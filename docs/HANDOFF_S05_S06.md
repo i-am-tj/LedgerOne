@@ -1,6 +1,6 @@
 # S05 → S06 engineering handoff
 
-S06A review artifact: [PR #18](https://github.com/i-am-tj/LedgerOne/pull/18), implementation commit `cf37cda`; required local pipeline **89 unit / 69 integration / 46 browser tests PASS**, plus schema/attestation/build. Remote checks and human review are reported on the PR.
+S06A review artifact: [PR #18](https://github.com/i-am-tj/LedgerOne/pull/18), implementation commit `cf37cda`; required local pipeline **89 unit / 70 integration / 46 browser tests PASS**, plus schema/attestation/build. Remote checks and human review are reported on the PR.
 
 **Recommendation: CONDITIONAL PASS for S06A review readiness; full S06 financial write gate: FAIL (closed).** No financial API write, production readiness or Phase 1 completion is claimed.
 
@@ -54,3 +54,7 @@ Changed source: Prisma financial audit relations; migration 007; schema version;
 Preserve SELECT-only financial runtime grants and the INR-only FX CHECK. New posted history is corrected only by exact linked reversals. S07 must preserve original opening provenance and derive correction chains; audit metadata/archive/restore and explicit reconciliation differences without balance overwrite or silent unarchive. Production deployment, hosted SQL/grants, backup/restore, paid services and real-bank connections remain outside this change.
 
 Next: complete/review/merge the S06A PR; only then begin S06B. No S06A review/merge or complete Phase 1 PASS is inferred from compiled code or owner approval of the earlier S05 PR.
+
+## CI repair and safe reference cleanup
+
+Ubuntu DNS failures were fixed by the version-matched official Playwright container step: remote PR run 43052573744 executed Node 22.22.0 and all 46 browser tests successfully. A parallel push run exposed a separate attestation-reference cleanup race after comparison; the tool force-dropped a backend whose pool socket was still closing. Cleanup now waits for zero connections, refuses active connections after a bounded deadline, and never uses FORCE. The CLI handles idle pool errors without raw connection dumps and prints PASS only after cleanup; private rehearsal uses the same safe cleanup. A new regression holds a reference connection open, verifies cleanup refusal and a still-working connection, then closes/retries successfully. Final local pipeline: 89 unit / 70 integration / 46 browser PASS (26.3s), all schema/attestation/build checks PASS. Current-head CI and human review remain merge requirements; no gate is waived.

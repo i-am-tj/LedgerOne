@@ -334,3 +334,20 @@ it("P1-S06A preserves function SQL literals when comparing catalogs", async () =
     c.release();
   }
 });
+
+it("P1-S06A cleanup refuses to terminate an active reference connection and succeeds after release", async () => {
+  const isolated = await createFreshLedgerDatabase(testDatabaseURL());
+  const active = new pg.Client({ connectionString: isolated.url });
+  const errors: unknown[] = [];
+  active.on("error", (error) => errors.push(error));
+  try {
+    await active.connect();
+    await active.query("SELECT 1");
+    await expect(isolated.cleanup()).rejects.toThrow("force deletion refused");
+    expect((await active.query("SELECT 1 AS value")).rows[0].value).toBe(1);
+    expect(errors).toHaveLength(0);
+  } finally {
+    await active.end();
+    await isolated.cleanup();
+  }
+}, 20000);

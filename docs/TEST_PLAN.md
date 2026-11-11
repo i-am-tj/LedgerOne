@@ -165,3 +165,5 @@ New work is on `feat/p1-s06a-command-controls`, based on the owner's merged main
 | R03 / migration history | 001–006 unchanged, preserved 007 after local application; all seven applied hashes matched; private/public fresh migration and Prisma diff PASS                                          | Production backup/restore and deployment separate                                      |
 
 Final full pipeline: 89 unit / 69 integration / 46 browser PASS. These controls do not satisfy W01–W15 for the unimplemented authenticated command API/replay/retry gate.
+
+S06A current evidence after CI repair: 89 unit / 70 integration / 46 browser PASS locally. The 22nd control test proves bounded cleanup refusal with an active reference client, continued client usability and successful cleanup after release. All new resource DROP paths are generated local test names and omit FORCE. CI browser step now uses the matching official image and exact Node 22; PR run 43052573744 independently passed all 46 browser cases. Final-head checks and human review remain required.

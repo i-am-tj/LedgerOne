@@ -11,23 +11,31 @@ async function main() {
   const target = process.env.TEST_DATABASE_URL;
   if (!target)
     throw new Error("Configure the private loopback TEST_DATABASE_URL");
+  let poolFault = false;
   await withFreshLedgerDatabase(target, async (reference) => {
     const ref = new pg.Pool({ connectionString: reference }),
       actual = new pg.Pool({ connectionString: target });
+    ref.on("error", () => {
+      poolFault = true;
+    });
+    actual.on("error", () => {
+      poolFault = true;
+    });
     try {
       const baseline = await readLedgerInvariants(ref, { schema: "public" });
       assertLedgerInvariants(
         await readLedgerInvariants(actual, { schema: "public" }),
         baseline,
       );
-      console.log(
-        "PASS: actual local test schema invariant catalog, enabled triggers, CHECK/function/security/grants, readiness and applied migration history match a fresh reference. No writes enabled.",
-      );
     } finally {
       await ref.end();
       await actual.end();
     }
   });
+  if (poolFault) throw new Error("Invariant pool failed during attestation");
+  console.log(
+    "PASS: actual local test schema invariant catalog, enabled triggers, CHECK/function/security/grants, readiness and applied migration history match a fresh reference; all reference resources closed safely. No writes enabled.",
+  );
 }
 try {
   await main();

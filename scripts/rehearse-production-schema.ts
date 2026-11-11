@@ -7,6 +7,7 @@ import pg from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { loadProfile } from "./load-env";
+import { dropDisposableLedgerDatabase } from "./lib/fresh-ledger-database";
 import { SCHEMA_VERSION } from "../src/lib/schema-version";
 import { databaseSettings } from "../src/lib/profile";
 import {
@@ -269,14 +270,14 @@ try {
     "SELECT count(*)::int AS count FROM information_schema.tables WHERE table_schema='public'",
   );
   assert.equal(publicTables.rows[0].count, 0);
-  console.log(
-    "PASS: fresh private-schema migrations and zero Prisma drift; production financial read-only grants; temporary invoker-role ledger balancing/rollback/immutability; protected audit and denied DDL/replication bypass/history access; no public tables.",
-  );
 } finally {
   await runtime?.$disconnect();
   await provision?.end();
-  if (created) await admin.query(`DROP DATABASE "${dbName}" WITH (FORCE)`);
+  if (created) await dropDisposableLedgerDatabase(admin, dbName);
   await admin.query(`DROP ROLE IF EXISTS "${appRole}"`);
   await admin.query(`DROP ROLE IF EXISTS "${migrator}"`);
   await admin.end();
 }
+console.log(
+  "PASS: fresh private-schema migrations and zero Prisma drift; production financial read-only grants; temporary invoker-role ledger balancing/rollback/immutability; protected audit and denied DDL/replication bypass/history access; no public tables.",
+);
