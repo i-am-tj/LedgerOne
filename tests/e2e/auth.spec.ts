@@ -80,6 +80,31 @@ test("P1-S03 sign-in initiation uses GitHub via adapter, state and canonical cal
   );
   expect(url.searchParams.get("state")).toBeTruthy();
 });
+test("P1-S03 auth template renders GitHub button and handles mode switching", async ({
+  page,
+}) => {
+  await page.goto("/login");
+  await expect(
+    page.getByRole("button", { name: "Continue with GitHub" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Continue with Google" }),
+  ).toBeVisible();
+
+  // Mode switch to Sign Up
+  await page.getByRole("button", { name: "Sign Up" }).click();
+  await expect(
+    page.getByRole("heading", {
+      name: "Your first deploy is just a sign-up away.",
+    }),
+  ).toBeVisible();
+
+  // Mode switch back to Log in
+  await page.getByRole("button", { name: "Log in" }).click();
+  await expect(
+    page.getByRole("heading", { name: "A clearer view starts here." }),
+  ).toBeVisible();
+});
 test("P1-S03 provider initiation error is recoverable without exposing details", async ({
   page,
 }) => {

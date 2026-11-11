@@ -33,3 +33,7 @@ User-assisted Google sign-in was observed returning to the authenticated workspa
 ## P1-S04 checkpoint
 
 The agent-owned S03 technical review is recorded, with no local-development blocker and explicit deployment prerequisites. S04 adds passing two-user Workspace/API/audit tests and atomic audit rollback/database constraints; 38 unit, 18 integration and 34 browser tests pass. The current-resource proof is not financial Account/Journal/Posting isolation: those tests remain blocked on S05–S08, as do all balancing, reversal, classification and ledger concurrency scenarios. Phase 1 is still NOT RUN/BLOCKED FOR RELEASE, with no reviewed remote merge or public deployment claimed. User approval of the core INR/sign/reversal policy is recorded for S05, not counted as implemented accounting.
+
+## P1-S04A / authentication extension checkpoint
+
+Supabase project creation/GitHub linkage and local environment/private-schema rehearsal are recorded. Public entry and protected home, plus the user's Google/GitHub adapter/login-card changes, have local regression evidence. Additional provider setup, hosted connection/roles/domain/OAuth, broader auth review and backup/restore remain pending. No accounting gate row changes to PASS; S05–S09 are still unimplemented and Phase 1 remains blocked for release.

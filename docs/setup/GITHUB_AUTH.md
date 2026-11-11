@@ -61,6 +61,17 @@ The auth architecture uses an **Adapter Design Pattern** located in `src/lib/aut
 
 ---
 
+## 4. UI Template
+
+The login interface (`src/components/auth/auth-controls.tsx`) renders the unified card template:
+
+- Mode toggling between **Sign In** and **Sign Up**.
+- Provider buttons for configured adapters ("Continue with Google", "Continue with GitHub").
+- Collapsible "Show other options" section for enterprise SAML and Passkey options.
+- Mode switcher footer allowing transitions between Login and Sign Up.
+
+---
+
 ## 5. Verification Checklist
 
 - [ ] Sign in with the allowlisted GitHub identity -> Redirected to `/home`.

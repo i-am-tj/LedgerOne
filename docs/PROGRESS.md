@@ -248,7 +248,34 @@ Audit is minimal mutation metadata, latest-50 API, not full change-payload/event
 
 The user approved the proposed core accounting defaults during this increment: fixed functional INR, preserved original currency quantities, asset/expense debit-normal, liability/equity/income credit-normal, linked-reversal correction of posted history. Detailed FX/investment decisions remain unapproved. No S05 work has started. Next story is P1-S05 after this increment's review; Phase 1 and all later phases remain blocked on accounting implementation/evidence. Existing unrelated README/progress/package/S01 verification edits and generated AGENTS.md are preserved outside the S04 commit. Artifact: the `[P1-S04]` local commit containing this report; no remote PR or reviewed merge is claimed.
 
-## 2026-11-11 — P1-S04A production profile preparation
+## 2026-11-11 — Multi-Provider Auth Adapter (Google & GitHub) & High-Fidelity Template
+
+Extended authentication architecture with the **Adapter Design Pattern** and refreshed the login/signup interface to match the user-provided modern developer auth template.
+
+### Architectural Changes
+
+- **Adapter Design Pattern (`src/lib/auth/adapters/`)**:
+  - `AuthProviderAdapter`: Standard interface specifying provider identity, metadata, origin security check (`authUrlOrigin`), canonical callback path, environment configuration status, Better Auth provider configuration, and user email verification admission logic.
+  - `GoogleAuthAdapter`: Supplies Google options and verified-email validation; Better Auth performs OAuth/PKCE and the client checks the authorization origin.
+  - `GitHubAuthAdapter`: Supplies GitHub options and verified-email validation; central policy enforces the allowlist and the client checks the authorization origin. Full callback/live GitHub sign-in is not verified.
+  - `AuthAdapterRegistry`: Manages adapter registration, resolution by provider ID or callback path, and detection of configured adapters based on environment credentials.
+- **Fail-Closed Auth Core**:
+  - Updated `src/lib/auth/policy.ts` to support both Google and GitHub client credentials. Fails closed if no provider is configured.
+  - Updated `src/lib/auth/create-auth.ts` to register social providers and validate users dynamically through the adapter registry.
+  - Updated `src/lib/auth/requests.ts` to validate incoming provider requests against currently configured providers and dynamic adapter callback paths.
+- **Unified Login/Signup Template (`src/components/auth/auth-controls.tsx`)**:
+  - Implemented `AuthCard` reflecting the modern developer-focused template.
+  - Seamless mode switching between "Log In" ("A clearer view starts here.") and "Sign Up" ("Your first deploy is just a sign-up away.").
+  - Outline buttons for "Continue with Google", "Continue with GitHub", and "Continue with ChatGPT".
+  - Collapsible "Show other options" section for SAML SSO, Passkey, and Apple options.
+  - Email address input with "Continue with Email" button informing user of approved identity access policy.
+  - Full backward compatibility for `GoogleSignIn`, `GitHubSignIn`, and `SignOutButton`.
+- **Documentation & Setup**:
+  - Created `docs/setup/GITHUB_AUTH.md` with step-by-step GitHub OAuth App setup guide and callback URL requirements (`/api/auth/callback/github`).
+  - Updated `docs/ADR/0002-google-auth-and-server-sessions.md` and `docs/stories/P1-S03.md`.
+  - Added environment variable slots to `.env.example`, `.env.development.example`, `.env.development.local`, and `playwright.config.ts`.
+
+## 2026-11-11 — P1-S04A production profiles and public-entry preparation
 
 The user paused ledger S05, requested Supabase production, separate real production/local dummy profiles, and a public dashboard with sign-in leading to protected home. Supabase project creation was verified in the Free Mumbai project and its GitHub integration is enabled with production deployment and automatic branching off. No upgrade/public application deployment, hosted migration or hosted DB connectivity test was performed. The user confirmed app hosting/domain is not set up. Google/GitHub provider configuration beyond existing local Google is deferred.
 
@@ -256,10 +283,16 @@ Local `.env` now reserves production values; actual project reference and a sepa
 
 Rehearsal `npx tsx scripts/rehearse-production-schema.ts` PASS: a newly created random local test DB applied all three existing Prisma migrations into private `ledgerone`; restricted runtime role read readiness and atomically inserted workspace/audit; DDL, audit changes/TRUNCATE and migration-history access were denied, with no public tables. The script removed only its newly generated test DB/roles. This is local portability/permission evidence, not hosted Supabase verification. The provision/regrant SQL and remaining deployment checklist are in `docs/setup/SUPABASE.md`.
 
-## 2026-11-11 — P1-S03 OAuth adapter review
+Public `/` renders statically without a session/DB query, exposes sign-in in the top-right and contains no private records or invented numbers. `/home`, appearance/component pages and private APIs continue to require current allowed sessions. Fixed successful OAuth destination is now `/home`; already authenticated `/login` visits transition there. All prior journal/account requirements remain unimplemented. No S05 or Phase 2 work started.
 
-Reviewed the user-supplied adapter interface, Google/GitHub implementations and registry. Server admission and provider initiation now use the shared OAuth abstraction while preserving verified-email allowlisting, sessions, CSRF and disabled automatic account linking. Provider credential fields, unions, request enum and client metadata still require coordinated edits for a new provider. Additional provider setup is deferred. GitHub initiation is tested; callback completion/live acceptance is not. See `docs/security/AUTH_ADAPTER_REVIEW.md`. The new card and public-entry routing are separated into subsequent local commits.
+## 2026-11-11 — Login adapter review and logical commit request
 
-## 2026-11-11 — P1-S04A public entry and protected home
+The user supplied auth adapter/card edits during the environment increment, requested understanding/review and logical commits, then explicitly chose **keep the new card active; defer provider setup**. Review is recorded in `docs/security/AUTH_ADAPTER_REVIEW.md`. The adapter/registry is actually used for Google/GitHub OAuth. It is not a complete plug-in interface for unrelated email/passkey/SAML methods: provider unions, request enum, credential plumbing and UI metadata are still hard-coded. Sign-up is a display mode over allowlisted OAuth, not public registration. Unsupported UI options and missing policy links remain documented release issues; no additional method is represented as connected. The original Google-only technical review is not approval of the new surface.
 
-Added a static public dashboard at `/`, top-right sign-in and protected `/home`; existing sessions transition from `/login` to home. Private APIs retain independent session/owner checks. Successful OAuth returns to fixed `/home`; no private data query runs on the public page. Public/private entry, keyboard, reflow and accessibility journeys passed in the combined local suite. This does not implement financial modules, public registration or application deployment. The supplied login-card presentation is kept separate in the next local commit.
+Combined validation before commit splitting: lint/typecheck/build PASS, 55 unit, 20 PostgreSQL integration, 46 desktop/mobile browser tests PASS. Two adapter files needed formatting; those were normalized. Route typecheck initially saw stale generated types after moving the home page; a fresh build regenerated them and subsequent typecheck passed. Initial test-migration execution was sandbox-denied before connection; rerun with approved local execution passed. Further final checks after migration-TLS/loader and verification-script refinements are recorded below. Live GitHub callback/denial/linking, hosted connectivity/OAuth, backup/restore and public deployment remain pending. Financial/accounting phase gates remain blocked.
+
+### Final combined verification and delivery — 2026-11-11
+
+`npm run verify:pipeline` PASS: local Compose healthy; guarded dev and test migrations report no pending migrations (existing three only); formatting, lint (0 warnings), typecheck, 57 unit tests, 20 real PostgreSQL integration tests, production build, 46 desktop/mobile Chromium tests (18.2s) and foundation-doc checks all exit 0. `npx tsx scripts/rehearse-production-schema.ts` rerun after the migration TLS/loader changes PASS, then `npm run verify:smoke` PASS: liveness 200, readiness 200, local DB outage 503, restored readiness 200. Its loopback test server was stopped and the local DB restored. No app changes followed these runs; final documentation/whitespace and staged-secret checks ran before the commits. Browser/integration suites ran sequentially. The benign outer-home lockfile and NO_COLOR/FORCE_COLOR notices do not indicate failed checks. Bash syntax validation passed; Prettier does not provide a shell-script parser, so shell validation is reported separately.
+
+Delivery groups: P1-S01 local verification/contributor guidance; P1-S04A environment/Supabase preparation; P1-S03 OAuth adapter backend; P1-S04A public/private entry; P1-S03 login-card presentation and final review/evidence. Commits are local only, with staged private-value scans; `.env` and `.env.development.local` remain ignored/private. No remote is configured, no push/remote issues/PRs or reviewed merges are claimed. No dependency or schema migration was added. The task's review/commit request is complete; story release/merge definitions remain pending. Next work remains the outstanding Supabase hosting/connection prerequisites and reviewed UI/provider follow-ups, then S05 once this foundation amendment is accepted. Phase 1 and Phase 2 gates remain blocked by the unimplemented accounting stories.

@@ -285,3 +285,7 @@ Status: ownership/audit foundation locally verified; see `docs/stories/P1-S04.md
 **Rollback/migration notes:** FAIL blocks Phase 2; no invented pass or destructive ledger repair.
 
 **Definition of done:** Demonstrated behavior; server validation/authorization; safe migration recovery; applicable accessibility and empty/loading/error/success states; formatting, lint, typecheck, unit/integration and build green with reproducible evidence; docs current; accounting/security review where applicable; reviewed merge.
+
+## Local foundation amendment — P1-S04A
+
+User-authorized interruption before P1-S05: [production profiles/public entry story](stories/P1-S04A.md). The existing P1-S01–P1-S09 dependency order and financial release gate are preserved. The supplied P1-S03 adapter/card edits are reviewed separately in [authentication review](security/AUTH_ADAPTER_REVIEW.md); additional provider setup is deferred. No remote issues or deployment were created.
