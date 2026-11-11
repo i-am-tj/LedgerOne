@@ -167,3 +167,13 @@ New work is on `feat/p1-s06a-command-controls`, based on the owner's merged main
 Final full pipeline: 89 unit / 69 integration / 46 browser PASS. These controls do not satisfy W01–W15 for the unimplemented authenticated command API/replay/retry gate.
 
 S06A current evidence after CI repair: 89 unit / 70 integration / 46 browser PASS locally. The 22nd control test proves bounded cleanup refusal with an active reference client, continued client usability and successful cleanup after release. All new resource DROP paths are generated local test names and omit FORCE. CI browser step now uses the matching official image and exact Node 22; PR run 43052573744 independently passed all 46 browser cases. Final-head checks and human review remain required.
+
+## S06A final-review regression traceability
+
+| Requirement / finding                                          | Reproducible evidence                                                                                                                                                     | Boundary                                                     |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| R14 / A05-03 / S06A-R01                                        | `command-controls.test.ts` direct/transitive runtime delegation, ADMIN/INHERIT/SET changes and logical membership identity normalization; SQL literal regression retained | Actual hosted writer/profile integration remains S06D        |
+| Audit exact scope/target, immutable financial meaning, upgrade | [21 independent probes](security/evidence/S06A_FINAL_PROBES.md): existing owner A/B records, invalid rollback, owner-level edits, actual legacy replay                    | SQL support does not prove future HTTP command authorization |
+| S07 OPENING audit                                              | `stories/P1-S07.md` explicit additive audit CHECK/helper/marker extension and atomic rollback/replay/concurrency requirements                                             | Planned; intentionally unsupported by 007                    |
+
+Corrected-source `npm run verify:pipeline`: 89 unit / 76 integration / 46 browser PASS (20.5s), all required pipeline stages PASS. [Final review](security/S06A_FINAL_REVIEW.md) records scope and exact commands. Final publication-head CI/merge evidence is recorded on PR #18. W01–W15 remain unaccepted for complete write enablement.
