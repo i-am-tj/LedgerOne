@@ -47,6 +47,8 @@ Labels when authorized remotely: `phase:1`, `epic:P1-E1`–`epic:P1-E4`, `type:e
 
 **ID:** P1-S02 | **Title:** Design system and application shell | **Epic:** P1-E1 | **Priority:** P0 | **Dependencies:** P1-S01 reviewed and merged
 
+Status: locally verified, awaiting review; details and limitations in `docs/stories/P1-S02.md`. No remote merge recorded.
+
 **User story:** As the owner, I want to navigate accessibly on mobile and desktop.
 
 **Inputs (data/API/preconditions):** Navigation inventory, breakpoints and accessibility requirements.
@@ -55,10 +57,11 @@ Labels when authorized remotely: `phase:1`, `epic:P1-E1`–`epic:P1-E4`, `type:e
 
 **Implementation tasks:**
 
-- [ ] Build theme/layout/sidebar/mobile navigation.
-- [ ] add accessible forms and states.
-- [ ] test visible states.
-- [ ] Update docs/traceability and record check output, migration recovery and review evidence.
+- [x] Build theme/layout/sidebar/mobile navigation.
+- [x] add accessible forms and states.
+- [x] test visible states.
+- [x] Update docs/traceability and record check output and migration recovery.
+- [ ] Record S02 review and merge evidence.
 
 **Acceptance criteria (Given/When/Then):** Given keyboard-only navigation at mobile and desktop widths, when routes and states are used, then focus is visible and no dead links exist.
 

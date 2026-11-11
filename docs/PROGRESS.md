@@ -88,3 +88,37 @@ No `.env` or real credential committed. Loopback service defaults, sanitized hea
 Docker Compose itself has NOT RUN because Docker is unavailable; real matching PostgreSQL migration tests are the recorded substitute, not evidence of container execution. Full dependency audit has unresolved moderate dev-tool findings; these must be reassessed before the phase release. Framework-specific lint/accessibility rules are deferred to P1-S02 after compatibility review. Accounting/security ADR approval remains outstanding before dependent stories. The phase gate remains NOT RUN/BLOCKED; none of its later criteria is satisfied by this scaffold.
 
 Next story: P1-S02 after P1-S01 review and merge, per Prompt 0. User remote setup is pending. Commit evidence: use `git log -1 --oneline` for the `[P1-S01]` commit containing this report; no PR exists yet.
+
+## 2026-11-11 — P1-S02 design system and shell
+
+Implemented P1-S02 only, locally verified and awaiting review. The user explicitly authorized proceeding to S02 after Docker became available. P1-S01 advancement is accepted on that basis; no remote PR/merge is invented. Phase 1 remains blocked by P1-S03–P1-S09. Next story is P1-S03 (Google sign-in with an owner allowlist), not Phase 2.
+
+### Result and changed files
+
+Added responsive desktop sidebar/mobile modal navigation, active route state, skip link, footer, honest overview empty states, persisted Light/Dark/System theme and Appearance route, local component library with RHF/Zod form validation and feedback demonstrations, shared status primitives and actual loading/error/not-found boundaries. Buttons and links only expose implemented routes/actions. No invented financial metrics or private records are displayed.
+
+Source: `src/app/layout.tsx`, `src/app/page.tsx`, `src/app/globals.css`, `src/app/loading.tsx`, `src/app/error.tsx`, `src/app/not-found.tsx`, `src/app/settings/appearance/page.tsx`, `src/app/design-system/page.tsx`; new `src/components/shell/`, `src/components/ui/`, `src/components/design-system/` and `src/lib/utils.ts`. Configuration: `components.json`, `package.json`/lockfile, `playwright.config.ts`, `.prettierignore`, `.github/workflows/ci.yml`. Verification: `tests/e2e/shell.spec.ts` and four PNGs in `docs/evidence/P1-S02/`. Documentation: README, PRD, ARCHITECTURE, BACKLOG, ROADMAP, TEST_PLAN, DECISIONS_NEEDED, this log, PHASE_1 gate and P1-S02 story. `docs/stories/P1-S02.md` contains the complete acceptance/recovery contract.
+
+Migrations: none. Financial mutations/authentication: none. Theme storage: only the browser-local non-sensitive `ledgerone-theme` preference. The form preview stores nothing. Framework primitives are manually adapted Radix/shadcn-style components, with pinned dependencies and component aliases.
+
+### Executed evidence
+
+- Docker socket initially required sandbox escalation; `docker compose up -d --wait` then exited 0 and reported `ledgerone-postgres-1` Healthy. No container reset or volume deletion was performed.
+- `npm run db:migrate`: exit 0, no pending platform migrations; `npm run test:integration`: exit 0, 1 PostgreSQL integration test passed against Docker at loopback 5432.
+- `npm run format:check`: exit 0; `npm run lint`: exit 0, no warnings; `npm run typecheck`: exit 0 (Prisma generation, route types and strict TypeScript).
+- `npm run test:unit`: exit 0, existing 6 seed-guard tests passed. New UI behavior is tested in browsers rather than duplicated shallow unit tests.
+- `NEXT_TELEMETRY_DISABLED=1 npm run build`: exit 0; overview, appearance, component library and not-found pages compile, with existing health routes retained.
+- `npx playwright install chromium`: exit 0. `npm run test:e2e`: final exit 0, **16 tests passed in 11.6s**, across desktop/mobile Chromium with production build on loopback port 3100. Playwright cleaned up its test server. No other local application server was stopped.
+- Tests cover navigation/link destinations, active routes, skip link, mobile trap/Escape/return focus, persisted theme/device changes, associated errors and focus, validation lengths, literal HTML-like text, all feedback states/retry, 404 recovery, reflow at 320/768/1024px, reduced motion and WCAG-tagged axe scans in light/dark for every route plus mobile modal.
+- First E2E run: 14 passed, 2 failed due to a selector also matching Next.js's route announcer; assertions were scoped to main content and the full suite rerun successfully. No application bug was hidden by removing an assertion.
+- Desktop light and mobile dark screenshots were visually inspected for readability/clipping; all four mode/viewport captures retained in `docs/evidence/P1-S02/`. Automated axe scans reported zero violations in the configured scope; full assistive-technology conformance is not claimed.
+- `python3 scripts/check_foundation.py`: exit 0, current story contracts/requirement mappings and 15 displayed journal examples verified structurally. This is not ledger implementation evidence.
+- `npm audit --omit=dev`: exit 0, zero runtime findings. Dependency installation reports the existing 10 moderate development-tool findings; no forced transitive major override was applied. Remote CI has not run.
+
+### Scope and review limits
+
+Google auth/owner isolation and the entire financial engine remain future Phase 1 stories. These public local preview routes contain no financial data; deployment remains unauthorized. Only UI/theme behavior is implemented. Actual server-render-error injection, screen-reader testing and Firefox/WebKit execution were not performed. Root error/loading boundaries use browser-exercised shared primitives, not independently forced server failures. No schema or financial migration is introduced; rollback is a UI/config revert, leaving the inert theme key harmless.
+
+Concurrent local foundation-verification edits appeared in README, package scripts, P1-S01 notes, this progress log and `scripts/verify.sh` during this increment. They were preserved and excluded from the S02 commit using selective staging. This story's own documentation additions remain included. No claim is made that the unrelated verification script was executed during this story.
+
+P1-E1 local integration scenarios are green (Docker baseline plus responsive/themed shell journeys); formal epic closure awaits review. The `[P1-S02]` commit containing this evidence is the local artifact reference (`git log --oneline --grep='\[P1-S02\]'`). No remote/PR/merge is claimed. Next: review P1-S02, then implement P1-S03 under the already authorized Phase 1 scope.

@@ -1,6 +1,6 @@
 # LedgerOne
 
-Private personal finance, implemented in reviewed increments. **P1-S01 is the current story; identity and financial features are not implemented.** The landing page contains no private data. Do not expose the development server publicly.
+Private personal finance, implemented in reviewed increments. **P1-S02 adds the responsive shell and theme controls; identity and financial features are not implemented.** The landing page contains no private data. Do not expose the development server publicly.
 
 ## Local prerequisites
 
@@ -52,3 +52,17 @@ Use `npm run start` after a successful build to serve the production artifact lo
 ## Delivery state
 
 See [progress](docs/PROGRESS.md), [current backlog](docs/BACKLOG.md), [roadmap](docs/ROADMAP.md), [accounting contract](docs/ACCOUNTING.md) and [Phase 1 gate](docs/gates/PHASE_1.md). No public deployment, paid service or bank connection is authorized. Local checks do not substitute for accounting/security review and reviewed merge.
+
+## P1-S02 shell and browser checks
+
+Available routes are `/`, `/settings/appearance`, and `/design-system`. Theme selection supports Light, Dark and System and persists in this browser. The component library demonstrates validation and feedback without storing records. Future finance modules are identified as unavailable and have no dead action links.
+
+```sh
+npx playwright install chromium
+npm run build
+npm run test:e2e
+```
+
+Playwright starts an isolated production server on loopback port 3100. Keep that port free. It covers desktop/mobile Chromium, keyboard/modal focus, theme persistence, form/error/retry feedback, no-overflow layouts at 320/768/1024px, and automated light/dark accessibility scans. Screenshots and an HTML report are generated under ignored `test-results/` and `playwright-report/`; use `npx playwright show-report` to inspect the report. CI installs Chromium and uploads browser evidence. Other browser engines and full screen-reader testing remain unverified.
+
+See `docs/stories/P1-S02.md` for acceptance, limitations and rollback notes. No new migration is required. Authentication with the selected Google owner allowlist is the next story, P1-S03.

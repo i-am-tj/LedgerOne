@@ -52,3 +52,7 @@ PWA/offline writes are deferred until core gates pass; offline financial conflic
 ## Success and release acceptance
 
 A user can enter and reconcile representative activity, explain category consumption without transfer double counting, export their original facts, and restore a backup. All financial writes are server-authorized and atomic. Each phase must pass its published gate. A story remains awaiting review until merged after review; local checks alone cannot mark it done. No implementation authorization is inferred from approval of this planning document.
+
+## P1-S02 product evidence
+
+R01's responsive shell, theme, keyboard navigation and shared visible states are implemented for Overview, Appearance and Component library; financial module states remain future work. The overview explicitly discloses that account setup/capture are unavailable and displays no invented totals. R19 gains production-build browser journeys and automated accessibility evidence. Details and limitations: `docs/stories/P1-S02.md`. The overall Phase 1 and financial requirements remain incomplete.

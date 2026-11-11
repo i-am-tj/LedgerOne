@@ -49,3 +49,13 @@ Private invite-only access by default. Session cookies: secure in production, Ht
 Files: private storage, generated names, allowlist types, byte signature validation, size/count limits, quarantine/scanning and short-lived authorized download links. Never serve untrusted HTML/SVG inline. Import previews parse without executing formulas or macros; CSV exports neutralize spreadsheet formula injection while documenting the export contract. Background jobs re-authorize their workspace and use unique occurrence keys.
 
 Testing: exact domain unit tests; real PostgreSQL integration tests for constraints, isolation and races; browser tests for keyboard and user journeys; backup restore drills against an isolated database. CI gates formatting, lint, typecheck, tests and production build. S024 defines deployment/runbooks; this proposal provisions nothing.
+
+## Implemented presentation boundary — P1-S02
+
+The root shell provides semantic main/navigation landmarks and a Radix modal mobile menu. Only Overview, Appearance and Component library routes are linked. Upcoming finance modules are plain text and do not query or fabricate balances. Local UI primitives follow the shadcn/Radix composition convention (Slot, CVA, Tailwind tokens); `components.json` records aliases and CSS location. A CSS-based decorative illustration contains no financial metrics.
+
+`next-themes` sets the root class with Light/Dark/System support and persists only `ledgerone-theme` in browser storage. The initial theme script and root hydration suppression follow that library's pattern; no user-specific financial facts enter the theme layer. Colors, focus indicators, spacing and breakpoints are in globals.css. System fonts avoid external asset requests. Reduced-motion rules disable animation.
+
+The RHF/Zod component preview validates locally and explicitly stores nothing. Reusable loading/error/empty/success components are also used by route boundaries. No financial write service or identity check is represented as implemented by these UI examples. P1-S03 must protect future private routes before private data is added.
+
+Playwright drives the production build on port 3100 for desktop/mobile Chromium, with axe A/AA-tagged checks and screenshot evidence. These complement TypeScript/ESLint and do not assert complete accessibility, security or accounting correctness. CI adds browser execution after build. No migration is introduced by this story.

@@ -86,3 +86,9 @@ The original Txx identifiers above describe planned product coverage. Current st
 | P1-S09          | R03,R05,R19  | Property/isolation/concurrency suite and expanded Phase 1 gate planned                                              |
 
 R06–R12 and R15–R18 plus full FX/analytics/privacy/release capabilities remain future scope in the archived backlog and PRD; this is not evidence of their implementation. The current authoritative gate is `docs/gates/PHASE_1.md`; initial G1–G7 remain historical NOT RUN entries.
+
+## P1-S02 implemented UI traceability
+
+R01 / T03 and the UI portion of R19 now map to `tests/e2e/shell.spec.ts`: eight journeys across desktop/mobile Chromium, 16 passed. Coverage includes navigation/active route, mobile modal trap/Escape/return focus, skip link, no dead links/404 recovery, persisted Light/Dark/System preferences, empty/loading/error/success and form validation, safe text rendering, 320/768/1024px reflow, reduced motion, and light/dark axe scans on all three routes plus mobile modal. Existing 6 unit tests and 1 PostgreSQL integration test also pass. Commands are `npm run build` followed by `npm run test:e2e`; Playwright installs via `npx playwright install chromium` locally and `--with-deps` in CI.
+
+Screenshots: `docs/evidence/P1-S02/`. This is not browser coverage for financial workflows, login, screen readers, Firefox or WebKit; those remain explicitly unverified. The UI error primitive is exercised through the gallery; actual server error-boundary injection was not executed. No additional financial invariant coverage is claimed.
