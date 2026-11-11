@@ -1,5 +1,24 @@
 # Progress and evidence
 
+## 2026-11-11 — P1-S01 Docker Compose and outage verification
+
+Executed full platform verification sequence on Node 22.22.0, npm 10.9.4, with Docker Compose v5.7.0 and PostgreSQL 17.6 (`postgres:17.6-alpine`) container via Colima runtime. All verification commands executed cleanly and exited code 0:
+
+- `npm ci`: Clean install, 315 packages audited.
+- `npm run db:up`: Container `ledgerone-postgres-1` provisioned and reported Healthy on `127.0.0.1:5432`.
+- `npm run db:generate`: Prisma Client 7.10.1 generated.
+- `npm run db:migrate`: Migration `202611110001_platform` verified against containerized PostgreSQL.
+- `npm run format:check`: Code style verified.
+- `npm run lint`: ESLint clean, 0 warnings.
+- `npm run typecheck`: TypeScript and route types clean.
+- `npm run test:unit`: 6 seed-guard unit tests passed.
+- `npm run test:integration`: 1 database integration test passed (`schema_version = '1'`).
+- `npm run build`: Next.js 16.4.6 production build completed.
+- `python3 scripts/check_foundation.py`: Passed structural and arithmetic checks.
+- Application served with `npm run start` at `http://127.0.0.1:3000`.
+- Health checks: `/api/health/live` returned 200 `{"status":"ok"}`; `/api/health/ready` returned 200 `{"status":"ready"}`.
+- Outage handling verified: `npm run db:stop` resulted in `/api/health/ready` returning 503 `{"status":"unavailable"}`. Running `npm run db:up` restored readiness to 200 `{"status":"ready"}`.
+
 ## 2026-11-11 — Phase 2 request prerequisite assessment
 
 The user supplied P2-E1–P2-E4 / P2-S01–P2-S08. Inspected `git status --short`, `git log -5 --oneline`, `git remote -v`, source/schema inventory and the Phase 1 gate. The only commit remains `8996627`; working tree was clean, no remote exists, and Prisma defines only AppMetadata. No Phase 1 ledger or authentication exists. Phase 1 remains blocked, so Phase 2 implementation cannot start under the user's gate rule.

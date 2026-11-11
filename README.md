@@ -33,6 +33,20 @@ The seed currently upserts a deterministic platform marker only. Financial demo 
 
 ## Verification
 
+Run the full automated verification suite (pipeline checks + live health and database outage drill):
+
+```sh
+npm run verify
+# or directly: ./scripts/verify.sh
+```
+
+Flags:
+
+- `npm run verify:pipeline` (or `./scripts/verify.sh --pipeline-only`): Runs the static checks, tests, build, and foundation script without live server smoke tests.
+- `npm run verify:smoke` (or `./scripts/verify.sh --smoke-only`): Runs liveness, readiness, and simulated database outage/recovery checks against the local server.
+
+Individual commands:
+
 ```sh
 npm run format:check
 npm run lint
