@@ -64,6 +64,22 @@ test("P1-S03 sign-in initiation uses Google, state and canonical callback", asyn
   expect(url.searchParams.get("state")).toBeTruthy();
   expect(url.searchParams.get("code_challenge_method")).toBe("S256");
 });
+test("P1-S03 sign-in initiation uses GitHub via adapter, state and canonical callback", async ({
+  page,
+}) => {
+  await page.goto("/login");
+  const response = await page.request.post("/api/auth/sign-in/social", {
+    headers: { origin: "http://127.0.0.1:3100" },
+    data: { provider: "github", callbackURL: "/" },
+  });
+  expect(response.status()).toBe(200);
+  const url = new URL((await response.json()).url);
+  expect(url.origin).toBe("https://github.com");
+  expect(url.searchParams.get("redirect_uri")).toBe(
+    "http://127.0.0.1:3100/api/auth/callback/github",
+  );
+  expect(url.searchParams.get("state")).toBeTruthy();
+});
 test("P1-S03 provider initiation error is recoverable without exposing details", async ({
   page,
 }) => {

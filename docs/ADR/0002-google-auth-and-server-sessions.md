@@ -1,17 +1,24 @@
-# ADR-002 — Google-only admission and database-backed sessions
+# ADR-002 — Multi-Provider Auth Adapter (Google & GitHub) and Database-Backed Sessions
 
-Date: 2026-11-11. Story: P1-S03. Status: IMPLEMENTED LOCALLY, LIVE OWNER GOOGLE SIGN-IN VERIFIED; AGENT TECHNICAL REVIEW RECORDED; MERGE PENDING. This is a reviewable decision record, not evidence of an independent security review or merged PR.
+Date: 2026-11-11. Story: P1-S03. Status: IMPLEMENTED LOCALLY, LIVE GOOGLE OWNER SIGN-IN PREVIOUSLY VERIFIED; LOCAL GOOGLE/GITHUB ADAPTER EXTENSION; EXPANDED REVIEW PENDING; MERGE PENDING. This is a reviewable decision record, not evidence of an independent security review or merged PR.
 
 ## Choice and rationale
 
 Use pinned Better Auth 1.7.20 with its matching PostgreSQL/Prisma adapter as the supported alternative allowed by Prompt 0. The [Auth.js maintenance announcement](https://better-auth.com/blog/authjs-joins-better-auth) recommends Better Auth for new projects. Its [Prisma documentation](https://better-auth.com/docs/adapters/prisma) supports Prisma 7, matching this repository. Authentication protocol/cryptography remains in the library; the application adds its admission and route policies. This supersedes ADR-001's provisional Auth.js candidate only; financial architecture is unchanged.
 
-The user selected Google sign-in with an owner allowlist and authorized S03. They asked to complete implementation/tests before Google configuration; later supplied the Google client creation screen and received exact callback/environment instructions. Subsequent user-assisted live owner sign-in was observed in Chrome and verified using account/session metadata; see the S03 story checkpoint. No credential values are included in evidence. See `docs/setup/GOOGLE_AUTH.md`.
+Authentication architecture was extended via the **Adapter Design Pattern** (`src/lib/auth/adapters/`) to support both Google and GitHub OAuth providers:
+
+- `AuthProviderAdapter` defines a unified interface for provider registration, dynamic callback path validation, and security validation hooks.
+- `GoogleAuthAdapter` supplies Google settings; Better Auth implements OAuth/PKCE, and the client separately checks the authorization origin.
+- `GitHubAuthAdapter` supplies GitHub settings and requires verified provider email; the client separately checks the authorization origin.
+- `AuthAdapterRegistry` dynamically discovers and validates configured providers based on active environment credentials. At least one valid provider must be configured.
+
+The user supplied the Google/GitHub adapter and modern card changes, requested a review and logical commits, and explicitly chose to keep the new card active while deferring additional provider setup. GitHub completion/live sign-in has not been verified. See `docs/security/AUTH_ADAPTER_REVIEW.md` for extension gaps and UI previews. See `docs/setup/GOOGLE_AUTH.md` and `docs/setup/GITHUB_AUTH.md`.
 
 ## Policy
 
-- Google authorization-code flow only, using the library's state, cookie binding, PKCE and Google validation. Direct client ID-token admission, credential signup, account linking, profile/email updates, deletion and token-retrieval endpoints are not exposed. Only Google identity scopes are requested, with online access and no incremental prior-grant scopes.
-- The high-level `validateUserInfo` hook requires the Google provider, a verified email and an exact normalized allowlist match before new identity persistence and on each returning provider sign-in. A create-user hook repeats admission and stores a lowercase address with no profile image. There are no wildcard/domain grants, implicit Gmail aliases or inferred owner identities.
+- Supported authorization-code flows (Google and GitHub) only, using library state, cookie binding, provider-supported PKCE, and provider validation. Direct client ID-token admission, credential signup, account linking, profile/email updates, deletion and token-retrieval endpoints are not exposed.
+- The high-level `validateUserInfo` hook delegates to the matching adapter from the registry, requiring a verified email (`emailVerified === true`) and an exact normalized allowlist match against `AUTH_ALLOWED_EMAILS` before identity persistence and on each returning provider sign-in. A create-user hook repeats admission and stores a lowercase address with no profile image. There are no wildcard/domain grants, implicit aliases or inferred owner identities.
 - `User` is the future authorization identity; `AuthAccount` stores provider bindings and is deliberately distinct from future financial `Account`. `(providerId, accountId)` and email uniqueness are enforced. Prisma adapter transactions are enabled.
 - Server sessions have a fixed eight-hour expiry, refresh disabled, cookie caching disabled, no stateless/JWT fallback. Each private page and its workspace layout use the server guard; each API must independently authorize. Workspace rendering is explicitly dynamic to avoid build-time cached redirects/session state. S04 must add entity ownership and audit; login alone does not implement either.
 - `getOwnerSession` obtains the database session and rechecks expiry, verified email and the current process's allowlist. Restart after allowlist edits. Database revocation takes effect at the next request; logout deletes the session and expires its cookie. Client navigation to login is a full navigation, clearing the app router's current client cache. No persistent client session DTO cache is used.

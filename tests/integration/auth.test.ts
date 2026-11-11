@@ -16,6 +16,9 @@ const config: AuthConfig = {
   secret: randomUUID() + randomUUID(),
   googleClientId: "integration-google-client",
   googleClientSecret: "integration-google-secret",
+  githubClientId: "integration-github-client",
+  githubClientSecret: "integration-github-secret",
+  configuredProviders: ["google", "github"],
   allowedEmails: new Set([email]),
 };
 const auth = createAuth(config, database);
@@ -259,5 +262,33 @@ describe("P1-S03 real PostgreSQL auth flow with mocked Google exchange", () => {
     expect(statuses.filter((status) => status === 200)).toHaveLength(10);
     expect(statuses.at(-1)).toBe(429);
     await database.authRateLimit.deleteMany();
+  });
+  it("initiates GitHub OAuth flow via adapter with canonical callback", async () => {
+    const response = await handleAuthRequest(
+      post("/api/auth/sign-in/social", { provider: "github" }),
+      auth,
+      config,
+    );
+    expect(response.status).toBe(200);
+    const url = new URL((await response.json()).url);
+    expect(url.origin).toBe("https://github.com");
+    expect(url.searchParams.get("client_id")).toBe("integration-github-client");
+    expect(url.searchParams.get("redirect_uri")).toBe(
+      config.baseURL + "/api/auth/callback/github",
+    );
+    expect(url.searchParams.get("state")).toBeTruthy();
+  });
+  it("rejects unconfigured providers even if known to schema", async () => {
+    const unconfiguredConfig: AuthConfig = {
+      ...config,
+      configuredProviders: ["google"],
+    };
+    const response = await handleAuthRequest(
+      post("/api/auth/sign-in/social", { provider: "github" }),
+      auth,
+      unconfiguredConfig,
+    );
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: "invalid_request" });
   });
 });

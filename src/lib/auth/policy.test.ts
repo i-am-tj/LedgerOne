@@ -15,6 +15,34 @@ describe("P1-S03 fail-closed auth policy", () => {
     ]);
     expect(SESSION_SECONDS).toBe(28800);
   });
+  it("supports multiple auth providers via registry adapters", () => {
+    // Both Google and GitHub configured
+    const multi = {
+      ...valid,
+      GITHUB_CLIENT_ID: "unit-github-client",
+      GITHUB_CLIENT_SECRET: "unit-github-secret",
+    };
+    const multiConfig = readAuthConfig(multi);
+    expect(multiConfig?.configuredProviders).toEqual(["google", "github"]);
+
+    // Only GitHub configured
+    const githubOnly = {
+      BETTER_AUTH_URL: valid.BETTER_AUTH_URL,
+      BETTER_AUTH_SECRET: valid.BETTER_AUTH_SECRET,
+      AUTH_ALLOWED_EMAILS: valid.AUTH_ALLOWED_EMAILS,
+      GITHUB_CLIENT_ID: "unit-github-client",
+      GITHUB_CLIENT_SECRET: "unit-github-secret",
+    };
+    const githubConfig = readAuthConfig(githubOnly);
+    expect(githubConfig?.configuredProviders).toEqual(["github"]);
+
+    // Partial GitHub credentials do not activate GitHub adapter
+    const partialGithub = {
+      ...githubOnly,
+      GITHUB_CLIENT_SECRET: "",
+    };
+    expect(readAuthConfig(partialGithub)).toBeNull();
+  });
   it.each(Object.keys(valid))("requires %s", (field) =>
     expect(readAuthConfig({ ...valid, [field]: "" })).toBeNull(),
   );

@@ -24,6 +24,7 @@ const config = {
   secret,
   googleClientId: "test-client",
   googleClientSecret: "test-secret",
+  configuredProviders: ["google"] as const,
   allowedEmails: new Set(emails),
 };
 const runtime = { config, auth: createAuth(config, database) };

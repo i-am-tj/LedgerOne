@@ -3,6 +3,7 @@ import { betterAuth } from "better-auth";
 import { APIError } from "better-auth/api";
 import { prismaAdapter } from "@better-auth/prisma-adapter";
 import type { PrismaClient } from "../../generated/prisma/client";
+import { defaultAuthRegistry } from "./adapters";
 import {
   isAllowedIdentity,
   normalizeEmail,
@@ -12,6 +13,23 @@ import {
 
 // No test provider, credential login, auth bypass, or environment-specific admission path.
 export function createAuth(config: AuthConfig, database: PrismaClient) {
+  const envMock: Record<string, string | undefined> = {
+    GOOGLE_CLIENT_ID: config.googleClientId,
+    GOOGLE_CLIENT_SECRET: config.googleClientSecret,
+    GITHUB_CLIENT_ID: config.githubClientId,
+    GITHUB_CLIENT_SECRET: config.githubClientSecret,
+  };
+
+  const socialProviders: Record<string, unknown> = {};
+  for (const adapter of defaultAuthRegistry.getAll()) {
+    if (adapter.isConfigured(envMock)) {
+      const providerConfig = adapter.getSocialProviderConfig(envMock);
+      if (providerConfig) {
+        socialProviders[adapter.id] = providerConfig;
+      }
+    }
+  }
+
   return betterAuth({
     appName: "LedgerOne",
     baseURL: config.baseURL,
@@ -22,20 +40,14 @@ export function createAuth(config: AuthConfig, database: PrismaClient) {
       transaction: true,
     }),
     emailAndPassword: { enabled: false },
-    socialProviders: {
-      google: {
-        clientId: config.googleClientId,
-        clientSecret: config.googleClientSecret,
-        prompt: "select_account",
-        accessType: "online",
-        includeGrantedScopes: false,
-        requireEmailVerification: true,
-      },
-    },
+    socialProviders,
     user: {
       validateUserInfo: ({ user, source }) => {
+        const providerId = source.oauth?.providerId;
+        const adapter = defaultAuthRegistry.get(providerId);
         if (
-          source.oauth?.providerId !== "google" ||
+          !adapter ||
+          !adapter.validateUser(user) ||
           !isAllowedIdentity(config, user)
         ) {
           return {

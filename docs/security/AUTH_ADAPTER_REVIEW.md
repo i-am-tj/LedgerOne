@@ -1,0 +1,33 @@
+# Authentication adapter and login review — 2026-11-11
+
+Scope: user's local Google/GitHub adapter and login-card changes on top of S03/S04, alongside the P1-S04A public-entry/environment increment. The user explicitly chose to keep the new card active and defer additional provider setup. This is a local engineering review, not an independent security audit or approval to release.
+
+## What changed
+
+The login page now renders `AuthCard`: login/signup display modes, email entry, Google/GitHub buttons, additional provider previews, expandable options and generic feedback. `SocialSignInButton` shares the POST/loading/error workflow and checks the returned authorization origin. Only provider IDs and availability reach the client; the server retains credentials and the verified-email allowlist. Existing logout, eight-hour DB sessions, CSRF checks and no automatic account linking remain.
+
+The new backend defines `AuthProviderAdapter`, concrete Google/GitHub adapters and `AuthAdapterRegistry`. Policy discovers configured providers; `createAuth` translates adapter settings into Better Auth social-provider options and delegates identity validation; HTTP handling admits configured providers and recognizes registered callback paths. Better Auth remains responsible for OAuth protocol/state/provider exchange. The adapter itself does not implement PKCE or token verification.
+
+## Assessment
+
+**Yes: an adapter/registry abstraction is integrated for the two OAuth providers. It is not yet a universal plug-in boundary for every sign-in/sign-up method.**
+
+| Area                         | Evidence / remaining limitation                                                                                                                                                                                                                                                                     |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Provider contract            | `src/lib/auth/adapters/types.ts`; metadata/configuration/identity-validation methods adapt providers to Better Auth.                                                                                                                                                                                |
+| Implementations and registry | `google.ts`, `github.ts`, `registry.ts`; configured-provider discovery and lookup are used by server policy and auth construction.                                                                                                                                                                  |
+| Admission                    | Both adapters require a verified email; central allowlist validation remains mandatory. Disabling account linking avoids silently merging two providers with the same email.                                                                                                                        |
+| Extension coupling           | `AuthProviderId`, the HTTP Zod enum, named credential fields in `AuthConfig`, the `envMock` reconstruction, `EXPECTED_ORIGINS`, button wrappers and card availability/rendering still enumerate Google/GitHub. A third provider requires coordinated edits, not just registry registration.         |
+| Type safety                  | `Record<string, unknown>` social options sacrifice provider-specific compile-time validation; use supported Better Auth option types when expanding.                                                                                                                                                |
+| Sign-up semantics            | The display toggle uses the same allowlisted social sign-in endpoint. A new approved identity may be provisioned on its first OAuth login. There is no public registration API, invitation workflow, password signup or email-delivery flow.                                                        |
+| Other methods                | Email, ChatGPT, SAML, passkey and Apple are UI previews/not connected. They have no working adapters/endpoints. Some preview notices are inside the login-only email form and therefore invisible in signup mode. These controls must be explicitly marked unavailable or completed before release. |
+| Product copy / legal links   | Signup still contains developer/deploy wording. Terms/Privacy are styled spans without policy destinations. Final finance copy and actual policies are release prerequisites; no legal acceptance workflow is implemented.                                                                          |
+| Callback policy              | Registered callbacks are recognized even when the corresponding provider is unconfigured; Better Auth supplies the next rejection layer. Restrict callbacks to configured providers before widening the provider surface.                                                                           |
+
+## Verification and deferrals
+
+Combined local checks: lint/typecheck/build PASS; unit policy tests cover both/one/partially configured provider credentials. Integration tests cover real PostgreSQL Google sign-in with a substituted provider exchange, allowlist/verification/state/session negatives, GitHub authorization initiation and rejection of an unconfigured provider. Browser tests cover Google/GitHub initiation, card mode switching, generic errors, expiry/logout/revocation, anonymous private denial and desktop/mobile accessibility. Exact final counts/commands are recorded in PROGRESS.
+
+**GitHub callback completion, denied/unverified GitHub identities, same-email cross-provider behavior and live GitHub OAuth remain unverified.** An initiation URL/state assertion does not prove successful GitHub login. No new provider credentials were configured or external identity settings changed during this review. Email/SAML/passkey/Apple/ChatGPT integration is deferred. The earlier S03 technical review covered the Google-only implementation; it must not be presented as approval of the expanded surface.
+
+Before future integration: introduce separate contracts for social redirects, email challenges and passkeys rather than forcing unlike protocols into a social-provider adapter; centralize public metadata and server credential resolution; validate every new method end to end, including admission, CSRF/state/replay, identity linking, session expiry and two-user isolation. These are recommendations for later work, not implemented capabilities.

@@ -2,6 +2,7 @@ import "server-only";
 import { z } from "zod";
 import type { LedgerAuth } from "./create-auth";
 import { isAllowedIdentity, type AuthConfig } from "./policy";
+import { defaultAuthRegistry } from "./adapters";
 
 export function authJSON(body: unknown, status = 200) {
   return Response.json(body, {
@@ -56,7 +57,7 @@ async function readSmallBody(request: Request): Promise<string | null> {
 }
 const signInInput = z
   .object({
-    provider: z.literal("google"),
+    provider: z.enum(["google", "github"]),
     callbackURL: z.literal("/").optional(),
     errorCallbackURL: z.literal("/login?error=signin").optional(),
   })
@@ -68,7 +69,7 @@ export async function handleAuthRequest(
 ) {
   const path = new URL(request.url).pathname;
   const isCallback =
-    request.method === "GET" && path === "/api/auth/callback/google";
+    request.method === "GET" && defaultAuthRegistry.isCallbackPath(path);
   const isSignIn =
     request.method === "POST" && path === "/api/auth/sign-in/social";
   const isSignOut = request.method === "POST" && path === "/api/auth/sign-out";
@@ -100,7 +101,11 @@ export async function handleAuthRequest(
     try {
       if (isSignIn) {
         const input = signInInput.safeParse(JSON.parse(raw));
-        if (!input.success) return authJSON({ error: "invalid_request" }, 400);
+        if (
+          !input.success ||
+          !config.configuredProviders.includes(input.data.provider)
+        )
+          return authJSON({ error: "invalid_request" }, 400);
         body = JSON.stringify({
           ...input.data,
           callbackURL: `${config.baseURL}/`,
