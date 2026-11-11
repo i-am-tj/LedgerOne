@@ -79,7 +79,7 @@ Status: locally verified, awaiting review; details and limitations in `docs/stor
 
 **ID:** P1-S03 | **Title:** Authentication and sessions | **Epic:** P1-E2 | **Priority:** P0 | **Dependencies:** P1-S02 reviewed and merged; security review
 
-Status: implemented locally, automated evidence in `docs/stories/P1-S03.md`; live Google acceptance and security review pending.
+Status: implemented locally; live owner Google sign-in and agent technical review recorded (see `docs/stories/P1-S03.md` and `docs/security/S03_REVIEW.md`); reviewed merge remains pending.
 
 **User story:** As the owner, I want to sign in privately.
 
@@ -111,6 +111,8 @@ Status: implemented locally, automated evidence in `docs/stories/P1-S03.md`; liv
 
 **ID:** P1-S04 | **Title:** User-scoped authorization and audit baseline | **Epic:** P1-E2 | **Priority:** P0 | **Dependencies:** P1-S03 reviewed and merged
 
+Status: ownership/audit foundation locally verified; see `docs/stories/P1-S04.md`. Actual account/transaction isolation cases depend on S05–S08 and remain release-blocking.
+
 **User story:** As the owner, I want to keep my data isolated.
 
 **Inputs (data/API/preconditions):** User model, ownership contracts and reviewed audit policy.
@@ -119,10 +121,11 @@ Status: implemented locally, automated evidence in `docs/stories/P1-S03.md`; liv
 
 **Implementation tasks:**
 
-- [ ] Enforce owner at boundaries and foreign keys.
-- [ ] add audit and trace IDs.
-- [ ] exercise negative cases.
-- [ ] Update docs/traceability and record check output, migration recovery and review evidence.
+- [x] Enforce owner at current Workspace boundaries and foreign keys.
+- [x] Add atomic audit and sanitized trace IDs.
+- [x] Exercise two-user current-resource negatives and rollback.
+- [x] Update docs/traceability, check output and migration recovery.
+- [ ] Record review/merge and financial-specific dependency follow-through with S05–S08.
 
 **Acceptance criteria (Given/When/Then):** Given user A guesses user B IDs, when read/write requests execute, then access is denied with no business side effects.
 

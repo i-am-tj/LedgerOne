@@ -25,6 +25,8 @@ model User {
   updatedAt     DateTime      @updatedAt
   sessions      AuthSession[]
   accounts      AuthAccount[]
+  workspace     Workspace?
+  auditEvents   AuditEvent[]
 
   @@map("auth_user")
 }
@@ -87,4 +89,33 @@ model AuthRateLimit {
   lastRequest BigInt
 
   @@map("auth_rate_limit")
+}
+
+model Workspace {
+  id        String       @id @default(uuid()) @db.Uuid
+  ownerId   String       @unique
+  name      String
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  owner     User         @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  audit     AuditEvent[]
+
+  @@unique([id, ownerId])
+  @@map("workspace")
+}
+
+model AuditEvent {
+  id          String    @id @default(uuid()) @db.Uuid
+  ownerId     String
+  actorId     String
+  workspaceId String    @db.Uuid
+  requestId   String    @db.Uuid
+  action      String
+  occurredAt  DateTime  @default(now())
+  owner       User      @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  workspace   Workspace @relation(fields: [workspaceId, ownerId], references: [id, ownerId], onDelete: Restrict)
+
+  @@index([ownerId, occurredAt, id])
+  @@index([requestId])
+  @@map("audit_event")
 }

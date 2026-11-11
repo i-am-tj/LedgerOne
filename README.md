@@ -90,3 +90,9 @@ npm run test:e2e
 ```
 
 Tests never use real Google credentials: the integration provider exchange is substituted only inside its test instance, and browsers use signed sessions seeded directly into the isolated DB. There is no deployed test-login provider or bypass flag. Live owner Google sign-in/callback is verified; the setup guide records the remaining manual acceptance checklist. P1-S04 entity ownership/audit and the financial ledger are not implemented by this story.
+
+## P1-S04 ownership and audit API foundation
+
+Apply `npm run db:migrate` and regenerate Prisma before using schema version 3. Workspace endpoints require the current S03 session: GET/POST `/api/workspaces`, GET/PATCH `/api/workspaces/[id]`, and GET `/api/audit` (latest 50 owned events). Create/rename input is strict `{name}` JSON, with the exact configured Origin; owner IDs are always derived server-side. No workspace UI or financial account/transaction API exists yet. API reads return empty arrays until an owner explicitly creates data.
+
+Successful mutations and minimal append-only audit commit together; audit failure rolls back the mutation. Cross-user reads/writes are denied, and supported handlers return a fresh `X-Request-ID` correlated to sanitized traces. See `docs/stories/P1-S04.md` and ADR-003 for security/retention/recovery limits. Integration/browser tests use the separate `_test` DB and intentionally retain immutable audited fixtures; production DB role separation remains a deployment prerequisite. The full Phase 1 gate still requires actual ledger and account/transaction isolation evidence.

@@ -1,6 +1,6 @@
 # ADR-002 — Google-only admission and database-backed sessions
 
-Date: 2026-11-11. Story: P1-S03. Status: IMPLEMENTED LOCALLY, LIVE OWNER GOOGLE SIGN-IN VERIFIED; SECURITY REVIEW PENDING. This is a reviewable decision record, not evidence of an independent security review or merged PR.
+Date: 2026-11-11. Story: P1-S03. Status: IMPLEMENTED LOCALLY, LIVE OWNER GOOGLE SIGN-IN VERIFIED; AGENT TECHNICAL REVIEW RECORDED; MERGE PENDING. This is a reviewable decision record, not evidence of an independent security review or merged PR.
 
 ## Choice and rationale
 
@@ -44,3 +44,7 @@ Migration `202611110002_identity` is additive and advances the platform marker t
 Changing `BETTER_AUTH_SECRET` invalidates existing signed cookies and prevents reading credentials encrypted under the old key unless a deliberate library-supported key rotation is configured. For this single-key initial setup, revoke sessions and require Google reauthentication under a reviewed recovery plan; keep the original secret in approved secure backup until retained encrypted records no longer require it. No rotation was executed here. Password authentication, email changes, public registration and deleting users are disabled.
 
 Automatic expiry denial is implemented; a scheduled purge/retention policy for expired session/state/rate-limit records and sanitized audit history is not. These records remain in the local database until the reviewed maintenance/privacy work. No public deployment or real provider login is approved by automated tests. Security review, real Google consent/callback acceptance, remote CI/review and entity isolation remain explicit outstanding work.
+
+## Technical review checkpoint
+
+Agent-owned technical review is recorded in `docs/security/S03_REVIEW.md` (e1f6d4b), with no blocker for continued local development and explicit release prerequisites. This is not an independent external audit or reviewed remote merge. P1-S04 subsequently implements current-resource ownership/audit; actual financial entity isolation still requires S05–S08 evidence.

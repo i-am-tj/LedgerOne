@@ -41,7 +41,7 @@ export default defineConfig({
       BETTER_AUTH_SECRET: secret,
       GOOGLE_CLIENT_ID: "e2e-google-placeholder",
       GOOGLE_CLIENT_SECRET: "e2e-google-placeholder",
-      AUTH_ALLOWED_EMAILS: "e2e-owner@ledgerone.test",
+      AUTH_ALLOWED_EMAILS: "e2e-owner@ledgerone.test,e2e-other@ledgerone.test",
       NEXT_TELEMETRY_DISABLED: "1",
     },
   },

@@ -51,3 +51,7 @@ Budgets use classified consumption in the budget period, including card purchase
 ## Approval boundaries
 
 INR functional currency is fixed after the first posted journal; changing it requires a future migration policy. Manual rates only initially. Historical flows retain locked values; current net worth can use a dated valuation layer with visible missing/stale rates. Weighted-average monetary FX carrying cost, half-even rounding cap, investment fee capitalization/cost-lot convention, opening equity, refund-period behavior and revaluation treatment require explicit accounting review before their implementation. See DECISIONS_NEEDED.md.
+
+## Core approval checkpoint — 2026-11-11
+
+The user approved INR as fixed functional currency, retained original foreign-currency quantities, the normal debit/credit signs above, and linked-reversal corrections for posted journals. Approval is policy evidence, not implementation. Detailed FX rounding/carrying-cost and investment choices remain pending their explicit review; S04 introduces no financial schema or postings.

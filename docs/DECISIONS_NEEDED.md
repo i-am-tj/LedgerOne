@@ -28,3 +28,9 @@ The user explicitly requested P1-S02 after Docker became available. This authori
 D03's provider selection is settled: Google-only, exact verified owner allowlist. Better Auth 1.7.20 is the justified supported alternative (ADR-002), with fixed eight-hour database sessions and no cookie cache/refresh. The user authorized S03, initially chose to configure Google afterward, then asked for client creation fields and exact files; `docs/setup/GOOGLE_AUTH.md` provides them. Local `.env` slots and an application secret were created without printing or committing secrets. The owner email and Google client values are user-provided, never inferred from Git identity.
 
 Outstanding: security review of ADR-002 and the auth implementation, plus live Google consent/callback acceptance after private configuration. The pending checklist is not waived by mock-provider tests. No public deployment, paid service, real-bank integration, accounting approval, audit retention choice or user-data deletion policy has been inferred from this story.
+
+## Core accounting approval and S04 retention default
+
+During this increment the user explicitly approved the proposed core ledger defaults: INR fixed functional currency; original foreign-currency quantities retained separately; asset/expense debit-normal and liability/equity/income credit-normal; posted history corrected by linked reversals. This resolves that D04 approval prerequisite for S05. It does not approve deployment, D05's detailed FX carrying-cost/rounding choices, or D06's investment cost policy. S05 code has not begun.
+
+ADR-003 documents the S04 audit default: retain immutable mutation history until the reviewed owner export/delete lifecycle; do not automatically purge or rewrite it. Operational trace retention must be selected/configured before deployment. S03 technical review is recorded by the agent, not left as an unexplained user auditing task; independent peer review/remote merge is still not fabricated.

@@ -1,0 +1,17 @@
+# ADR-003 — Owner-bound workspaces and atomic minimal audit
+
+Date: 2026-11-11. Story: P1-S04. Status: implemented locally; pending review/merge, not independent audit.
+
+A verified email allowlist controls admission. It does not grant access to other users' data. Each User may explicitly create one owned Workspace; future monetary accounts/journals must reference the same ownership container using composite keys. No sharing or owner transfer exists. HTTP handlers derive the owner from the current S03 session, never request body/query/headers; server-only services repeat owner predicates and return indistinguishable missing/foreign responses.
+
+Successful workspace creation/rename and AuditEvent insert run in one transaction; an audit failure rolls the write back. Events store only owner/actor, workspace ID, request UUID, action and timestamp. Actor must equal owner in the current single-owner model; composite FK prevents another owner's workspace link. Audit update/delete/truncate and workspace owner/ID changes are blocked by SQL triggers. These are normal-role application invariants, not cryptographic tamper evidence; an elevated DB/migration owner can alter database objects. Separate least-privilege production credentials remain a deployment prerequisite.
+
+The current audit action set is workspace.created/workspace.renamed. No raw amounts, before/after names, credential/session data, IP, user agent or arbitrary metadata/body is accepted into this audit schema. It is not a full event-sourcing log. Financial journals must retain their own immutable accounting facts and transactional audit in S05–S08. Identity/session events and global request monitoring are not silently asserted to be covered by workspace audit.
+
+Unauthorized attempts produce no business or success-audit DB mutation. They receive a fresh request UUID and sanitized operational trace (fixed route, safe method, status, duration); there is no victim identifier in that log. Next raw request logging is suppressed on owned/auth/session APIs. Traces ignore supplied request IDs; a broken trace transport cannot convert a committed success into a retry-inducing failure. Audit read is owner-scoped, latest 50 events; full export/pagination belongs to the portability workflow.
+
+Retention default is conservative: no automatic deletion of immutable mutation history until the reviewed owner export/delete policy (D08). No background purge or blanket privacy compliance is claimed. Operational trace retention and access control must be configured with deployment monitoring; no hosted logs are provisioned here. Audited test fixtures remain in the isolated disposable DB, never the development/personal DB; tests do not disable audit triggers to clean them.
+
+Migration 202611110003_ownership_audit is additive and advances schema readiness to 3. Recovery preserves data/triggers and uses reviewed forward repair. Workspace APIs have no UI in this increment. The explicit current-resource choice resolves a dependency issue: financial accounts/transactions do not exist before S05–S08. Their ownership/FK/IDOR tests are still required before the Phase 1 gate can pass. S04 does not substitute a synthetic financial test or silently claim those scenarios work.
+
+A request trace UUID is correlation metadata, not an idempotency key. Financial commands must add stable operation keys, journal balancing/immutability and atomic domain audit in their own stories; none of those invariants is supplied by workspace CRUD.

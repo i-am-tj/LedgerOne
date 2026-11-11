@@ -60,3 +60,7 @@ R01's responsive shell, theme, keyboard navigation and shared visible states are
 ## P1-S03 product evidence
 
 R02 now has an implemented Google-only login/logout boundary, verified exact owner allowlist, database sessions, absolute eight-hour expiry, per-page/API checks, safe public configuration/error states and automated negative/session tests. User/provider credentials are still configured privately and live Google acceptance is pending. Public registration, password login and implicit account linking are not available. Real two-user financial entity isolation remains P1-S04; the full R02 requirement and Phase 1 gate are not complete. See `docs/setup/GOOGLE_AUTH.md` and ADR-002 for setup/policy review.
+
+## P1-S04 product evidence
+
+R02 gains an implemented resource boundary: allowed identities can access only their own Workspace and latest audit events. R03's audit foundation records workspace mutations atomically and rejects history edits. These APIs have no new UI and contain no monetary account/transaction behavior. Financial R02/R03 tests and all accounting requirements remain pending S05–S08; see the explicit dependency reconciliation in the S04 story. No deployment or full Phase 1 PASS is claimed.

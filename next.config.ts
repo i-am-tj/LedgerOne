@@ -5,7 +5,9 @@ const config: NextConfig = {
     fetches: { fullUrl: false },
     serverFunctions: false,
     browserToTerminal: false,
-    incomingRequests: { ignore: [/\/api\/auth(?:\/|$)/] },
+    incomingRequests: {
+      ignore: [/\/api\/(?:auth|session|workspaces|audit)(?:\/|$)/],
+    },
   },
   async headers() {
     return [

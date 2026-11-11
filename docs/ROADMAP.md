@@ -20,3 +20,7 @@ The user's instruction to proceed with S02 authorizes advancement from the local
 ## P1-S03 checkpoint
 
 The user authorized S03. Google-only admission and fixed database sessions are implemented; automated evidence and security policy are in `docs/stories/P1-S03.md` and ADR-002. The user is configuring Google locally after receiving exact Console fields and `.env` instructions. Live Google acceptance, security review and remote merge are not claimed. Next is P1-S04 ownership/audit, after S03 acceptance/review. Phase 1 remains blocked by those prerequisites and all ledger stories; no Phase 2 work starts.
+
+## P1-S04 checkpoint
+
+S03's agent-owned technical review is recorded at `docs/security/S03_REVIEW.md` (commit e1f6d4b); it found no blocker for continued local development and lists release prerequisites without claiming an independent audit. S04 ownership/audit foundation is implemented with passing local two-user Workspace evidence, pending review. Financial account/transaction-specific isolation remains required with S05–S08. User approved the core INR/sign/reversal defaults in the accounting question during S04; no S05 implementation has started. Next story: P1-S05, after this increment's review; full phase gate remains blocked.
