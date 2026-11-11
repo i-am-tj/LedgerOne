@@ -14,6 +14,14 @@ import {
   type PostCommand,
 } from "./contract";
 
+import {
+  remaining,
+  retryable,
+  retryDelay,
+  sqlState,
+  withinDeadline,
+} from "./retry";
+
 type Actor = Readonly<{ ownerId: string; requestId: string }>;
 export type PostResult = Readonly<{
   operationId: string;
@@ -31,6 +39,9 @@ export type PostResult = Readonly<{
   }[];
 }>;
 export type Stage =
+  | "connected"
+  | "serialization"
+  | "deadlock"
   | "begin"
   | "receipt"
   | "draft"
@@ -136,10 +147,11 @@ export class PostExecutor {
     key: string,
     command: PostCommand,
   ): Promise<{ result: PostResult; replayed: boolean }> {
-    const first = await authorize();
+    const deadline = performance.now() + 10000;
+    const first = await withinDeadline(authorize(), deadline);
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
-        await this.attest();
+        await withinDeadline(this.attest(), deadline);
         return await this.attempt(
           async () => {
             const actor = await authorize();
@@ -151,17 +163,16 @@ export class PostExecutor {
           key,
           command,
           attempt,
+          deadline,
         );
       } catch (error) {
-        const receiptConflict =
-          sqlState(error) === "23505" &&
-          typeof error === "object" &&
-          error !== null &&
-          "constraint" in error &&
-          error.constraint ===
-            "ledger_operation_workspaceId_ownerId_idempotencyKey_key";
-        if (attempt < 3 && (sqlState(error) === "40001" || receiptConflict))
+        const delay = retryable(error)
+          ? retryDelay(attempt, deadline - performance.now())
+          : null;
+        if (delay !== null) {
+          await new Promise((r) => setTimeout(r, delay));
           continue;
+        }
         if (error instanceof CommandError) throw error;
         throw unavailable();
       }
@@ -174,16 +185,34 @@ export class PostExecutor {
     key: string,
     command: PostCommand,
     attempt: number,
+    deadline: number,
   ): Promise<{ result: PostResult; replayed: boolean }> {
-    const actor = await authorize(),
+    const actor = await withinDeadline(authorize(), deadline),
       hash = requestHash(actor.ownerId, workspace, command);
-    const c = await this.pool.connect();
-    let committing = false;
+    const c = await withinDeadline(this.pool.connect(), deadline, (late) =>
+      late.release(true),
+    );
+    let committing = false,
+      committed = false,
+      destroy = false;
+    const onFault = () => {
+      destroy = true;
+    };
+    c.on("error", onFault);
     try {
+      await this.probe?.("connected", c, attempt);
+      remaining(deadline);
       await c.query("BEGIN ISOLATION LEVEL SERIALIZABLE");
       await c.query("SET LOCAL search_path=pg_catalog,public,pg_temp");
-      await c.query("SET LOCAL statement_timeout='2000ms'");
-      await c.query("SET LOCAL lock_timeout='1500ms'");
+      const budget = remaining(deadline);
+      await c.query(
+        "SELECT set_config('statement_timeout',$1,true),set_config('lock_timeout',$2,true),set_config('transaction_timeout',$3,true)",
+        [
+          String(Math.min(2000, budget)),
+          String(Math.min(1500, budget)),
+          String(budget),
+        ],
+      );
       await this.probe?.("begin", c, attempt);
       if (
         !(
@@ -204,6 +233,7 @@ export class PostExecutor {
         const result = await outcome(c, actor, workspace, old.rows[0].id);
         committing = true;
         await c.query("COMMIT");
+        committed = true;
         return { result, replayed: true };
       }
       const op = randomUUID(),
@@ -273,31 +303,32 @@ export class PostExecutor {
       const result = await outcome(c, actor, workspace, op);
       await this.probe?.("beforeCommit", c, attempt);
       committing = true;
+      remaining(deadline);
       await c.query("COMMIT");
+      committed = true;
       await this.probe?.("committed", c, attempt);
       return { result, replayed: false };
     } catch (error) {
-      if (!committing || sqlState(error)) {
-        try {
-          await c.query("ROLLBACK");
-        } catch {
-          this.failed = true;
-        }
+      // A transport failure at COMMIT has no known outcome. Never retry it here.
+      if (committed || (committing && !sqlState(error))) {
+        destroy = true;
+        throw unavailable();
       }
+      try {
+        if (!destroy) await c.query("ROLLBACK");
+      } catch {
+        destroy = true;
+      }
+      if (sqlState(error) === "40001")
+        await this.probe?.("serialization", c, attempt);
+      if (sqlState(error) === "40P01")
+        await this.probe?.("deadlock", c, attempt);
       throw error;
     } finally {
-      c.release(committing ? true : undefined);
+      c.release(destroy);
+      c.removeListener("error", onFault);
     }
   }
-}
-function sqlState(error: unknown): string | undefined {
-  return typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    typeof error.code === "string" &&
-    /^[0-9A-Z]{5}$/.test(error.code)
-    ? error.code
-    : undefined;
 }
 async function outcome(
   c: pg.PoolClient,

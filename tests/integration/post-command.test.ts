@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import type pg from "pg";
 import { beforeAll, afterAll, it, expect } from "vitest";
 import { postHarness } from "../support/post-harness";
 let h: Awaited<ReturnType<typeof postHarness>>;
@@ -7,6 +8,142 @@ beforeAll(async () => {
 }, 30000);
 afterAll(async () => {
   await h?.cleanup();
+});
+
+it.each([false, true])(
+  "B-T04 real 40001 whole-transaction retry/exhaustion (exhaust=%s)",
+  async (exhaust) => {
+    const before = await counts(),
+      seen: number[] = [];
+    h.setProbe(async (stage, _c, attempt) => {
+      if (stage === "receipt" && (exhaust || attempt === 1))
+        await h.admin.query(
+          "UPDATE ledger_account SET name=name || 'x' WHERE id=$1",
+          [h.users[0]!.bank],
+        );
+      if (stage === "serialization") seen.push(attempt);
+    });
+    try {
+      const result = await h.api(0, randomUUID(), h.payload());
+      expect(result.status).toBe(exhaust ? 503 : 201);
+      expect(seen).toEqual(exhaust ? [1, 2, 3] : [1]);
+      const after = await counts();
+      if (exhaust) expect(after).toEqual(before);
+      else expect(after.audits - before.audits).toBe(1);
+    } finally {
+      h.setProbe(undefined);
+    }
+  },
+);
+
+it("B-T04 real 40P01 command victim retries fully and audit commits once", async () => {
+  const before = await counts(),
+    seen: number[] = [];
+  let cleanup: Promise<void> | undefined;
+  h.setProbe(async (stage, c, attempt) => {
+    if (stage === "deadlock") seen.push(attempt);
+    if (stage !== "locked" || attempt !== 1) return;
+    const contender = await h.admin.connect();
+    await contender.query(
+      "BEGIN; SET LOCAL deadlock_timeout='10s'; SELECT pg_advisory_xact_lock(76233441)",
+    );
+    // Contender waits on our account; our command waits on its advisory lock.
+    const waiting = contender.query(
+      "SELECT id FROM ledger_account WHERE id=$1 FOR UPDATE",
+      [h.users[0]!.bank],
+    );
+    cleanup = waiting
+      .then(async () => {
+        await contender.query("ROLLBACK");
+      })
+      .finally(() => contender.release());
+    await c.query("SELECT pg_advisory_xact_lock(76233441)");
+  });
+  try {
+    const response = await h.api(0, randomUUID(), h.payload());
+    expect(response.status).toBe(201);
+    expect(seen).toEqual([1]);
+    const after = await counts();
+    expect(after.audits - before.audits).toBe(1);
+    expect(after.receipts - before.receipts).toBe(1);
+  } finally {
+    h.setProbe(undefined);
+    await cleanup;
+  }
+}, 10000);
+
+it("B-T04 statement timeout aborts without partial effects and pooled settings reset", async () => {
+  const before = await counts();
+  let entered = false;
+  h.setProbe(async (stage, c) => {
+    if (stage === "begin") {
+      entered = true;
+      await c.query("SELECT pg_sleep(3)");
+    }
+  });
+  try {
+    expect((await h.api(0, randomUUID(), h.payload())).status).toBe(503);
+    expect(entered).toBe(true);
+    expect(await counts()).toEqual(before);
+  } finally {
+    h.setProbe(undefined);
+  }
+  let checked = false;
+  h.setProbe(async (stage, c) => {
+    if (stage === "connected") {
+      const r = (
+        await c.query(
+          "SELECT current_setting('statement_timeout') AS statement,current_setting('lock_timeout') AS lock,current_setting('transaction_timeout') AS transaction,current_user AS role",
+        )
+      ).rows[0];
+      expect(r).toEqual({
+        statement: "0",
+        lock: "0",
+        transaction: "0",
+        role: h.role,
+      });
+      checked = true;
+    }
+  });
+  try {
+    expect((await h.api(0, randomUUID(), h.payload())).status).toBe(201);
+    expect(checked).toBe(true);
+  } finally {
+    h.setProbe(undefined);
+  }
+}, 10000);
+
+it("B-T04 ambiguous COMMIT transport error destroys connection; fresh replay finds committed result", async () => {
+  const key = randomUUID(),
+    before = await counts();
+  let intercepted = false;
+  h.setProbe(async (stage, c) => {
+    if (stage !== "beforeCommit") return;
+    const original = c.query.bind(c);
+    // Database executes COMMIT; the caller loses its acknowledgement. No SQLSTATE
+    // is fabricated, and the committed rows are independently verified afterward.
+    c.query = (async (...args: unknown[]) => {
+      const result = await (
+        original as (...args: unknown[]) => Promise<unknown>
+      )(...args);
+      if (args[0] === "COMMIT") {
+        intercepted = true;
+        throw Object.assign(new Error("lost ack"), { code: "ECONNRESET" });
+      }
+      return result;
+    }) as pg.PoolClient["query"];
+  });
+  try {
+    expect((await h.api(0, key, h.payload())).status).toBe(503);
+    expect(intercepted).toBe(true);
+  } finally {
+    h.setProbe(undefined);
+  }
+  const replay = await h.api(0, key, h.payload());
+  expect(replay.status).toBe(200);
+  const after = await counts();
+  expect(after.audits - before.audits).toBe(1);
+  expect(after.receipts - before.receipts).toBe(1);
 });
 async function counts() {
   return (
