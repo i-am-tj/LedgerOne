@@ -132,3 +132,143 @@ it("B-T02 session, scope, origin, internal fields and disabled exposure deny wit
     ).toBe(status);
   expect(await counts()).toEqual(before);
 });
+
+it("B-T03 replays immutable history after archive/rename while rejecting a new post", async () => {
+  const key = randomUUID(),
+    payload = h.payload(),
+    first = await h.api(0, key, payload),
+    result = await first.json();
+  expect(first.status).toBe(201);
+  const before = await counts();
+  await h.admin.query(
+    "UPDATE ledger_account SET name='Renamed',\"archivedAt\"=NOW() WHERE id=$1",
+    [h.users[0]!.bank],
+  );
+  try {
+    const replay = await h.api(0, key, {
+      ...payload,
+      legs: [...payload.legs].reverse(),
+    });
+    expect(replay.status).toBe(200);
+    expect(await replay.json()).toEqual(result);
+    expect((await h.api(0, randomUUID(), payload)).status).toBe(409);
+    expect(await counts()).toEqual(before);
+    expect(
+      (await h.api(0, key, { ...payload, reason: "Changed" })).status,
+    ).toBe(409);
+  } finally {
+    await h.admin.query(
+      'UPDATE ledger_account SET "archivedAt"=NULL WHERE id=$1',
+      [h.users[0]!.bank],
+    );
+  }
+});
+it("B-T03 concurrent same-key retries use fresh transactions and commit exactly once", async () => {
+  const key = randomUUID(),
+    before = await counts(),
+    seen: { attempt: number; tx: string }[] = [];
+  let release!: () => void;
+  const ready = new Promise<void>((r) => {
+    release = r;
+  });
+  let arrived = 0;
+  h.setProbe(async (stage, c, attempt) => {
+    if (stage === "begin") {
+      seen.push({
+        attempt,
+        tx: (await c.query("SELECT txid_current()::text AS tx")).rows[0].tx,
+      });
+      if (attempt === 1) {
+        if (++arrived === 4) release();
+        await ready;
+      }
+    }
+  });
+  try {
+    const responses = await Promise.all(
+      Array.from({ length: 4 }, () => h.api(0, key, h.payload())),
+    );
+    expect(responses.map((r) => r.status).sort()).toEqual([200, 200, 200, 201]);
+    const results = await Promise.all(responses.map((r) => r.json()));
+    for (const result of results) expect(result).toEqual(results[0]);
+    const after = await counts();
+    expect(after).toEqual({
+      journals: before.journals + 1,
+      postings: before.postings + 2,
+      receipts: before.receipts + 1,
+      audits: before.audits + 1,
+    });
+    expect(new Set(seen.map((s) => s.tx)).size).toBe(seen.length);
+    expect(seen.some((s) => s.attempt > 1)).toBe(true);
+  } finally {
+    h.setProbe(undefined);
+  }
+});
+it("B-T03 concurrent key/payload conflict has one winner and no loser effects", async () => {
+  const key = randomUUID(),
+    before = await counts();
+  const responses = await Promise.all([
+    h.api(0, key, h.payload()),
+    h.api(0, key, { ...h.payload(), reason: "Different" }),
+  ]);
+  expect(responses.map((r) => r.status).sort()).toEqual([201, 409]);
+  const after = await counts();
+  expect(after.receipts - before.receipts).toBe(1);
+  expect(after.audits - before.audits).toBe(1);
+});
+it("B-T03 uncertain committed response recovers original result on fresh same-key request", async () => {
+  const key = randomUUID(),
+    before = await counts();
+  let original: unknown;
+  h.setProbe(async (stage, c) => {
+    if (stage === "committed") {
+      original = (
+        await c.query(
+          'SELECT id FROM ledger_operation WHERE "idempotencyKey"=$1',
+          [key],
+        )
+      ).rows[0].id;
+      throw new Error("response connection lost");
+    }
+  });
+  try {
+    expect((await h.api(0, key, h.payload())).status).toBe(503);
+  } finally {
+    h.setProbe(undefined);
+  }
+  const replay = await h.api(0, key, h.payload());
+  expect(replay.status).toBe(200);
+  expect((await replay.json()).operationId).toBe(original);
+  const after = await counts();
+  expect(after.receipts - before.receipts).toBe(1);
+  expect(after.audits - before.audits).toBe(1);
+});
+it("B-T03 aborted attempt with no durable receipt permits one new first commit", async () => {
+  const key = randomUUID(),
+    before = await counts();
+  h.setProbe(async (stage) => {
+    if (stage === "beforeCommit") throw new Error("not committed");
+  });
+  try {
+    expect((await h.api(0, key, h.payload())).status).toBe(503);
+  } finally {
+    h.setProbe(undefined);
+  }
+  expect(await counts()).toEqual(before);
+  expect((await h.api(0, key, h.payload())).status).toBe(201);
+  expect((await h.api(0, key, h.payload())).status).toBe(200);
+});
+it("B-T03 duplicate posting multiplicity survives canonical replay", async () => {
+  const p = h.payload(),
+    payload = { ...p, legs: [...p.legs, ...p.legs] },
+    key = randomUUID();
+  const first = await h.api(0, key, payload),
+    result = await first.json();
+  expect(first.status).toBe(201);
+  expect(result.legs).toHaveLength(4);
+  expect(
+    await (
+      await h.api(0, key, { ...payload, legs: payload.legs.reverse() })
+    ).json(),
+  ).toEqual(result);
+});

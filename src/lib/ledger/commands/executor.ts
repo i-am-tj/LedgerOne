@@ -136,7 +136,45 @@ export class PostExecutor {
     key: string,
     command: PostCommand,
   ): Promise<{ result: PostResult; replayed: boolean }> {
-    await this.attest();
+    const first = await authorize();
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        await this.attest();
+        return await this.attempt(
+          async () => {
+            const actor = await authorize();
+            if (actor.ownerId !== first.ownerId)
+              throw new CommandError(401, "unauthorized");
+            return actor;
+          },
+          workspace,
+          key,
+          command,
+          attempt,
+        );
+      } catch (error) {
+        const receiptConflict =
+          sqlState(error) === "23505" &&
+          typeof error === "object" &&
+          error !== null &&
+          "constraint" in error &&
+          error.constraint ===
+            "ledger_operation_workspaceId_ownerId_idempotencyKey_key";
+        if (attempt < 3 && (sqlState(error) === "40001" || receiptConflict))
+          continue;
+        if (error instanceof CommandError) throw error;
+        throw unavailable();
+      }
+    }
+    throw unavailable();
+  }
+  private async attempt(
+    authorize: () => Promise<Actor>,
+    workspace: string,
+    key: string,
+    command: PostCommand,
+    attempt: number,
+  ): Promise<{ result: PostResult; replayed: boolean }> {
     const actor = await authorize(),
       hash = requestHash(actor.ownerId, workspace, command);
     const c = await this.pool.connect();
@@ -146,7 +184,7 @@ export class PostExecutor {
       await c.query("SET LOCAL search_path=pg_catalog,public,pg_temp");
       await c.query("SET LOCAL statement_timeout='2000ms'");
       await c.query("SET LOCAL lock_timeout='1500ms'");
-      await this.probe?.("begin", c, 1);
+      await this.probe?.("begin", c, attempt);
       if (
         !(
           await c.query(
@@ -174,7 +212,7 @@ export class PostExecutor {
         'INSERT INTO ledger_operation(id,"workspaceId","ownerId","idempotencyKey","requestHash",kind) VALUES($1,$2,$3,$4,$5,\'POST\')',
         [op, workspace, actor.ownerId, key, hash],
       );
-      await this.probe?.("receipt", c, 1);
+      await this.probe?.("receipt", c, attempt);
       const ids = [...new Set(command.legs.map((l) => l.accountId))].sort();
       const accounts = await c.query(
         'SELECT id,"archivedAt","currencyCode" FROM ledger_account WHERE "workspaceId"=$1 AND "ownerId"=$2 AND id=ANY($3::uuid[]) ORDER BY id FOR UPDATE',
@@ -188,7 +226,7 @@ export class PostExecutor {
         )
       )
         throw new CommandError(409, "account_unavailable");
-      await this.probe?.("locked", c, 1);
+      await this.probe?.("locked", c, attempt);
       await c.query(
         'INSERT INTO journal(id,"workspaceId","ownerId",description,"effectiveAt") VALUES($1,$2,$3,$4,$5)',
         [
@@ -199,7 +237,7 @@ export class PostExecutor {
           command.effectiveAt,
         ],
       );
-      await this.probe?.("draft", c, 1);
+      await this.probe?.("draft", c, attempt);
       for (const l of command.legs)
         await c.query(
           'INSERT INTO posting(id,"journalId","workspaceId","ownerId","accountId","currencyCode",side,"nativeMinor","functionalMinor") VALUES($1,$2,$3,$4,$5,\'INR\',$6,$7,$7)',
@@ -213,12 +251,12 @@ export class PostExecutor {
             l.minor,
           ],
         );
-      await this.probe?.("postings", c, 1);
+      await this.probe?.("postings", c, attempt);
       await c.query(
         'UPDATE journal SET status=\'POSTED\',"postedAt"=clock_timestamp(),"operationId"=$1 WHERE id=$2 AND "workspaceId"=$3 AND "ownerId"=$4',
         [op, journal, workspace, actor.ownerId],
       );
-      await this.probe?.("sealed", c, 1);
+      await this.probe?.("sealed", c, attempt);
       await c.query(
         'INSERT INTO audit_event(id,"workspaceId","ownerId","actorId","requestId",action,"operationId","targetJournalId",reason) VALUES($1,$2,$3,$3,$4,\'ledger.posted\',$5,$6,$7)',
         [
@@ -231,12 +269,12 @@ export class PostExecutor {
           command.reason,
         ],
       );
-      await this.probe?.("audit", c, 1);
+      await this.probe?.("audit", c, attempt);
       const result = await outcome(c, actor, workspace, op);
-      await this.probe?.("beforeCommit", c, 1);
+      await this.probe?.("beforeCommit", c, attempt);
       committing = true;
       await c.query("COMMIT");
-      await this.probe?.("committed", c, 1);
+      await this.probe?.("committed", c, attempt);
       return { result, replayed: false };
     } catch (error) {
       if (!committing || sqlState(error)) {
@@ -246,8 +284,7 @@ export class PostExecutor {
           this.failed = true;
         }
       }
-      if (error instanceof CommandError) throw error;
-      throw unavailable();
+      throw error;
     } finally {
       c.release(committing ? true : undefined);
     }
