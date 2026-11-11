@@ -32,3 +32,13 @@ P1-S04A interrupts the S04→S05 transition at the user's request: Supabase prod
 ## S05 checkpoint
 
 User authorized S05 after the successful remote foundation pipeline and approved staged foreign-currency schema support. The exact owned schema, deferred balancing, concurrency guards, opening/reversal structure and scoped reads are implemented with local evidence recorded in PROGRESS. Accounting/security peer review and merge precede S06. S06–S09 and the phase gate remain pending; no Phase 2 work starts.
+
+## S05 → S06 reviewed delivery
+
+Remote tracking is authorized and established under Phase 1 milestone #1. The [handoff](HANDOFF_S05_S06.md) maps P1-E3 sub-epics, findings and four ordered S06 slices. S05 PR #1 awaits the user’s completed accounting/security review and reviewed merge. S06A controls/audit → S06B POST → S06C REVERSE/CORRECT → S06D write gate, each with reviewed merge before the next. No S06 code or financial write enablement has begun.
+
+## Confirmed S05 closure and active S06A slice
+
+The owner explicitly confirmed: “It was reviewed by me and merged. So please for anything new use s06 branch or a different handoff branch.” [Human review evidence](https://github.com/i-am-tj/LedgerOne/pull/1#issuecomment-6796866109) records this confirmation without fabricating a native GitHub APPROVED review. PR #1 merged implementation `1243360` at `54efed5e266847ec66c0a54caf15b9c4e5fb358a`; its two original foundation CI checks passed. Tracker #6 is closed as completed. Earlier pending-review statements in historical checkpoints describe the state when written, not the current closure status.
+
+New work is on `feat/p1-s06a-command-controls`, based on the owner's merged main. Post-merge review/handoff documentation was carried onto this separate branch. S06A #8 is the only active implementation slice: migration 007 adds scoped immutable financial audit context and rejects CORRECT's same-operation predecessor; invariant attestation/mutation regressions cover SQL/privilege/migration state. It adds no financial write handler or runtime grant. S06B/C/D remain blocked until the active slice's required checks, human review and reviewed merge. Findings remain open for their full linked acceptance; the complete S06 write gate and Phase 1 gate remain closed.

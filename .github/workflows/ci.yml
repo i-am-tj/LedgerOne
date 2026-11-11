@@ -37,9 +37,10 @@ jobs:
       - run: npm run test:unit
       - run: npm run test:integration
       - run: npm run test:schema
+      - run: npm run ledger:attest
       - run: npm run build
-      - run: npx playwright install --with-deps chromium
-      - run: npm run test:e2e
+      - name: Run all browser regressions with bundled Chromium dependencies
+        run: bash scripts/test-e2e-ci.sh
       - uses: actions/upload-artifact@v4
         if: always()
         with:

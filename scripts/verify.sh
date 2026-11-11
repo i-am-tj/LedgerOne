@@ -86,6 +86,10 @@ if [ "$RUN_PIPELINE" = true ]; then
   npm run test:schema
   pass "Private-schema checks passed"
 
+  info "Attesting the actual test schema against a fresh invariant reference..."
+  npm run ledger:attest
+  pass "Ledger invariant attestation passed"
+
   info "Building production application..."
   npm run build
   pass "Application build succeeded"

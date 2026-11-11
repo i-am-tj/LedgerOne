@@ -7,8 +7,13 @@ import pg from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { loadProfile } from "./load-env";
+import { dropDisposableLedgerDatabase } from "./lib/fresh-ledger-database";
 import { SCHEMA_VERSION } from "../src/lib/schema-version";
 import { databaseSettings } from "../src/lib/profile";
+import {
+  captureLedgerInvariants,
+  assertLedgerInvariants,
+} from "../src/lib/ledger/invariant-manifest";
 
 loadProfile("development");
 const settings = databaseSettings(process.env);
@@ -95,6 +100,18 @@ try {
     0,
     "Private-schema Prisma drift detected (output withheld)",
   );
+  const invariantScope = {
+    schema: "ledgerone",
+    roles: { [migrator]: "MIGRATOR", [appRole]: "RUNTIME" },
+  };
+  const reviewedCatalog = await captureLedgerInvariants(
+    provision,
+    invariantScope,
+  );
+  assertLedgerInvariants(
+    await captureLedgerInvariants(provision, invariantScope),
+    reviewedCatalog,
+  );
   const runtimeURL = new URL(target);
   runtimeURL.username = appRole;
   runtimeURL.password = password;
@@ -167,6 +184,8 @@ try {
   await provision.query(
     `GRANT EXECUTE ON FUNCTION ledgerone.ledger05_assert_journal(uuid), ledgerone.ledger05_assert_operation(uuid) TO "${appRole}"`,
   );
+  const grantCatalog = await captureLedgerInvariants(provision, invariantScope);
+  assert.throws(() => assertLedgerInvariants(grantCatalog, reviewedCatalog));
   const bank = await runtime.account.create({
     data: {
       ...scope,
@@ -213,7 +232,7 @@ try {
           kind: "POST",
         },
       });
-      return tx.journal.update({
+      const posted = await tx.journal.update({
         where: { id: journal.id },
         data: {
           status: "POSTED",
@@ -221,6 +240,18 @@ try {
           operationId: operation.id,
         },
       });
+      await tx.auditEvent.create({
+        data: {
+          ...scope,
+          actorId: userId,
+          requestId: randomUUID(),
+          action: "ledger.posted",
+          operationId: operation.id,
+          targetJournalId: posted.id,
+          reason: "Private-schema fixture",
+        },
+      });
+      return posted;
     });
   }
   const posted = await postFixture(100n);
@@ -239,14 +270,14 @@ try {
     "SELECT count(*)::int AS count FROM information_schema.tables WHERE table_schema='public'",
   );
   assert.equal(publicTables.rows[0].count, 0);
-  console.log(
-    "PASS: fresh private-schema migrations and zero Prisma drift; production financial read-only grants; temporary invoker-role ledger balancing/rollback/immutability; protected audit and denied DDL/replication bypass/history access; no public tables.",
-  );
 } finally {
   await runtime?.$disconnect();
   await provision?.end();
-  if (created) await admin.query(`DROP DATABASE "${dbName}" WITH (FORCE)`);
+  if (created) await dropDisposableLedgerDatabase(admin, dbName);
   await admin.query(`DROP ROLE IF EXISTS "${appRole}"`);
   await admin.query(`DROP ROLE IF EXISTS "${migrator}"`);
   await admin.end();
 }
+console.log(
+  "PASS: fresh private-schema migrations and zero Prisma drift; production financial read-only grants; temporary invoker-role ledger balancing/rollback/immutability; protected audit and denied DDL/replication bypass/history access; no public tables.",
+);

@@ -1,0 +1,38 @@
+# S06 financial write-enablement gate
+
+**Status: NOT RUN. Write-enablement recommendation: FAIL (closed).** S05 owner review/merge is confirmed; only S06A controls are implemented locally and await their own review/merge. The S05 conditional approval is not production readiness. No actual financial POST/REVERSE/CORRECT handler or retry orchestrator is implemented. Migration 007/audit contracts and catalog-attestation primitives exist, with control tests; they do not satisfy the complete command/exposure gate.
+
+Owner story: [P1-S06D](https://github.com/i-am-tj/LedgerOne/issues/11). Parent: [P1-S06](https://github.com/i-am-tj/LedgerOne/issues/7). Required predecessor sequence: S05 reviewed merge → S06A reviewed merge → S06B reviewed merge → S06C reviewed merge → S06D evidence/review. Published financial grants remain SELECT-only and INR-only posting remains enforced.
+
+| Gate | Acceptance evidence required                                                                                                                                                                    | Story                                                     | Status  |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- | ------- |
+| W01  | Real handlers derive actor from verified unexpired allowlisted session; two-user/anonymous/revoked/cross-scope/CSRF attacks leave no effects.                                                   | [P1-S06B](https://github.com/i-am-tj/LedgerOne/issues/9)  | NOT RUN |
+| W02  | Strict bounded payload/date/amount/leg validation rejects unknown owner/internal-ID/draft/revision fields; no float accounting.                                                                 | [P1-S06B](https://github.com/i-am-tj/LedgerOne/issues/9)  | NOT RUN |
+| W03  | Canonical semantic hash + same-key replay/conflict; simultaneous identical requests return one original outcome and one committed receipt/audit; lost-response replay.                          | [P1-S06B](https://github.com/i-am-tj/LedgerOne/issues/9)  | NOT RUN |
+| W04  | Valid POST commits one balanced immutable journal/receipt/linked audit; each staged and deferred-commit failure rolls all back.                                                                 | [P1-S06B](https://github.com/i-am-tj/LedgerOne/issues/9)  | NOT RUN |
+| W05  | REVERSE derives exact opposite original multiset, including duplicates, authorizes/locks exact target and preserves original history.                                                           | [P1-S06C](https://github.com/i-am-tj/LedgerOne/issues/10) | NOT RUN |
+| W06  | CORRECT reverses exact authorized original outside its own replacement operation and commits one replacement/audit atomically; concurrent corrections serialize safely.                         | [P1-S06C](https://github.com/i-am-tj/LedgerOne/issues/10) | NOT RUN |
+| W07  | Additive audit action/context schema and scoped operation/target links; failed audit or journal commit leaves no partial rows; replay adds no duplicate financial audit.                        | [P1-S06A](https://github.com/i-am-tj/LedgerOne/issues/8)  | NOT RUN |
+| W08  | Private atomic drafts are inaccessible outside one command; stale persisted draft ID/revision confirmations reject atomically. Editable saved-draft feature remains excluded.                   | [P1-S06B](https://github.com/i-am-tj/LedgerOne/issues/9)  | NOT RUN |
+| W09  | Deterministic lock order; real 40001/40P01 failures trigger bounded full-transaction retries; success/exhaustion/timeout and no-partial-effect regressions.                                     | [P1-S06B](https://github.com/i-am-tj/LedgerOne/issues/9)  | NOT RUN |
+| W10  | Pre-write fresh-replay attestation fails on disabled triggers, changed CHECK expressions, changed helper bodies/security/search paths/privileges, including connection/unknown-version failure. | [P1-S06A](https://github.com/i-am-tj/LedgerOne/issues/8)  | NOT RUN |
+| W11  | Fresh and upgrade DB public/private-schema migrations additive; applied 001–006 bytes/checksums unchanged; missing/extra/unfinished migration states rejected.                                  | [P1-S06A](https://github.com/i-am-tj/LedgerOne/issues/8)  | NOT RUN |
+| W12  | All A05-01..A05-05 have reviewed resolution or precise deferral outside exposed contract. S07 account metadata mutation/original-label reporting remains excluded.                              | [P1-S06D](https://github.com/i-am-tj/LedgerOne/issues/11) | NOT RUN |
+| W13  | Restricted writer SQL permissions and all exposed actual handlers tested together; published production grants remain read-only until approved enablement.                                      | [P1-S06D](https://github.com/i-am-tj/LedgerOne/issues/11) | NOT RUN |
+| W14  | Existing S05 tests remain green plus format/lint/typecheck/unit/integration/schema/build/relevant E2E; INR FX gate remains enabled.                                                             | [P1-S06D](https://github.com/i-am-tj/LedgerOne/issues/11) | NOT RUN |
+| W15  | Reviewed merges/current-head evidence; accounting/security review accepts gate and deferrals; hosted connectivity/backups/deployment approval separately tracked.                               | [P1-S06D](https://github.com/i-am-tj/LedgerOne/issues/11) | NOT RUN |
+
+## Enablement procedure contract (not executed)
+
+1. Start with handler exposure disabled and published financial runtime grants SELECT-only. Test-only temporary writer grants are permitted solely in disposable guarded databases.
+2. Validate deployed-target invariant/migration/privilege state with the reviewed baseline using a suitably scoped verifier; fail closed on unknown/drift/unavailable state. A fresh scratch DB alone does not attest the target.
+3. Require every row above PASS with commands, assertions, database role/schema, commit and review evidence. A05-04 deferral needs explicit route/contract exclusions, not an untested promise.
+4. Prepare the exact minimal financial writer grants separately and review them. No blanket ALL/DDL/TRUNCATE/superuser/function-owner rights. No service role/RLS bypass substitution for application authorization.
+5. Apply hosted grants or deploy only after the user's separate deployment approval. Re-attest after authorized schema/role changes and before exposure. Define failure response and pool invalidation; migrations never bypass live guard checks.
+6. Record actual enablement and rollback evidence. If any prerequisite fails, keep exposure disabled and the gate FAIL. Production-ready/Phase 1 PASS is not implied by S06 PASS; S07–S09 and operational gates remain.
+
+S06A control tests run; real financial command/handler/retry gate scenarios remain NOT RUN. Existing S05/foundation regressions are reported separately in PROGRESS and the handoff; they do not change any NOT RUN row.
+
+## S06A evidence boundary
+
+Migration 007, scoped audit/correction tests, catalog mutation tests, local target/reference attestation and private-schema restricted-role audit rehearsal are implemented. W07/W10/W11 have partial control evidence only: mandatory actual command audit, hosted target/provisioning and the complete write-enablement integration remain unproved. W01–W15 remain NOT RUN for final gate acceptance. No feature flag or financial runtime DML grant was enabled.

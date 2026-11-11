@@ -129,3 +129,51 @@ These supplement the R01–R20 matrix; no financial invariant or phase gate is i
 | R19 / migration correctness | Applied-file SHA-256 checksums, fresh private-schema zero-drift/restricted-role rehearsal                                                                         | Hosted Supabase migration/connectivity and backup/restore not performed    |
 
 Run `npm run db:migrate:test`, `npm run test:unit`, `npm run test:integration`, `npm run test:schema` (also enforced in CI), then the required lint/types/build/browser pipeline. Keep integration/browser runs sequential on the disposable test DB. Synthetic immutable ledger fixtures remain there; no trigger is disabled to clean them.
+
+## S05 adversarial review traceability — 2026-11-11
+
+See [decision and exact evidence](security/S05_ADVERSARIAL_REVIEW.md) and [extractable independent probes](security/evidence/S05_ADVERSARIAL_PROBES.md). These documentation probes supplement the existing CI suite; they are not yet a new CI job.
+
+| Review ID | Requirement | Demonstrated evidence                                                                                                       | Regression still required                                                                          |
+| --------- | ----------- | --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| A05-01    | R03 / R19   | Draft date/description change keeps revision 2 and stale CAS finalizes; MVCC child-edit controls still pass                 | Full draft-version conflict protocol or validated private command drafts before relying on CAS     |
+| A05-02    | R03         | Same-operation replacement then its reversal satisfies CORRECT receipt counts                                               | Explicit authorized original target and reject own replacement; concurrent corrections/chain tests |
+| A05-03    | R03 / R14   | 89 sampled catalog definitions match local fresh replay; deliberate scratch invariant removal escapes Prisma diff/checksums | Automated invariant catalog mutation/detection tests and writer-role deployment attestation        |
+| A05-04    | R04 / R14   | Account rename changes historical current-name join, not amounts/classes                                                    | S07 historical-context/current-label distinction and authorized atomic metadata audit              |
+| A05-05    | R02 / R14   | Scoped helper negatives and existing workspace/session tests pass; no financial HTTP endpoint exists                        | Actual financial session-derived ownership/CSRF/IDOR/no-side-effect tests in S06/S07               |
+
+New standalone races cover competing finalization at READ COMMITTED, REPEATABLE READ and SERIALIZABLE plus concurrent same-key receipt insertion. They prove one surviving result and safe database rejection, not successful S06 replay/retry orchestration. A complete additional 48-test integration run passed on the probe's fresh six-migration DB. S06 financial audit requires a forward migration extending the current workspace-only action CHECK and recording operation/target context. Existing opening-marker uniqueness is compatible with a GENERAL correction replacement while retaining original provenance; S07 must test derived opening chains rather than overwrite markers. Foreign posting remains rejected. These conditions do not mark any Phase 1 gate or deferred workflow complete.
+
+## S06 planned gate traceability
+
+The [S06 financial write gate](gates/S06_WRITES.md) enumerates W01–W15: actual-handler identity/scope/CSRF, bounded validation, replay/conflict, POST, exact reversal/correction, atomic audit, private drafts/stale confirmation rejection, real serialization/deadlock retries, target catalog drift and migration checksums, explicit finding deferrals, restricted roles, regressions/FX and human review. All rows remain NOT RUN; no S06 code exists. [Finding issues and stories](security/S05_FINDINGS.md) give concrete positive/negative acceptance and regression scenarios. Existing S05/helper passes are not substituted for these handler-level tests.
+
+## Confirmed S05 closure and active S06A slice
+
+The owner explicitly confirmed: “It was reviewed by me and merged. So please for anything new use s06 branch or a different handoff branch.” [Human review evidence](https://github.com/i-am-tj/LedgerOne/pull/1#issuecomment-6796866109) records this confirmation without fabricating a native GitHub APPROVED review. PR #1 merged implementation `1243360` at `54efed5e266847ec66c0a54caf15b9c4e5fb358a`; its two original foundation CI checks passed. Tracker #6 is closed as completed. Earlier pending-review statements in historical checkpoints describe the state when written, not the current closure status.
+
+New work is on `feat/p1-s06a-command-controls`, based on the owner's merged main. Post-merge review/handoff documentation was carried onto this separate branch. S06A #8 is the only active implementation slice: migration 007 adds scoped immutable financial audit context and rejects CORRECT's same-operation predecessor; invariant attestation/mutation regressions cover SQL/privilege/migration state. It adds no financial write handler or runtime grant. S06B/C/D remain blocked until the active slice's required checks, human review and reviewed merge. Findings remain open for their full linked acceptance; the complete S06 write gate and Phase 1 gate remain closed.
+
+## Implemented S06A requirement evidence
+
+| Requirement/finding     | Current test/control evidence                                                                                                                                                            | Remaining boundary                                                                     |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| R03 / A05-02            | `command-controls.test.ts`: same-operation correction rejected, exact posted/reverse/correct audit targets, retained original multiset tests                                             | Explicit authorized original/locks and real handlers remain S06C                       |
+| R14 / audit             | 007 scoped/unique/append-only audit; exact invalid-input SQLSTATE + unchanged row counts; valid existing wrong target and temp spoofing rejected; private writer inserts audited fixture | Mandatory actual command transaction audit remains S06B/C                              |
+| R03,R14 / A05-03        | 10 catalog mutation cases plus SQL-literal preservation; version/empty/extra/missing comparator negatives; actual test DB vs fresh migration CLI                                         | Hosted/private production baseline and actual write-enablement integration remain S06D |
+| R14 / local tools       | 4 unsafe reference-config negatives before connection, private error output, random disposable reference cleanup                                                                         | No hosted verification implied                                                         |
+| R03 / migration history | 001–006 unchanged, preserved 007 after local application; all seven applied hashes matched; private/public fresh migration and Prisma diff PASS                                          | Production backup/restore and deployment separate                                      |
+
+Final full pipeline: 89 unit / 69 integration / 46 browser PASS. These controls do not satisfy W01–W15 for the unimplemented authenticated command API/replay/retry gate.
+
+S06A current evidence after CI repair: 89 unit / 70 integration / 46 browser PASS locally. The 22nd control test proves bounded cleanup refusal with an active reference client, continued client usability and successful cleanup after release. All new resource DROP paths are generated local test names and omit FORCE. CI browser step now uses the matching official image and exact Node 22; PR run 43052573744 independently passed all 46 browser cases. Final-head checks and human review remain required.
+
+## S06A final-review regression traceability
+
+| Requirement / finding                                          | Reproducible evidence                                                                                                                                                     | Boundary                                                     |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| R14 / A05-03 / S06A-R01                                        | `command-controls.test.ts` direct/transitive runtime delegation, ADMIN/INHERIT/SET changes and logical membership identity normalization; SQL literal regression retained | Actual hosted writer/profile integration remains S06D        |
+| Audit exact scope/target, immutable financial meaning, upgrade | [21 independent probes](security/evidence/S06A_FINAL_PROBES.md): existing owner A/B records, invalid rollback, owner-level edits, actual legacy replay                    | SQL support does not prove future HTTP command authorization |
+| S07 OPENING audit                                              | `stories/P1-S07.md` explicit additive audit CHECK/helper/marker extension and atomic rollback/replay/concurrency requirements                                             | Planned; intentionally unsupported by 007                    |
+
+Corrected-source `npm run verify:pipeline`: 89 unit / 76 integration / 46 browser PASS (20.5s), all required pipeline stages PASS. [Final review](security/S06A_FINAL_REVIEW.md) records scope and exact commands. Final publication-head CI/merge evidence is recorded on PR #18. W01–W15 remain unaccepted for complete write enablement.

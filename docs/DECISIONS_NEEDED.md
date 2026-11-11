@@ -42,3 +42,13 @@ User chose Supabase PostgreSQL for production and created the GitHub-linked Free
 ## S05 authorization and staged FX approval
 
 The user explicitly authorized completing S05 after the published foundation CI passed. They approved foreign accounts and immutable rate records with foreign-currency posting disabled until detailed FX rounding/carrying-cost review. Core INR/sign/reversal policy remains approved. This permits the S05 schema/accounting evidence, not S06 implementation, financial write exposure, production migrations, independent review claims or deployment. S05's concrete accounting/security review is recorded separately; peer review/merge remains required.
+
+## S05 → S06 handoff authorization
+
+The user authorized GitHub finding/story tracking and S06 delivery after S05 reviewed closure, and selected themselves as the human S05 reviewer. “I will review it” is intent, not approval. GitHub author self-approval is unavailable; retain actual human PR-comment review evidence without fabricating a formal APPROVED review or overriding repository protections. The documented implementation default is private atomic command drafts (persisted editable draft finalization excluded); A05-01 remains explicitly tracked rather than silently fixed. All five findings retain linked acceptance/regression obligations. Hosted migration/grant/deployment approval remains separate. See HANDOFF_S05_S06.md.
+
+## Confirmed S05 closure and active S06A slice
+
+The owner explicitly confirmed: “It was reviewed by me and merged. So please for anything new use s06 branch or a different handoff branch.” [Human review evidence](https://github.com/i-am-tj/LedgerOne/pull/1#issuecomment-6796866109) records this confirmation without fabricating a native GitHub APPROVED review. PR #1 merged implementation `1243360` at `54efed5e266847ec66c0a54caf15b9c4e5fb358a`; its two original foundation CI checks passed. Tracker #6 is closed as completed. Earlier pending-review statements in historical checkpoints describe the state when written, not the current closure status.
+
+New work is on `feat/p1-s06a-command-controls`, based on the owner's merged main. Post-merge review/handoff documentation was carried onto this separate branch. S06A #8 is the only active implementation slice: migration 007 adds scoped immutable financial audit context and rejects CORRECT's same-operation predecessor; invariant attestation/mutation regressions cover SQL/privilege/migration state. It adds no financial write handler or runtime grant. S06B/C/D remain blocked until the active slice's required checks, human review and reviewed merge. Findings remain open for their full linked acceptance; the complete S06 write gate and Phase 1 gate remain closed.

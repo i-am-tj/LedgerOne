@@ -29,7 +29,8 @@
     "test:e2e:ui": "playwright test --ui",
     "db:migrate:production": "tsx scripts/migrate-db.ts production",
     "start:local": "tsx scripts/start-local.ts",
-    "test:schema": "tsx scripts/rehearse-production-schema.ts"
+    "test:schema": "tsx scripts/rehearse-production-schema.ts",
+    "ledger:attest": "tsx scripts/verify-ledger-invariants.ts"
   },
   "dependencies": {
     "@better-auth/prisma-adapter": "1.7.20",

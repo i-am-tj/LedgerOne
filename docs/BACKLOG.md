@@ -1,8 +1,8 @@
 # Current implementation backlog
 
-The user’s 2026-11-11 expanded Phase 1 supersedes the initial S001–S024 execution order. Historical scope remains in archive/BACKLOG_INITIAL.md. Current IDs are P1-S01–P1-S09; no implementation story is done. Phase = milestone; epic = parent issue (fallback labeled parent); story = issue; tasks = checkboxes. No remote resources are created; the user will configure the remote.
+The user’s 2026-11-11 expanded Phase 1 supersedes the initial S001–S024 execution order. Historical scope remains in archive/BACKLOG_INITIAL.md. Current IDs are P1-S01–P1-S09; P1-S05 is owner-reviewed and merged (review evidence and merge SHA in the current handoff); other story statuses are not inferred from it. Phase = milestone; epic = parent issue (fallback labeled parent); story = issue; tasks = checkboxes. Remote repository identity and tracker authorization are now confirmed; current Phase 1 issue links and S06 slice ordering are recorded in HANDOFF_S05_S06.md. Historical implementation/merge claims below remain distinct from current issue tracking.
 
-Labels when authorized remotely: `phase:1`, `epic:P1-E1`–`epic:P1-E4`, `type:epic`, `type:story`, `type:bug`, `type:decision`, `priority:P0`, `priority:P1`, `status:planned`, `status:in-progress`, `status:awaiting-review`, `status:blocked`, `status:done`. Trace commits/PRs to the current IDs. One story/PR at a time; required failures and unreviewed/unmerged stories block the next story.
+Current remote workflow labels: `phase:1`, `epic:P1-E1`–`epic:P1-E4`, `type:epic`, `type:story`, `type:bug`, `type:decision`, `priority:P0`, `priority:P1`, `status:planned`, `status:in-progress`, `status:awaiting-review`, `status:blocked`, `status:done`. Trace commits/PRs to the current IDs. One story/PR at a time; required failures and unreviewed/unmerged stories block the next story.
 
 ## Milestone Phase 1
 
@@ -200,6 +200,8 @@ Status: ownership/audit foundation locally verified; see `docs/stories/P1-S04.md
 
 **Definition of done:** Demonstrated behavior; server validation/authorization; safe migration recovery; applicable accessibility and empty/loading/error/success states; formatting, lint, typecheck, unit/integration and build green with reproducible evidence; docs current; accounting/security review where applicable; reviewed merge.
 
+S06 detailed delivery plan: [P1-S06](https://github.com/i-am-tj/LedgerOne/issues/7) is the umbrella; ordered implementation slices [P1-S06A](https://github.com/i-am-tj/LedgerOne/issues/8), [P1-S06B](https://github.com/i-am-tj/LedgerOne/issues/9), [P1-S06C](https://github.com/i-am-tj/LedgerOne/issues/10), [P1-S06D](https://github.com/i-am-tj/LedgerOne/issues/11). Full contracts are in corresponding `docs/stories/` files. All remain blocked on S05 human review/merge and reviewed predecessors. Findings A05-01..A05-05 are tracked in `docs/security/S05_FINDINGS.md`; no finding is closed by planning.
+
 ## P1-S07 — Account management and reconciliation
 
 **ID:** P1-S07 | **Title:** Account management and reconciliation | **Epic:** P1-E3 | **Priority:** P0 | **Dependencies:** P1-S06 reviewed and merged
@@ -294,3 +296,9 @@ User-authorized interruption before P1-S05: [production profiles/public entry st
 ## S05 local implementation checkpoint
 
 See [S05 story](stories/P1-S05.md), [ADR-004](ADR/0004-owned-ledger-schema.md) and [accounting contract](ACCOUNTING.md). The user authorized advancement after foundation CI passed and approved staged FX. Schema constraints/read boundaries are implemented for review; S06 service/retries/audit, S07 UI/opening/reconciliation and S08–S09 classification/gate are not implied. Review/merge is still outstanding.
+
+## Confirmed S05 closure and active S06A slice
+
+The owner explicitly confirmed: “It was reviewed by me and merged. So please for anything new use s06 branch or a different handoff branch.” [Human review evidence](https://github.com/i-am-tj/LedgerOne/pull/1#issuecomment-6796866109) records this confirmation without fabricating a native GitHub APPROVED review. PR #1 merged implementation `1243360` at `54efed5e266847ec66c0a54caf15b9c4e5fb358a`; its two original foundation CI checks passed. Tracker #6 is closed as completed. Earlier pending-review statements in historical checkpoints describe the state when written, not the current closure status.
+
+New work is on `feat/p1-s06a-command-controls`, based on the owner's merged main. Post-merge review/handoff documentation was carried onto this separate branch. S06A #8 is the only active implementation slice: migration 007 adds scoped immutable financial audit context and rejects CORRECT's same-operation predecessor; invariant attestation/mutation regressions cover SQL/privilege/migration state. It adds no financial write handler or runtime grant. S06B/C/D remain blocked until the active slice's required checks, human review and reviewed merge. Findings remain open for their full linked acceptance; the complete S06 write gate and Phase 1 gate remain closed.
