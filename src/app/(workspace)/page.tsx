@@ -115,8 +115,8 @@ export default async function Home() {
       </Card>
       <p className="foundation-note">
         <LockKeyhole size={15} aria-hidden="true" />
-        This foundation preview contains no personal financial data. Secure
-        sign-in and money management are coming next.
+        This foundation preview contains no personal financial data. Money
+        management is coming next.
       </p>
     </>
   );

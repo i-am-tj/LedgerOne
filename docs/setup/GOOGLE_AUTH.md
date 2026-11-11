@@ -1,6 +1,6 @@
 # Google sign-in setup — P1-S03
 
-Application code and automated auth tests are implemented. A live Google login is not yet verified. Configure this privately; never paste a client secret, session secret or cookie into chat, an issue, a screenshot or source control.
+Application code and automated auth tests are implemented. User-assisted live owner Google sign-in is verified; remaining manual checks and security review are recorded below. Configure this privately; never paste a client secret, session secret or cookie into chat, an issue, a screenshot or source control.
 
 ## 1. Create the Google OAuth web client
 
@@ -61,7 +61,7 @@ Use the canonical hostname in `BETTER_AUTH_URL`. Do not start an OAuth flow at `
 
 These checks remain pending until the real client is configured:
 
-- [ ] Sign in from localhost:3000 with the allowlisted verified Google account; return to Overview.
+- [x] Sign in from localhost:3000 with the allowlisted verified Google account; return to Overview. Verified in Chrome and DB metadata on 2026-11-11.
 - [ ] Open Appearance and Component library while signed in.
 - [ ] Verify `/api/session` returns only the current user's ID/name/email and expiry, never session/provider tokens.
 - [ ] Sign out using the sidebar/mobile navigation; private pages then redirect to login and `/api/session` returns 401.

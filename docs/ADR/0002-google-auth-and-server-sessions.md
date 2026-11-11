@@ -1,12 +1,12 @@
 # ADR-002 — Google-only admission and database-backed sessions
 
-Date: 2026-11-11. Story: P1-S03. Status: IMPLEMENTED LOCALLY, SECURITY REVIEW AND LIVE GOOGLE ACCEPTANCE PENDING. This is a reviewable decision record, not evidence of an independent security review or merged PR.
+Date: 2026-11-11. Story: P1-S03. Status: IMPLEMENTED LOCALLY, LIVE OWNER GOOGLE SIGN-IN VERIFIED; SECURITY REVIEW PENDING. This is a reviewable decision record, not evidence of an independent security review or merged PR.
 
 ## Choice and rationale
 
 Use pinned Better Auth 1.7.20 with its matching PostgreSQL/Prisma adapter as the supported alternative allowed by Prompt 0. The [Auth.js maintenance announcement](https://better-auth.com/blog/authjs-joins-better-auth) recommends Better Auth for new projects. Its [Prisma documentation](https://better-auth.com/docs/adapters/prisma) supports Prisma 7, matching this repository. Authentication protocol/cryptography remains in the library; the application adds its admission and route policies. This supersedes ADR-001's provisional Auth.js candidate only; financial architecture is unchanged.
 
-The user selected Google sign-in with an owner allowlist and authorized S03. They asked to complete implementation/tests before Google configuration; later supplied the Google client creation screen and received exact callback/environment instructions. Real Google credentials and consent have not been verified by the agent. See `docs/setup/GOOGLE_AUTH.md`.
+The user selected Google sign-in with an owner allowlist and authorized S03. They asked to complete implementation/tests before Google configuration; later supplied the Google client creation screen and received exact callback/environment instructions. Subsequent user-assisted live owner sign-in was observed in Chrome and verified using account/session metadata; see the S03 story checkpoint. No credential values are included in evidence. See `docs/setup/GOOGLE_AUTH.md`.
 
 ## Policy
 

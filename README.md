@@ -1,6 +1,6 @@
 # LedgerOne
 
-Private personal finance, implemented in reviewed increments. **P1-S03 adds Google-only authentication and server sessions; live Google setup/acceptance is pending and financial features are not implemented.** The public login contains no financial data. Do not expose the development server publicly.
+Private personal finance, implemented in reviewed increments. **P1-S03 adds Google-only authentication and server sessions; live owner Google sign-in is verified and financial features are not implemented.** The public login contains no financial data. Do not expose the development server publicly.
 
 ## Local prerequisites
 
@@ -89,4 +89,4 @@ npm run build
 npm run test:e2e
 ```
 
-Tests never use real Google credentials: the integration provider exchange is substituted only inside its test instance, and browsers use signed sessions seeded directly into the isolated DB. There is no deployed test-login provider or bypass flag. Real Google consent/callback verification remains pending; the setup guide contains the manual acceptance checklist. P1-S04 entity ownership/audit and the financial ledger are not implemented by this story.
+Tests never use real Google credentials: the integration provider exchange is substituted only inside its test instance, and browsers use signed sessions seeded directly into the isolated DB. There is no deployed test-login provider or bypass flag. Live owner Google sign-in/callback is verified; the setup guide records the remaining manual acceptance checklist. P1-S04 entity ownership/audit and the financial ledger are not implemented by this story.
