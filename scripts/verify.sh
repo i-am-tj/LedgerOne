@@ -82,6 +82,10 @@ if [ "$RUN_PIPELINE" = true ]; then
   npm run test:integration
   pass "Integration tests passed"
 
+  info "Rehearsing the private schema and restricted database role..."
+  npm run test:schema
+  pass "Private-schema checks passed"
+
   info "Building production application..."
   npm run build
   pass "Application build succeeded"

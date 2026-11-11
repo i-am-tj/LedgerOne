@@ -38,3 +38,7 @@ ADR-003 documents the S04 audit default: retain immutable mutation history until
 ## Supabase and login-card steering — 2026-11-11
 
 User chose Supabase PostgreSQL for production and created the GitHub-linked Free Mumbai project; app hosting/domain is not set up. Production connection credentials, reviewed roles/schema, hosting and backup/restore remain prerequisites, not approved paid/public deployment. Keep development/test profiles isolated. The user explicitly selected keeping the new login card active while deferring additional provider setup. Google/GitHub OAuth adapters may be committed/reviewed locally; that does not establish live GitHub acceptance or enable email/passkey/SAML/Apple/ChatGPT. See the new setup/review documents. Core accounting defaults remain approved; S05 is paused during this amendment.
+
+## S05 authorization and staged FX approval
+
+The user explicitly authorized completing S05 after the published foundation CI passed. They approved foreign accounts and immutable rate records with foreign-currency posting disabled until detailed FX rounding/carrying-cost review. Core INR/sign/reversal policy remains approved. This permits the S05 schema/accounting evidence, not S06 implementation, financial write exposure, production migrations, independent review claims or deployment. S05's concrete accounting/security review is recorded separately; peer review/merge remains required.

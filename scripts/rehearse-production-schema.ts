@@ -7,6 +7,7 @@ import pg from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { loadProfile } from "./load-env";
+import { SCHEMA_VERSION } from "../src/lib/schema-version";
 import { databaseSettings } from "../src/lib/profile";
 
 loadProfile("development");
@@ -68,6 +69,32 @@ try {
       appRole,
     ),
   );
+  const drift = spawnSync(
+    process.execPath,
+    [
+      "node_modules/prisma/build/index.js",
+      "migrate",
+      "diff",
+      "--from-config-datasource",
+      "--to-schema",
+      "prisma/schema.prisma",
+      "--exit-code",
+    ],
+    {
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        LEDGERONE_ENV: "test",
+        DATABASE_URL: migrationURL.toString(),
+        DIRECT_DATABASE_URL: migrationURL.toString(),
+      },
+    },
+  );
+  assert.equal(
+    drift.status,
+    0,
+    "Private-schema Prisma drift detected (output withheld)",
+  );
   const runtimeURL = new URL(target);
   runtimeURL.username = appRole;
   runtimeURL.password = password;
@@ -80,7 +107,7 @@ try {
   assert.equal(
     (await runtime.appMetadata.findUnique({ where: { key: "schema_version" } }))
       ?.value,
-    "3",
+    SCHEMA_VERSION,
   );
   const userId = randomUUID();
   await runtime.user.create({
@@ -115,12 +142,105 @@ try {
     "SELECT * FROM ledgerone._prisma_migrations",
   ])
     await assert.rejects(runtime.$queryRawUnsafe(forbidden));
+  // The published S05 grant file intentionally keeps financial data read-only.
+  const workspace = await runtime.workspace.findFirstOrThrow({
+    where: { ownerId: userId },
+  });
+  const scope = { workspaceId: workspace.id, ownerId: userId };
+  assert.equal(await runtime.account.count(), 0);
+  await assert.rejects(
+    runtime.account.create({
+      data: {
+        ...scope,
+        name: "No grant",
+        type: "ASSET",
+        kind: "BANK",
+        currencyCode: "INR",
+      },
+    }),
+  );
+  // Test a future command-writer role only in this disposable DB, with invoker
+  // helpers explicitly granted. No deployed/runtime grant file is broadened.
+  await provision.query(
+    `GRANT INSERT, UPDATE, DELETE ON ledgerone.ledger_account, ledgerone.journal, ledgerone.posting, ledgerone.ledger_operation, ledgerone.opening_balance TO "${appRole}"`,
+  );
+  await provision.query(
+    `GRANT EXECUTE ON FUNCTION ledgerone.ledger05_assert_journal(uuid), ledgerone.ledger05_assert_operation(uuid) TO "${appRole}"`,
+  );
+  const bank = await runtime.account.create({
+    data: {
+      ...scope,
+      name: "Bank fixture",
+      type: "ASSET",
+      kind: "BANK",
+      currencyCode: "INR",
+    },
+  });
+  const expense = await runtime.account.create({
+    data: {
+      ...scope,
+      name: "Expense fixture",
+      type: "EXPENSE",
+      kind: "EXPENSE",
+      currencyCode: "INR",
+    },
+  });
+  async function postFixture(credit: bigint) {
+    return runtime!.$transaction(async (tx) => {
+      const journal = await tx.journal.create({
+        data: { ...scope, effectiveAt: new Date() },
+      });
+      for (const leg of [
+        { accountId: expense.id, side: "DEBIT" as const, amount: 100n },
+        { accountId: bank.id, side: "CREDIT" as const, amount: credit },
+      ])
+        await tx.posting.create({
+          data: {
+            ...scope,
+            journalId: journal.id,
+            accountId: leg.accountId,
+            side: leg.side,
+            currencyCode: "INR",
+            nativeMinor: leg.amount,
+            functionalMinor: leg.amount,
+          },
+        });
+      const operation = await tx.ledgerOperation.create({
+        data: {
+          ...scope,
+          idempotencyKey: randomUUID(),
+          requestHash: "a".repeat(64),
+          kind: "POST",
+        },
+      });
+      return tx.journal.update({
+        where: { id: journal.id },
+        data: {
+          status: "POSTED",
+          postedAt: new Date(),
+          operationId: operation.id,
+        },
+      });
+    });
+  }
+  const posted = await postFixture(100n);
+  await assert.rejects(postFixture(99n));
+  assert.equal(await runtime.journal.count(), 1);
+  await assert.rejects(
+    runtime.journal.update({
+      where: { id: posted.id },
+      data: { description: "Cannot edit" },
+    }),
+  );
+  await assert.rejects(
+    runtime.$executeRawUnsafe("SET session_replication_role = replica"),
+  );
   const publicTables = await provision.query(
     "SELECT count(*)::int AS count FROM information_schema.tables WHERE table_schema='public'",
   );
   assert.equal(publicTables.rows[0].count, 0);
   console.log(
-    "PASS: fresh private-schema migrations, Prisma runtime reads/atomic writes, protected audit and denied DDL/migration-history access; no public tables.",
+    "PASS: fresh private-schema migrations and zero Prisma drift; production financial read-only grants; temporary invoker-role ledger balancing/rollback/immutability; protected audit and denied DDL/replication bypass/history access; no public tables.",
   );
 } finally {
   await runtime?.$disconnect();

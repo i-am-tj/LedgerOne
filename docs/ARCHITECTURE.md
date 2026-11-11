@@ -79,3 +79,7 @@ AuditEvent uses actor=owner CHECK and a composite workspace/owner FK, and SQL ap
 ## P1-S04A environment and entry boundary
 
 Public `/` is static and contains no database/session data; `/login` enters the current allowed-provider flow, `/home` is protected. Production targets Supabase PostgreSQL through server-only Prisma using private `ledgerone` schema, verified TLS and separate migration/runtime roles; local/test tooling rejects remote DBs and never loads production `.env`. See `docs/setup/SUPABASE.md`. Hosted connectivity/roles and app hosting remain pending. The local Google/GitHub adapter registry is an OAuth extension seam; email/passkey/SAML and other protocols remain unimplemented and need separate contracts. See `docs/security/AUTH_ADAPTER_REVIEW.md`.
+
+## S05 ledger persistence boundary
+
+`Workspace` owns immutable-identity `Account`, `Journal`, `FXRate` and `LedgerOperation` records; `Posting` and opening provenance repeat composite scope/currency FKs. Journal balances are commit-time PostgreSQL constraints, not client promises. Draft mutations write parent versions to serialize finalization; posted history is immutable, with exact linked reversals. Pure bigint money/chart code is separate from server-only scoped read queries. No financial write API exists before S06; production financial grants remain SELECT-only. Staged FX and administrator/trusted-service boundaries are specified in ADR-004 and ACCOUNTING. Schema readiness version is centralized in `src/lib/schema-version.ts`; S05 forward migrations finish at 6.

@@ -151,11 +151,12 @@ Status: ownership/audit foundation locally verified; see `docs/stories/P1-S04.md
 
 **Implementation tasks:**
 
-- [ ] Review accounting ADR.
-- [ ] implement exact money.
-- [ ] add scoped keys/indexes.
-- [ ] enforce deferred balancing and immutability.
-- [ ] Update docs/traceability and record check output, migration recovery and review evidence.
+- [x] Record approved core/staged-FX policy and accounting ADR; peer review remains pending.
+- [x] Implement exact money.
+- [x] Add scoped keys/indexes.
+- [x] Enforce deferred balancing, lifecycle isolation and immutability.
+- [x] Update docs/traceability, checks, migration recovery and agent review evidence.
+- [ ] Obtain peer accounting/security review and reviewed merge.
 
 **Acceptance criteria (Given/When/Then):** Given unbalanced or incompatible currency/account records, when the DB transaction commits, then PostgreSQL rejects them and correct account signs are retained.
 
@@ -289,3 +290,7 @@ Status: ownership/audit foundation locally verified; see `docs/stories/P1-S04.md
 ## Local foundation amendment — P1-S04A
 
 User-authorized interruption before P1-S05: [production profiles/public entry story](stories/P1-S04A.md). The existing P1-S01–P1-S09 dependency order and financial release gate are preserved. The supplied P1-S03 adapter/card edits are reviewed separately in [authentication review](security/AUTH_ADAPTER_REVIEW.md); additional provider setup is deferred. No remote issues or deployment were created.
+
+## S05 local implementation checkpoint
+
+See [S05 story](stories/P1-S05.md), [ADR-004](ADR/0004-owned-ledger-schema.md) and [accounting contract](ACCOUNTING.md). The user authorized advancement after foundation CI passed and approved staged FX. Schema constraints/read boundaries are implemented for review; S06 service/retries/audit, S07 UI/opening/reconciliation and S08–S09 classification/gate are not implied. Review/merge is still outstanding.

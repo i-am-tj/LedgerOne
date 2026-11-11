@@ -1,6 +1,6 @@
-# Accounting contract proposal
+# Accounting contract
 
-Status: awaiting accounting/security review; examples are illustrative INR-valued journals, not implemented behavior.
+Status: core INR/sign/reversal policy and staged FX support approved. S05 schema constraints are implemented locally; review/merge and S06–S09 workflows remain pending. Worked business examples below are still illustrative templates, not claims of implemented transaction commands.
 
 ## Ledger conventions
 
@@ -55,3 +55,17 @@ INR functional currency is fixed after the first posted journal; changing it req
 ## Core approval checkpoint — 2026-11-11
 
 The user approved INR as fixed functional currency, retained original foreign-currency quantities, the normal debit/credit signs above, and linked-reversal corrections for posted journals. Approval is policy evidence, not implementation. Detailed FX rounding/carrying-cost and investment choices remain pending their explicit review; S04 introduces no financial schema or postings.
+
+## S05 implemented contract and deliberate boundaries
+
+- Workspace functional currency is fixed INR. Currency reference rows support INR/USD/EUR/GBP scale 2, JPY scale 0 and KWD scale 3. They are immutable system metadata, not financial demo fixtures.
+- `Account` maps to `ledger_account`, distinct from OAuth `AuthAccount`. Class/kind/owner/workspace/currency/creation identity never changes; names/archive metadata may change with future authorized S07 services. Debit-normal assets/expenses and credit-normal liabilities/income/equity are display conventions, not available-funds/credit-limit policies.
+- `Posting` stores positive native and functional **bigint minor units**, separate DEBIT/CREDIT side, maximum 999999999999999999 per leg. Canonical decimal-string parsing rejects numbers, exponents, grouping, excess fractional digits and implicit negative reversals. Totals use bigint/application or numeric/PostgreSQL, so sums can safely exceed one bigint leg's range. SQL coercion is not an accepted application input format.
+- User approved staged FX: foreign accounts and immutable positive manual `FXRate` quotes (38,18 fixed precision, functional INR per native major unit, effective time/source) are modeled. **Foreign postings, rounded conversion, valuation-only zero-native legs and FX carrying-cost execution are rejected until the detailed rules are reviewed.** Current postings require native INR = functional INR and no FX-rate link. The original/native and rate ownership links exist for a later reviewed migration.
+- Persisted DRAFT journals are excluded from accounting reads. POSTED requires 2–500 positive legs, equal functional totals, an absolute posted timestamp and one immutable successful-command receipt. Posted journals/context/postings cannot be updated/deleted/truncated. Account and journal composite keys enforce the same owner/workspace/currency for every leg.
+- Each posting/opening-marker edit writes the draft parent's revision. Deferred final-state triggers plus parent version writes detect finalization races under READ COMMITTED and REPEATABLE READ. Accounts are locked during final validation; archive races cannot pass using stale active state. Caller search paths and temporary-table shadows do not affect validation. Normal invoker-role tests complement administrator-role SQL tests; elevated migration administrators remain trusted.
+- `LedgerOperation` has a scoped unique idempotency key and immutable SHA-256 request hash. POST/OPENING/REVERSE has exactly one appropriately typed posted journal; CORRECT has one reversal and one general replacement. Orphan or extra outcomes fail commit. S06 still supplies payload/hash matching, replay results, audit and command orchestration; those are not implemented by these uniqueness checks alone.
+- An opening marker records original account/journal/source, never a second balance. Its two-leg journal targets an asset/liability and opening equity. It is unique per account and immutable once posted. S07 must implement opening correction/reconciliation UX while retaining this original history.
+- Reversal references must point to an already-posted predecessor, excluding circular draft graphs. Exactly one full reversal per original is allowed, with the exact opposite posting multiset (including duplicate-line multiplicities), not merely equal aggregated totals. Original rows stay POSTED; effective correction status is derived through links. Reversal of a reversal follows the chain. Archived accounts reject all new postings for now, including reversals; any controlled exception needs the S07 workflow/review.
+
+S05 adds no financial write endpoint or UI. Production role grants keep all financial tables read-only until S06 review. No balance cache, transaction template, report, overdraft policy, import or automated exchange rate is implied. Source grants, constraints, portability tests and recovery notes are in ADR-004, the S05 story and TEST_PLAN.
