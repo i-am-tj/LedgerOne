@@ -1,5 +1,7 @@
 # S05 → S06 engineering handoff
 
+S06A review artifact: [PR #18](https://github.com/i-am-tj/LedgerOne/pull/18), implementation commit `cf37cda`; required local pipeline **89 unit / 69 integration / 46 browser tests PASS**, plus schema/attestation/build. Remote checks and human review are reported on the PR.
+
 **Recommendation: CONDITIONAL PASS for S06A review readiness; full S06 financial write gate: FAIL (closed).** No financial API write, production readiness or Phase 1 completion is claimed.
 
 ## S05 closure — confirmed
