@@ -409,3 +409,245 @@ it("B-T03 duplicate posting multiplicity survives canonical replay", async () =>
     ).json(),
   ).toEqual(result);
 });
+
+it.each(["expired", "revoked", "removed", "unverified"])(
+  "B-T05 real %s session cannot POST or replay",
+  async (mode) => {
+    const user = h.users[1]!,
+      payload = h.payload(1),
+      key = randomUUID();
+    expect((await h.api(1, key, payload, {}, user.workspace)).status).toBe(201);
+    const before = await counts(),
+      email = `${user.id}@ledgerone.test`;
+    try {
+      if (mode === "expired")
+        await h.database.authSession.update({
+          where: { id: user.session },
+          data: { expiresAt: new Date(Date.now() - 1000) },
+        });
+      if (mode === "revoked")
+        await h.database.authSession.delete({ where: { id: user.session } });
+      if (mode === "removed") h.runtime.config.allowedEmails.delete(email);
+      if (mode === "unverified")
+        await h.database.user.update({
+          where: { id: user.id },
+          data: { emailVerified: false },
+        });
+      expect((await h.api(1, key, payload, {}, user.workspace)).status).toBe(
+        401,
+      );
+      expect(
+        (await h.api(1, randomUUID(), payload, {}, user.workspace)).status,
+      ).toBe(401);
+      expect(await counts()).toEqual(before);
+    } finally {
+      h.runtime.config.allowedEmails.add(email);
+      await h.database.user.update({
+        where: { id: user.id },
+        data: { emailVerified: true },
+      });
+      await h.database.authSession.upsert({
+        where: { id: user.session },
+        update: { expiresAt: new Date(Date.now() + 3600000) },
+        create: {
+          id: user.session,
+          userId: user.id,
+          token: user.token,
+          expiresAt: new Date(Date.now() + 3600000),
+        },
+      });
+    }
+  },
+);
+it("B-T05 ownership is checked again before any replay and keys are independently scoped", async () => {
+  const key = randomUUID(),
+    a = await h.api(0, key, h.payload());
+  expect(a.status).toBe(201);
+  const first = await a.json();
+  const before = await counts();
+  expect(
+    (await h.api(1, key, h.payload(), { "x-owner-id": h.users[0]!.id })).status,
+  ).toBe(404);
+  expect(await counts()).toEqual(before);
+  const b = await h.api(1, key, h.payload(1), {}, h.users[1]!.workspace);
+  expect(b.status).toBe(201);
+  expect((await b.json()).operationId).not.toBe(first.operationId);
+  const own = await h.api(0, key, h.payload(), {
+    "x-owner-id": h.users[1]!.id,
+    "x-request-id": "spoofed",
+  });
+  expect(own.status).toBe(200);
+  expect(await own.json()).toEqual(first);
+  expect(own.headers.get("x-request-id")).not.toBe("spoofed");
+});
+it("B-T05 session revoked during a serialization retry cannot complete a second attempt", async () => {
+  const user = h.users[1]!,
+    before = await counts();
+  h.setProbe(async (stage, _c, attempt) => {
+    if (stage === "receipt" && attempt === 1)
+      await h.admin.query(
+        "UPDATE ledger_account SET name=name||'r' WHERE id=$1",
+        [user.bank],
+      );
+    if (stage === "serialization")
+      await h.database.authSession.delete({ where: { id: user.session } });
+  });
+  try {
+    expect(
+      (await h.api(1, randomUUID(), h.payload(1), {}, user.workspace)).status,
+    ).toBe(401);
+    expect(await counts()).toEqual(before);
+  } finally {
+    h.setProbe(undefined);
+    await h.database.authSession.create({
+      data: {
+        id: user.session,
+        userId: user.id,
+        token: user.token,
+        expiresAt: new Date(Date.now() + 3600000),
+      },
+    });
+  }
+});
+it.each([
+  [
+    "trigger",
+    "ALTER TABLE journal DISABLE TRIGGER journal_balanced_at_commit",
+    "ALTER TABLE journal ENABLE TRIGGER journal_balanced_at_commit",
+  ],
+  [
+    "function",
+    "ALTER FUNCTION ledger06_audit_target() SECURITY DEFINER",
+    "ALTER FUNCTION ledger06_audit_target() SECURITY INVOKER",
+  ],
+  [
+    "version",
+    "UPDATE app_metadata SET value='unknown' WHERE key='schema_version'",
+    "UPDATE app_metadata SET value='7' WHERE key='schema_version'",
+  ],
+  [
+    "checksum",
+    "UPDATE _prisma_migrations SET checksum=repeat('0',64) WHERE migration_name='202611110007_command_audit_controls'",
+    "",
+  ],
+])(
+  "B-T05 actual handler fails closed on %s invariant drift",
+  async (_name, change, restore) => {
+    const before = await counts();
+    const checksum = (
+      await h.admin.query(
+        "SELECT checksum FROM _prisma_migrations WHERE migration_name='202611110007_command_audit_controls'",
+      )
+    ).rows[0].checksum;
+    await h.admin.query(change);
+    try {
+      expect((await h.api(0, randomUUID(), h.payload())).status).toBe(503);
+      expect(await counts()).toEqual(before);
+    } finally {
+      if (restore) await h.admin.query(restore);
+      else
+        await h.admin.query(
+          "UPDATE _prisma_migrations SET checksum=$1 WHERE migration_name='202611110007_command_audit_controls'",
+          [checksum],
+        );
+    }
+  },
+);
+it("B-T05 restricted command role cannot alter invariants, audit, ownership or migration history", async () => {
+  const c = await h.admin.connect();
+  try {
+    for (const sql of [
+      "ALTER TABLE journal DISABLE TRIGGER journal_balanced_at_commit",
+      "TRUNCATE posting",
+      "DELETE FROM posting",
+      "UPDATE audit_event SET reason='rewrite'",
+      "UPDATE ledger_account SET \"ownerId\"='other'",
+      "SELECT * FROM _prisma_migrations",
+      "SET session_replication_role=replica",
+    ]) {
+      await c.query(`BEGIN; SET LOCAL ROLE "${h.role}"`);
+      await expect(c.query(sql)).rejects.toMatchObject({ code: "42501" });
+      await c.query("ROLLBACK");
+    }
+  } finally {
+    await c.query("ROLLBACK");
+    c.release();
+  }
+});
+it("B-T05 unrelated unique audit failure rolls back once without pretending to replay", async () => {
+  const before = await counts();
+  let attempts = 0;
+  h.setProbe(async (stage, c) => {
+    if (stage === "begin") attempts++;
+    if (stage === "audit")
+      await c.query(
+        'INSERT INTO audit_event(id,"workspaceId","ownerId","actorId","requestId",action,"operationId","targetJournalId",reason) SELECT $1,"workspaceId","ownerId","actorId","requestId",action,"operationId","targetJournalId",reason FROM audit_event ORDER BY "occurredAt" DESC LIMIT 1',
+        [randomUUID()],
+      );
+  });
+  try {
+    expect((await h.api(0, randomUUID(), h.payload())).status).toBe(503);
+    expect(attempts).toBe(1);
+    expect(await counts()).toEqual(before);
+  } finally {
+    h.setProbe(undefined);
+  }
+});
+
+it.each(["empty", "version", "unavailable", "owner"] as const)(
+  "B-T05 rejects %s verifier/runtime activation without effects",
+  async (mode) => {
+    const before = await counts();
+    await expect(h.factory(mode)).rejects.toThrow("service_unavailable");
+    expect(await counts()).toEqual(before);
+  },
+);
+
+it("B-T05 lock timeout rolls receipt and draft back without retrying partial work", async () => {
+  const before = await counts(),
+    locker = await h.admin.connect();
+  try {
+    await locker.query("BEGIN");
+    await locker.query("SELECT id FROM ledger_account WHERE id=$1 FOR UPDATE", [
+      h.users[0]!.bank,
+    ]);
+    expect((await h.api(0, randomUUID(), h.payload())).status).toBe(503);
+    expect(await counts()).toEqual(before);
+  } finally {
+    await locker.query("ROLLBACK");
+    locker.release();
+  }
+});
+it("B-T05 archive race is rechecked on a fresh attempt without silently unarchiving", async () => {
+  const before = await counts(),
+    attempts: number[] = [];
+  h.setProbe(async (stage, _c, attempt) => {
+    if (stage === "receipt") {
+      attempts.push(attempt);
+      if (attempt === 1)
+        await h.admin.query(
+          'UPDATE ledger_account SET "archivedAt"=NOW() WHERE id=$1',
+          [h.users[0]!.bank],
+        );
+    }
+  });
+  try {
+    expect((await h.api(0, randomUUID(), h.payload())).status).toBe(409);
+    expect(attempts).toEqual([1, 2]);
+    expect(await counts()).toEqual(before);
+    expect(
+      (
+        await h.admin.query(
+          'SELECT "archivedAt" FROM ledger_account WHERE id=$1',
+          [h.users[0]!.bank],
+        )
+      ).rows[0].archivedAt,
+    ).not.toBeNull();
+  } finally {
+    h.setProbe(undefined);
+    await h.admin.query(
+      'UPDATE ledger_account SET "archivedAt"=NULL WHERE id=$1',
+      [h.users[0]!.bank],
+    );
+  }
+});

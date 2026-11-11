@@ -101,12 +101,14 @@ export function parsePost(value: unknown): PostCommand {
   try {
     const p = payload.parse(value);
     const legs = p.legs
-      .map((l): Leg => ({
-        accountId: l.accountId,
-        side: l.side,
-        currency: l.currency,
-        minor: positiveMinor(parseAmount(l.amount, l.currency)).toString(),
-      }))
+      .map((l): Leg =>
+        Object.freeze({
+          accountId: l.accountId,
+          side: l.side,
+          currency: l.currency,
+          minor: positiveMinor(parseAmount(l.amount, l.currency)).toString(),
+        }),
+      )
       .sort(compareLegs);
     if (
       legs.reduce(
@@ -115,13 +117,13 @@ export function parsePost(value: unknown): PostCommand {
       ) !== 0n
     )
       throw invalid();
-    return {
+    return Object.freeze({
       kind: "POST",
       effectiveAt: instant(p.effectiveAt),
       description: p.description,
       reason: p.reason,
-      legs,
-    };
+      legs: Object.freeze(legs),
+    });
   } catch {
     throw invalid();
   }

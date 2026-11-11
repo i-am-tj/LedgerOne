@@ -122,6 +122,33 @@ export async function postHarness() {
       runtime,
       role,
       expected,
+      factory: async (mode: "empty" | "version" | "unavailable" | "owner") => {
+        let baseline = expected;
+        let runtimeURL = url.toString();
+        const verifierURL = new URL(lease.url);
+        if (mode === "empty") baseline = { version: "7", objects: {} };
+        if (mode === "version") baseline = { ...expected, version: "unknown" };
+        if (mode === "unavailable")
+          verifierURL.password = "deliberately-invalid-fixture-password";
+        if (mode === "owner") {
+          runtimeURL = lease.url;
+          const owner = decodeURIComponent(new URL(lease.url).username);
+          const c = await admin.connect();
+          try {
+            baseline = await captureLedgerInvariants(c, {
+              schema: "public",
+              roles: { [owner]: "RUNTIME" },
+            });
+          } finally {
+            c.release();
+          }
+        }
+        return PostExecutor.disposable({
+          runtimeURL,
+          verifierURL: verifierURL.toString(),
+          expected: baseline,
+        });
+      },
       setProbe: (fn: typeof probe) => {
         probe = fn;
       },

@@ -137,7 +137,7 @@ export class PostExecutor {
     );
     const r = await this.pool
       .query(`SELECT r.rolsuper OR r.rolcreaterole OR r.rolcreatedb OR r.rolreplication OR r.rolbypassrls
-      OR EXISTS (SELECT 1 FROM pg_class WHERE relnamespace='public'::regnamespace AND relowner=r.oid)
+      OR EXISTS (SELECT 1 FROM pg_class WHERE relnamespace='public'::regnamespace AND pg_has_role(current_user,relowner,'MEMBER'))
       OR has_schema_privilege(current_user,'public','CREATE') AS unsafe FROM pg_roles r WHERE rolname=current_user`);
     if (r.rows.length !== 1 || r.rows[0].unsafe) throw unavailable();
   }

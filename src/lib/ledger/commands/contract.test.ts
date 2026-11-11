@@ -174,3 +174,10 @@ it("B-T01 bounded streaming JSON refuses malformed UTF-8 and bodies regardless o
   ])
     await expect(readCommandBody(request)).rejects.toThrow("invalid_request");
 });
+
+it("B-T05 canonical command and every leg are frozen across asynchronous authorization", () => {
+  const p = parsePost(value);
+  expect(Object.isFrozen(p)).toBe(true);
+  expect(Object.isFrozen(p.legs)).toBe(true);
+  expect(p.legs.every(Object.isFrozen)).toBe(true);
+});
