@@ -1,7 +1,10 @@
-import "dotenv/config";
+import { loadProfile } from "../scripts/load-env";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { assertDemoSeedAllowed } from "../src/lib/environment";
+loadProfile(
+  process.env.LEDGERONE_ENV === "production" ? "production" : "development",
+);
 assertDemoSeedAllowed(process.env);
 const database = new PrismaClient({
   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),

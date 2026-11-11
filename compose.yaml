@@ -4,7 +4,7 @@ services:
     image: postgres:17.6-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:?Copy .env.example to .env first}
+      POSTGRES_USER: ${POSTGRES_USER:?Copy .env.development.example to .env.development.local first}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set a local database password}
       POSTGRES_DB: ${POSTGRES_DB:?Set a local database name}
     ports:

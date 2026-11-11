@@ -20,6 +20,12 @@ export function readAuthConfig(
       base.hostname,
     );
     if (
+      (env.LEDGERONE_ENV === "production" ||
+        (!env.LEDGERONE_ENV && env.NODE_ENV === "production")) &&
+      (loopback || base.protocol !== "https:")
+    )
+      return null;
+    if (
       base.username ||
       base.password ||
       base.search ||

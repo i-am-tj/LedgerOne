@@ -1,13 +1,16 @@
-import "dotenv/config";
+import { loadProfile } from "../../scripts/load-env";
+import { databaseSettings } from "../../src/lib/profile";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../../src/generated/prisma/client";
+loadProfile("test");
 export function testDatabaseURL(): string {
   const url = process.env.TEST_DATABASE_URL;
-  if (!url || !new URL(url).pathname.endsWith("_test"))
-    throw new Error(
-      "Tests require TEST_DATABASE_URL pointing to a dedicated *_test database.",
-    );
-  return url;
+  databaseSettings({
+    ...process.env,
+    LEDGERONE_ENV: "test",
+    DATABASE_URL: url,
+  });
+  return url!;
 }
 export function testDatabase() {
   return new PrismaClient({

@@ -5,6 +5,7 @@ coverage/
 *.tsbuildinfo
 .env*
 !.env.example
+!.env.development.example
 src/generated/
 .DS_Store
 *.log

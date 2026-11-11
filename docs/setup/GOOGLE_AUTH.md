@@ -22,11 +22,11 @@ Use the created Client ID and Client Secret directly in the environment file; a 
 
 Folder: `<project-root>`
 
-File to edit: `<project-root>/.env`
+File to edit: `<project-root>/.env.development.local`
 
-Template tracked in Git: `<project-root>/.env.example`
+Template tracked in Git: `<project-root>/.env.development.example`
 
-The local `.env` has slots for:
+The local `.env.development.local` has slots for:
 
 ```dotenv
 BETTER_AUTH_URL=http://localhost:3000
@@ -36,11 +36,11 @@ GOOGLE_CLIENT_SECRET=<web client secret from Google>
 AUTH_ALLOWED_EMAILS=<your exact verified Google email>
 ```
 
-Replace the three owner/client placeholders with your values; do not put literal angle-bracket placeholders in `.env`. The app secret is separate from the Google client secret. A random application secret was generated locally only if missing; it is not printed or committed. To generate a replacement yourself, use `openssl rand -base64 48` and paste the result privately into the file. Rotating it invalidates existing signed session cookies and affects encrypted provider credentials; see ADR-002 before rotating a configured installation.
+Replace the three owner/client placeholders with your values; do not put literal angle-bracket placeholders in `.env.development.local`. The app secret is separate from the Google client secret. A random application secret was generated locally only if missing; it is not printed or committed. To generate a replacement yourself, use `openssl rand -base64 48` and paste the result privately into the file. Rotating it invalidates existing signed session cookies and affects encrypted provider credentials; see ADR-002 before rotating a configured installation.
 
 `AUTH_ALLOWED_EMAILS` accepts comma-separated exact addresses. Matching is case-insensitive after trimming; there are no wildcard/domain grants or Gmail alias/dot rewrites. Keep the approved list limited to intended owners. Changing the allowlist requires a server restart; a removed identity is denied on the next server session check after restart, without a cookie-cache grace period.
 
-Preserve existing `DATABASE_URL`, PostgreSQL and `TEST_DATABASE_URL` values. `.env` is ignored by Git. Do not copy secrets into `.env.example`, and do not overwrite a configured `.env` with the blank template.
+Preserve existing `DATABASE_URL`, PostgreSQL and `TEST_DATABASE_URL` values. `.env.development.local` is ignored by Git. Do not copy secrets into `.env.development.example`, and do not overwrite a configured `.env.development.local` with the blank template.
 
 ## 3. Run migrations and restart development
 
@@ -84,7 +84,7 @@ Expected failures: `redirect_uri_mismatch` means the registered redirect does no
 
 ## Automated tests without real Google credentials
 
-Use a dedicated database named with an `_test` suffix; `TEST_DATABASE_URL` must never point to your personal-data database. Create `ledgerone_test` in local PostgreSQL with the same local development role, then set its URL privately in `.env`. The implementation environment already has this database and variable.
+Use a dedicated database named with an `_test` suffix; `TEST_DATABASE_URL` must never point to your personal-data database. Create `ledgerone_test` in local PostgreSQL with the same local development role, then set its URL privately in `.env.development.local`. The implementation environment already has this database and variable.
 
 ```sh
 npm run db:migrate:test

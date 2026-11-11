@@ -34,23 +34,15 @@ for arg in "$@"; do
   esac
 done
 
-# Step 0: Ensure local environment files exist
+# Step 0: Development tools never read or create production .env.
 if [ ! -f .env.development.local ]; then
   if [ -f .env.development.example ]; then
     info "Copying .env.development.example to .env.development.local..."
-    cp .env.development.example .env.development.local
+    (umask 077; cp .env.development.example .env.development.local)
     pass ".env.development.local initialized from .env.development.example"
   fi
 else
   pass ".env.development.local exists"
-fi
-
-if [ ! -f .env ]; then
-  info "Copying .env.example to .env..."
-  cp .env.example .env
-  pass ".env initialized from .env.example"
-else
-  pass ".env exists"
 fi
 
 # Step 1: Verification Pipeline
@@ -79,7 +71,10 @@ if [ "$RUN_PIPELINE" = true ]; then
   npm run typecheck
   pass "Typecheck passed"
 
-  info "Running unit tests (6 seed-guard tests)..."
+  info "Migrating the dedicated test database (see setup guide)..."
+  npm run db:migrate:test
+
+  info "Running unit tests..."
   npm run test:unit
   pass "Unit tests passed"
 
@@ -91,6 +86,10 @@ if [ "$RUN_PIPELINE" = true ]; then
   npm run build
   pass "Application build succeeded"
 
+  info "Running desktop/mobile browser regressions..."
+  npm run test:e2e
+  pass "Browser checks passed"
+
   info "Checking foundation planning documents..."
   python3 scripts/check_foundation.py
   pass "Foundation checks passed"
@@ -101,7 +100,11 @@ if [ "$RUN_SMOKE" = true ]; then
   info "Running live health and database outage checks..."
 
   APP_PID=""
+  DB_STOPPED=false
   cleanup() {
+    if [ "$DB_STOPPED" = true ]; then
+      npm run db:up >/dev/null 2>&1 || true
+    fi
     if [ -n "$APP_PID" ] && kill -0 "$APP_PID" 2>/dev/null; then
       info "Stopping test server (PID $APP_PID)..."
       kill "$APP_PID" 2>/dev/null || true
@@ -115,7 +118,7 @@ if [ "$RUN_SMOKE" = true ]; then
     info "Detected existing running instance on http://127.0.0.1:3000"
   else
     info "Starting production server on http://127.0.0.1:3000..."
-    npm run start >/dev/null 2>&1 &
+    npm run start:local >/dev/null 2>&1 &
     APP_PID=$!
 
     # Wait for server to respond
@@ -152,6 +155,7 @@ if [ "$RUN_SMOKE" = true ]; then
 
   # Outage test: Stop DB
   info "Stopping database to simulate outage (npm run db:stop)..."
+  DB_STOPPED=true
   npm run db:stop >/dev/null 2>&1
 
   OUTAGE_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3000/api/health/ready)
@@ -165,6 +169,7 @@ if [ "$RUN_SMOKE" = true ]; then
   # Recovery test: Restart DB
   info "Restarting database (npm run db:up)..."
   npm run db:up >/dev/null 2>&1
+  DB_STOPPED=false
 
   RECOVERY_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3000/api/health/ready)
   RECOVERY_BODY=$(curl -s http://127.0.0.1:3000/api/health/ready)

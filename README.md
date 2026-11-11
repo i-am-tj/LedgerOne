@@ -12,14 +12,14 @@ Private personal finance, implemented in reviewed increments. **P1-S03 adds Goog
 
 ```sh
 npm ci
-cp .env.example .env
+cp .env.development.example .env.development.local
 npm run db:up
 npm run db:generate
 npm run db:migrate
 npm run dev
 ```
 
-Open http://127.0.0.1:3000. The app binds to loopback. Compose publishes PostgreSQL on loopback only. The example database password is deliberately local-only; it is not a hosted credential. Choose an unused host port and update both Compose and DATABASE_URL if 5432 is occupied. Never commit `.env` or use a production database for local tests.
+Open http://127.0.0.1:3000. The app binds to loopback. Compose publishes PostgreSQL on loopback only. The example database password is deliberately local-only; it is not a hosted credential. Choose an unused host port and update both Compose and DATABASE_URL if 5432 is occupied. Never commit private environment files or use a production database for local tests.
 
 Health endpoints: `/api/health/live` returns 200 without a database dependency; `/api/health/ready` returns 200 only when the expected schema version is present, otherwise a sanitized 503. No account data or exception details are exposed. Readiness is not proof of accounting correctness.
 
@@ -59,7 +59,7 @@ python3 scripts/check_foundation.py
 
 Integration tests require a migrated PostgreSQL database and fail if it is unavailable. CI provisions an isolated database and runs these commands, but remote CI execution requires a user-configured remote. Browser interaction tests begin with P1-S02; there is no claimed E2E coverage yet.
 
-Use `npm run start` after a successful build to serve the production artifact locally. Copy `.env` on each new checkout; Prisma loads it for CLI operations and Next.js loads it for the server. Builds/generation do not require a running database. Never put secrets in `NEXT_PUBLIC_*` variables. Configure Google and app secrets privately using `docs/setup/GOOGLE_AUTH.md`; no credentials belong in source control.
+Use `npm run start:local` after a successful build to serve the built app with the development profile. `npm run start` uses production configuration. Development CLI commands load only `.env.development.local`; production `.env` is separate. Builds/generation do not require a running database. Never put secrets in `NEXT_PUBLIC_*` variables. Configure Google and app secrets privately using `docs/setup/GOOGLE_AUTH.md`; no credentials belong in source control.
 
 `npm run db:stop` retains the local volume. Do not use `docker compose down --volumes` unless you intend to delete local data. For migration recovery, see `docs/stories/P1-S01.md`.
 
@@ -89,7 +89,7 @@ Use `npm run dev -- --port 3000` for everyday development. Next.js Fast Refresh 
 
 ## P1-S03 Google sign-in and session verification
 
-Follow [Google setup](docs/setup/GOOGLE_AUTH.md) to register the exact local callback and configure the existing project-root `.env`. Its tracked template is `.env.example`. The app fails closed until `BETTER_AUTH_URL`, `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` and `AUTH_ALLOWED_EMAILS` are valid. Use `http://localhost:3000` consistently for real local Google sign-in. Restart after editing the environment.
+Follow [Google setup](docs/setup/GOOGLE_AUTH.md) to register the exact local callback and configure the project-root `.env.development.local`. Its tracked template is `.env.development.example`. Production uses `.env` and `.env.example`; see [Supabase setup](docs/setup/SUPABASE.md). The app fails closed until `BETTER_AUTH_URL`, `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` and `AUTH_ALLOWED_EMAILS` are valid. Use `http://localhost:3000` consistently for real local Google sign-in. Restart after editing the environment.
 
 The identity migration is additive and advances readiness to schema version 2. Run `npm run db:migrate` before using this version. Private pages render dynamically and authorize on the server; `/api/session` returns only the authenticated user DTO and expiry. Sessions expire absolutely after eight hours and are revoked on logout. The supported alternative to Auth.js and threat model are documented in [ADR-002](docs/ADR/0002-google-auth-and-server-sessions.md), awaiting security review.
 
@@ -110,3 +110,7 @@ Tests never use real Google credentials: the integration provider exchange is su
 Apply `npm run db:migrate` and regenerate Prisma before using schema version 3. Workspace endpoints require the current S03 session: GET/POST `/api/workspaces`, GET/PATCH `/api/workspaces/[id]`, and GET `/api/audit` (latest 50 owned events). Create/rename input is strict `{name}` JSON, with the exact configured Origin; owner IDs are always derived server-side. No workspace UI or financial account/transaction API exists yet. API reads return empty arrays until an owner explicitly creates data.
 
 Successful mutations and minimal append-only audit commit together; audit failure rolls back the mutation. Cross-user reads/writes are denied, and supported handlers return a fresh `X-Request-ID` correlated to sanitized traces. See `docs/stories/P1-S04.md` and ADR-003 for security/retention/recovery limits. Integration/browser tests use the separate `_test` DB and intentionally retain immutable audited fixtures; production DB role separation remains a deployment prerequisite. The full Phase 1 gate still requires actual ledger and account/transaction isolation evidence.
+
+## Production profiles
+
+See [Supabase preparation](docs/setup/SUPABASE.md) for the created project, private-schema provisioning and guarded commands. Hosted credentials/connectivity, app hosting/OAuth and backup/restore remain pending.

@@ -1,4 +1,3 @@
-import "dotenv/config";
 import { randomBytes } from "node:crypto";
 import { testDatabaseURL } from "./tests/support/database";
 import { defineConfig, devices } from "@playwright/test";
@@ -36,7 +35,9 @@ export default defineConfig({
     reuseExistingServer: false,
     timeout: 60000,
     env: {
+      LEDGERONE_ENV: "test",
       DATABASE_URL: testDatabaseURL(),
+      DIRECT_DATABASE_URL: testDatabaseURL(),
       BETTER_AUTH_URL: "http://127.0.0.1:3100",
       BETTER_AUTH_SECRET: secret,
       GOOGLE_CLIENT_ID: "e2e-google-placeholder",
