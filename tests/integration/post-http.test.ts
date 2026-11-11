@@ -201,3 +201,66 @@ it("B-T05 real HTTP two-user, forged identity, query/origin/body and method atta
   }
   expect(await snapshot()).toEqual(before);
 });
+
+it("B-AC08 real HTTP disconnect after COMMIT replays the durable original exactly once", async () => {
+  const before = await snapshot(),
+    key = randomUUID();
+  let reached!: () => void, release!: () => void;
+  const committed = new Promise<void>((r) => {
+      reached = r;
+    }),
+    gate = new Promise<void>((r) => {
+      release = r;
+    });
+  h.setProbe(async (stage) => {
+    if (stage === "committed") {
+      reached();
+      await gate;
+    }
+  });
+  const controller = new AbortController();
+  const pending = fetch(url(), {
+    method: "POST",
+    headers: headers(key),
+    body: JSON.stringify(h.payload()),
+    signal: controller.signal,
+  }).catch((error: Error) => ({ error: error.name }));
+  try {
+    await committed;
+    expect((await snapshot()).receipts).toBe(before.receipts + 1);
+    const original = (
+      await h.admin.query(
+        'SELECT id FROM ledger_operation WHERE "idempotencyKey"=$1',
+        [key],
+      )
+    ).rows[0].id;
+    controller.abort();
+    expect(await pending).toEqual({ error: "AbortError" });
+    release();
+    h.setProbe(undefined);
+    const replay = await fetch(url(), {
+      method: "POST",
+      headers: headers(key),
+      body: JSON.stringify(h.payload()),
+    });
+    expect(replay.status).toBe(200);
+    const result = await replay.json();
+    expect(result.operationId).toBe(original);
+    const again = await fetch(url(), {
+      method: "POST",
+      headers: headers(key),
+      body: JSON.stringify(h.payload()),
+    });
+    expect(await again.json()).toEqual(result);
+    const after = await snapshot();
+    expect(after.receipts - before.receipts).toBe(1);
+    expect(after.journals - before.journals).toBe(1);
+    expect(after.audits - before.audits).toBe(1);
+    expect(after.drafts).toBe(0);
+  } finally {
+    release();
+    h.setProbe(undefined);
+    controller.abort();
+    await pending;
+  }
+});

@@ -29,6 +29,7 @@ export async function postHTTP(h: Awaited<ReturnType<typeof postHarness>>) {
         h.runtime,
         h.executor,
       );
+      if (res.destroyed) return;
       res.writeHead(response.status, Object.fromEntries(response.headers));
       res.end(await response.text());
     } catch {
