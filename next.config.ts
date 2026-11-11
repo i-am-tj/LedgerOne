@@ -1,6 +1,12 @@
 import type { NextConfig } from "next";
 const config: NextConfig = {
   poweredByHeader: false,
+  logging: {
+    fetches: { fullUrl: false },
+    serverFunctions: false,
+    browserToTerminal: false,
+    incomingRequests: { ignore: [/\/api\/auth(?:\/|$)/] },
+  },
   async headers() {
     return [
       {

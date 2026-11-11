@@ -5,7 +5,7 @@ export async function GET() {
     const version = await getDatabase().appMetadata.findUnique({
       where: { key: "schema_version" },
     });
-    if (version?.value !== "1") throw new Error("Schema not ready");
+    if (version?.value !== "2") throw new Error("Schema not ready");
     return Response.json(
       { status: "ready" },
       { headers: { "Cache-Control": "no-store" } },

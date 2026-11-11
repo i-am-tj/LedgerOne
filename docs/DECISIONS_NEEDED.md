@@ -22,3 +22,9 @@ Security/accounting decisions require review evidence in the relevant ADR/story 
 ## S02 advancement and remaining prerequisites
 
 The user explicitly requested P1-S02 after Docker became available. This authorizes proceeding from P1-S01; remote setup remains user-owned and no reviewed remote merge is claimed. The Google owner-allowlisted sign-in choice stands for P1-S03. Provider client ID/secret, bootstrap allowlist configuration and session review must be addressed during that story; no credential is requested in this document or committed. Accounting and deployment approvals remain unchanged.
+
+## S03 decisions and acceptance
+
+D03's provider selection is settled: Google-only, exact verified owner allowlist. Better Auth 1.7.20 is the justified supported alternative (ADR-002), with fixed eight-hour database sessions and no cookie cache/refresh. The user authorized S03, initially chose to configure Google afterward, then asked for client creation fields and exact files; `docs/setup/GOOGLE_AUTH.md` provides them. Local `.env` slots and an application secret were created without printing or committing secrets. The owner email and Google client values are user-provided, never inferred from Git identity.
+
+Outstanding: security review of ADR-002 and the auth implementation, plus live Google consent/callback acceptance after private configuration. The pending checklist is not waived by mock-provider tests. No public deployment, paid service, real-bank integration, accounting approval, audit retention choice or user-data deletion policy has been inferred from this story.

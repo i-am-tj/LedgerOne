@@ -56,3 +56,7 @@ A user can enter and reconcile representative activity, explain category consump
 ## P1-S02 product evidence
 
 R01's responsive shell, theme, keyboard navigation and shared visible states are implemented for Overview, Appearance and Component library; financial module states remain future work. The overview explicitly discloses that account setup/capture are unavailable and displays no invented totals. R19 gains production-build browser journeys and automated accessibility evidence. Details and limitations: `docs/stories/P1-S02.md`. The overall Phase 1 and financial requirements remain incomplete.
+
+## P1-S03 product evidence
+
+R02 now has an implemented Google-only login/logout boundary, verified exact owner allowlist, database sessions, absolute eight-hour expiry, per-page/API checks, safe public configuration/error states and automated negative/session tests. User/provider credentials are still configured privately and live Google acceptance is pending. Public registration, password login and implicit account linking are not available. Real two-user financial entity isolation remains P1-S04; the full R02 requirement and Phase 1 gate are not complete. See `docs/setup/GOOGLE_AUTH.md` and ADR-002 for setup/policy review.

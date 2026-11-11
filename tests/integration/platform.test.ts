@@ -17,5 +17,5 @@ afterAll(async () => {
 it("P1-S01 fresh migration exposes the expected schema version", async () => {
   expect(
     await database.appMetadata.findUnique({ where: { key: "schema_version" } }),
-  ).toEqual({ key: "schema_version", value: "1" });
+  ).toEqual({ key: "schema_version", value: "2" });
 });

@@ -1,7 +1,9 @@
+import { requirePageSession } from "@/lib/auth/server";
 import type { Metadata } from "next";
 import { ComponentGallery } from "@/components/design-system/component-gallery";
 export const metadata: Metadata = { title: "Component library" };
-export default function DesignSystemPage() {
+export default async function DesignSystemPage() {
+  await requirePageSession();
   return (
     <>
       <div className="page-heading">

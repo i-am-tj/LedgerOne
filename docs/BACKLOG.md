@@ -79,6 +79,8 @@ Status: locally verified, awaiting review; details and limitations in `docs/stor
 
 **ID:** P1-S03 | **Title:** Authentication and sessions | **Epic:** P1-E2 | **Priority:** P0 | **Dependencies:** P1-S02 reviewed and merged; security review
 
+Status: implemented locally, automated evidence in `docs/stories/P1-S03.md`; live Google acceptance and security review pending.
+
 **User story:** As the owner, I want to sign in privately.
 
 **Inputs (data/API/preconditions):** Google OIDC selected by user; owner allowlist; private environment secrets and reviewed session policy.
@@ -87,10 +89,11 @@ Status: locally verified, awaiting review; details and limitations in `docs/stor
 
 **Implementation tasks:**
 
-- [ ] Review provider/session/CSRF design.
-- [ ] implement flows.
-- [ ] test expiry and deny non-allowlisted identities.
-- [ ] Update docs/traceability and record check output, migration recovery and review evidence.
+- [x] Document provider/session/CSRF design for review.
+- [x] implement flows.
+- [x] test expiry and deny non-allowlisted identities.
+- [x] Update docs/traceability and record automated evidence and migration recovery.
+- [ ] Complete live Google acceptance, security review and reviewed merge.
 
 **Acceptance criteria (Given/When/Then):** Given an anonymous, uninvited or expired identity, when private data routes are requested, then read/write access is denied; invited owner can sign in and out.
 

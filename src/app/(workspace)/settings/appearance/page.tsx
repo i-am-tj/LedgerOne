@@ -1,7 +1,9 @@
+import { requirePageSession } from "@/lib/auth/server";
 import type { Metadata } from "next";
 import { AppearanceSettings } from "@/components/shell/appearance-settings";
 export const metadata: Metadata = { title: "Appearance" };
-export default function AppearancePage() {
+export default async function AppearancePage() {
+  await requirePageSession();
   return (
     <>
       <div className="page-heading">

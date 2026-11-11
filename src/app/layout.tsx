@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { AppShell } from "@/components/shell/app-shell";
 import { ThemeProvider } from "@/components/shell/theme-provider";
 import "./globals.css";
 export const metadata: Metadata = {
@@ -13,12 +12,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        <a className="skip-link" href="#main">
-          Skip to content
-        </a>
-        <ThemeProvider>
-          <AppShell>{children}</AppShell>
-        </ThemeProvider>
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );

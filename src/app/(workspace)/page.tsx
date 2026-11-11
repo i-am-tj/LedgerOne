@@ -1,3 +1,4 @@
+import { requirePageSession } from "@/lib/auth/server";
 import Link from "next/link";
 import {
   ArrowDownUp,
@@ -10,7 +11,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/states";
-export default function Home() {
+export default async function Home() {
+  await requirePageSession();
   return (
     <>
       <div className="page-heading">

@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { SignOutButton } from "@/components/auth/auth-controls";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useTheme } from "next-themes";
@@ -79,6 +80,7 @@ function SidebarFooter() {
       <div>
         <strong>Built with care</strong>
         <p>Your financial workspace is taking shape.</p>
+        <SignOutButton />
       </div>
     </div>
   );
