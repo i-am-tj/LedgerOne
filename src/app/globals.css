@@ -1,0 +1,26 @@
+@import "tailwindcss";
+:root {
+  color-scheme: light;
+  background: #f5f7f7;
+  color: #102b2a;
+  font-family: Arial, Helvetica, sans-serif;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -6rem;
+  padding: 1rem;
+  background: white;
+  color: #102b2a;
+  z-index: 50;
+}
+.skip-link:focus {
+  top: 1rem;
+  outline: 3px solid #0f766e;
+}

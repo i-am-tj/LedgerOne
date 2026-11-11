@@ -1,0 +1,16 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Platform metadata only. Financial and identity schemas belong to later stories.
+model AppMetadata {
+  key   String @id
+  value String
+
+  @@map("app_metadata")
+}
