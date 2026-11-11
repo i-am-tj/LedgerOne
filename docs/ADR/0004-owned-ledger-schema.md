@@ -1,6 +1,6 @@
 # ADR-004 — Exact owned ledger schema and commit-time invariants
 
-Date: 2026-11-11. Story: P1-S05. Status: implemented locally with green checks; agent technical review recorded; peer review/merge pending. Core policy and staged FX boundary approved; independent review/merge pending.
+Date: 2026-11-11. Story: P1-S05. Status: implemented locally with green checks; fresh adversarial agent review CONDITIONALLY APPROVED within the read-only S05 scope; external peer review/merge pending. Core policy and staged FX boundary approved. See the review conditions below.
 
 Accounts have fixed scope/class/kind/currency. Assets/expenses are debit-normal; liabilities/income/equity credit-normal. Amounts are positive bigint minor units plus DEBIT/CREDIT side, maximum 999999999999999999 per leg. PostgreSQL sums use numeric; application arithmetic uses bigint, never JS number. There is no mutable balance cache.
 
@@ -15,3 +15,5 @@ OpeningBalance links original opening journal/account/provenance; it stores no s
 Primary mechanics: [constraint triggers](https://www.postgresql.org/docs/17/sql-createtrigger.html), [transaction isolation](https://www.postgresql.org/docs/17/transaction-iso.html), [row locks](https://www.postgresql.org/docs/17/explicit-locking.html). Deferred triggers alone do not prevent stale-snapshot races; parent version writes and actual PostgreSQL tests are required.
 
 Implementation uses forward migrations 004–006 and schema readiness version 6. Explicit pg_temp last prevents implicit temporary-table precedence. Production grants keep financial tables read-only pending S06; the disposable rehearsal temporarily grants only its local test writer and assertion helpers to prove invoker-right constraints.
+
+Fresh adversarial verification is recorded in [S05_ADVERSARIAL_REVIEW.md](../security/S05_ADVERSARIAL_REVIEW.md). The draft revision counter currently versions child edits, not every header meaning change; CORRECT outcome counts do not establish the intended original target. File checksums and Prisma diff do not attest live SQL invariant definitions. These are explicit S06 handoff/write-enablement conditions; the reviewed contract must not imply guarantees beyond the demonstrated controls. Production financial grants remain SELECT-only, and no S06 implementation or reviewed merge is implied.
