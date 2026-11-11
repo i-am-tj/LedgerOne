@@ -1,6 +1,6 @@
 # LedgerOne
 
-Private personal finance, implemented in reviewed increments. **P1-S03 adds Google-only authentication and server sessions; live owner Google sign-in is verified and financial features are not implemented.** The public login contains no financial data. Do not expose the development server publicly.
+Private personal finance, implemented in reviewed increments. **P1-S03 adds Google-only authentication and server sessions; live owner Google sign-in is verified and financial features are not implemented.** The public dashboard and login contain no financial data; `/home` requires an allowed session. Do not expose the development server publicly.
 
 ## Local prerequisites
 
@@ -19,7 +19,7 @@ npm run db:migrate
 npm run dev
 ```
 
-Open http://127.0.0.1:3000. The app binds to loopback. Compose publishes PostgreSQL on loopback only. The example database password is deliberately local-only; it is not a hosted credential. Choose an unused host port and update both Compose and DATABASE_URL if 5432 is occupied. Never commit private environment files or use a production database for local tests.
+Open http://127.0.0.1:3000. The app binds to loopback. Compose publishes PostgreSQL on loopback only. The example database password is deliberately local-only; it is not a hosted credential. Choose an unused host port and update both Compose and DATABASE_URL if 5432 is occupied. Never commit private environment files or use a production database for local tests. The public dashboard works without Google credentials; sign-in remains unavailable until configured.
 
 Health endpoints: `/api/health/live` returns 200 without a database dependency; `/api/health/ready` returns 200 only when the expected schema version is present, otherwise a sanitized 503. No account data or exception details are exposed. Readiness is not proof of accounting correctness.
 
@@ -57,7 +57,7 @@ npm run build
 python3 scripts/check_foundation.py
 ```
 
-Integration tests require a migrated PostgreSQL database and fail if it is unavailable. CI provisions an isolated database and runs these commands, but remote CI execution requires a user-configured remote. Browser interaction tests begin with P1-S02; there is no claimed E2E coverage yet.
+Integration tests require a migrated PostgreSQL database and fail if it is unavailable. CI provisions an isolated database and runs these commands, but remote CI execution requires a user-configured remote. Desktop/mobile Chromium covers the shell, login, public entry and private isolation; see the latest evidence in PROGRESS.
 
 Use `npm run start:local` after a successful build to serve the built app with the development profile. `npm run start` uses production configuration. Development CLI commands load only `.env.development.local`; production `.env` is separate. Builds/generation do not require a running database. Never put secrets in `NEXT_PUBLIC_*` variables. Configure Google and app secrets privately using `docs/setup/GOOGLE_AUTH.md`; no credentials belong in source control.
 
@@ -69,7 +69,7 @@ See [progress](docs/PROGRESS.md), [current backlog](docs/BACKLOG.md), [roadmap](
 
 ## P1-S02 shell and browser checks
 
-Workspace routes are `/`, `/settings/appearance`, and `/design-system`; P1-S03 now protects them with an owner session. The public entry is `/login`. Theme selection supports Light, Dark and System and persists in this browser. The component library demonstrates validation and feedback without storing records. Future finance modules are identified as unavailable and have no dead action links.
+Workspace routes are `/home`, `/settings/appearance`, and `/design-system`, protected by an owner session. Public routes are `/` (dashboard preview) and `/login`. Theme selection supports Light, Dark and System and persists in this browser. The component library demonstrates validation and feedback without storing records. Future finance modules are identified as unavailable and have no dead action links.
 
 ```sh
 npx playwright install chromium
@@ -79,19 +79,19 @@ npm run test:e2e
 
 Playwright starts an isolated production server on loopback port 3100. Keep that port free. It covers desktop/mobile Chromium, keyboard/modal focus, theme persistence, form/error/retry feedback, no-overflow layouts at 320/768/1024px, and automated light/dark accessibility scans. Screenshots and an HTML report are generated under ignored `test-results/` and `playwright-report/`; use `npx playwright show-report` to inspect the report. CI installs Chromium and uploads browser evidence. Other browser engines and full screen-reader testing remain unverified.
 
-See `docs/stories/P1-S02.md` for acceptance, limitations and rollback notes. No new migration is required. Authentication with the selected Google owner allowlist is the next story, P1-S03.
+See `docs/stories/P1-S02.md` for acceptance, limitations and rollback notes. No new migration is required. Google owner-allowlisted authentication is implemented; the new card and Google/GitHub adapter extension are reviewed in `docs/security/AUTH_ADAPTER_REVIEW.md`. GitHub callback completion/live setup and other methods remain deferred.
 
 ## Daily development and live reload
 
 Use `npm run dev -- --port 3000` for everyday development. Next.js Fast Refresh updates the browser when source files are saved. If port 3000 is occupied by a production `npm run start` session, stop that session with Ctrl+C in its terminal before starting dev; refresh an already-open production tab once after switching. Keep the dev terminal running.
 
-`npm run start` serves the last production build and does not watch source files. Use it after `npm run build` for production-build verification. Docker runs PostgreSQL only; the Next.js watcher runs on the host, so no Docker volume/watcher integration is needed for the current setup.
+`npm run start:local` serves the last production build with local credentials and does not watch source files. Use it after `npm run build` for local build verification; `npm run start` is reserved for actual production configuration. Docker runs PostgreSQL only; the Next.js watcher runs on the host, so no Docker volume/watcher integration is needed for the current setup.
 
 ## P1-S03 Google sign-in and session verification
 
 Follow [Google setup](docs/setup/GOOGLE_AUTH.md) to register the exact local callback and configure the project-root `.env.development.local`. Its tracked template is `.env.development.example`. Production uses `.env` and `.env.example`; see [Supabase setup](docs/setup/SUPABASE.md). The app fails closed until `BETTER_AUTH_URL`, `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` and `AUTH_ALLOWED_EMAILS` are valid. Use `http://localhost:3000` consistently for real local Google sign-in. Restart after editing the environment.
 
-The identity migration is additive and advances readiness to schema version 2. Run `npm run db:migrate` before using this version. Private pages render dynamically and authorize on the server; `/api/session` returns only the authenticated user DTO and expiry. Sessions expire absolutely after eight hours and are revoked on logout. The supported alternative to Auth.js and threat model are documented in [ADR-002](docs/ADR/0002-google-auth-and-server-sessions.md), awaiting security review.
+The identity migration is additive and advances readiness to schema version 2. Run `npm run db:migrate` before using this version. Private pages render dynamically and authorize on the server; `/api/session` returns only the authenticated user DTO and expiry. Sessions expire absolutely after eight hours and are revoked on logout. The supported alternative to Auth.js and threat model are documented in [ADR-002](docs/ADR/0002-google-auth-and-server-sessions.md), with the original Google review recorded; the expanded provider surface requires further review.
 
 Integration/browser tests now require a separate `TEST_DATABASE_URL` with a database name ending in `_test`. Create the local `ledgerone_test` database as described in the setup guide, then:
 
@@ -111,6 +111,6 @@ Apply `npm run db:migrate` and regenerate Prisma before using schema version 3. 
 
 Successful mutations and minimal append-only audit commit together; audit failure rolls back the mutation. Cross-user reads/writes are denied, and supported handlers return a fresh `X-Request-ID` correlated to sanitized traces. See `docs/stories/P1-S04.md` and ADR-003 for security/retention/recovery limits. Integration/browser tests use the separate `_test` DB and intentionally retain immutable audited fixtures; production DB role separation remains a deployment prerequisite. The full Phase 1 gate still requires actual ledger and account/transaction isolation evidence.
 
-## Production profiles
+## Supabase and provider readiness
 
-See [Supabase preparation](docs/setup/SUPABASE.md) for the created project, private-schema provisioning and guarded commands. Hosted credentials/connectivity, app hosting/OAuth and backup/restore remain pending.
+See [production preparation](docs/setup/SUPABASE.md) for the created GitHub-linked Supabase database, private schema/role provisioning files and guarded migration commands. Production hosting, database credentials/connectivity, OAuth and backup/restore are pending. No Prisma migration has been sent to Supabase and no app has been deployed. The login card stays active; additional provider setup is deferred. The [adapter review](docs/security/AUTH_ADAPTER_REVIEW.md) distinguishes implemented OAuth abstractions from unconnected UI options.

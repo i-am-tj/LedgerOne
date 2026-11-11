@@ -1,6 +1,78 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
+.public-dashboard {
+  min-height: 100dvh;
+}
+.public-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: 1280px;
+  margin: auto;
+  padding: 1.25rem 2rem;
+  border-bottom: 1px solid var(--border);
+}
+.public-header .brand {
+  margin: 0;
+}
+.public-content {
+  max-width: 1280px;
+  margin: auto;
+  padding: 3rem 2rem;
+}
+.public-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+.public-summary-card {
+  padding: 1.5rem;
+}
+.public-summary-card h3 {
+  margin: 1.25rem 0 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+.public-summary-card p {
+  color: var(--muted-foreground);
+  margin-bottom: 1.25rem;
+}
+.public-footer {
+  max-width: 1280px;
+  margin: auto;
+  padding: 1.5rem 2rem;
+  border-top: 1px solid var(--border);
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+}
+@media (max-width: 767px) {
+  .public-header {
+    padding: 1rem;
+    gap: 0.5rem;
+  }
+  .public-header .brand {
+    gap: 0.5rem;
+    font-size: 1.125rem;
+  }
+  .public-header .brand small {
+    display: none;
+  }
+  .public-header .brand-mark {
+    display: none;
+  }
+  .public-content {
+    padding: 2rem 1rem;
+  }
+  .public-card-grid {
+    grid-template-columns: 1fr;
+  }
+  .public-footer {
+    padding: 1.5rem 1rem;
+  }
+}
+
 :root {
   color-scheme: light;
   --background: #f7f8f5;

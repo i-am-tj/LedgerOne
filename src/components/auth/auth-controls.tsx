@@ -15,7 +15,7 @@ export function GoogleSignIn({ available }: { available: boolean }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           provider: "google",
-          callbackURL: "/",
+          callbackURL: "/home",
           errorCallbackURL: "/login?error=signin",
         }),
       });

@@ -259,3 +259,7 @@ Rehearsal `npx tsx scripts/rehearse-production-schema.ts` PASS: a newly created 
 ## 2026-11-11 — P1-S03 OAuth adapter review
 
 Reviewed the user-supplied adapter interface, Google/GitHub implementations and registry. Server admission and provider initiation now use the shared OAuth abstraction while preserving verified-email allowlisting, sessions, CSRF and disabled automatic account linking. Provider credential fields, unions, request enum and client metadata still require coordinated edits for a new provider. Additional provider setup is deferred. GitHub initiation is tested; callback completion/live acceptance is not. See `docs/security/AUTH_ADAPTER_REVIEW.md`. The new card and public-entry routing are separated into subsequent local commits.
+
+## 2026-11-11 — P1-S04A public entry and protected home
+
+Added a static public dashboard at `/`, top-right sign-in and protected `/home`; existing sessions transition from `/login` to home. Private APIs retain independent session/owner checks. Successful OAuth returns to fixed `/home`; no private data query runs on the public page. Public/private entry, keyboard, reflow and accessibility journeys passed in the combined local suite. This does not implement financial modules, public registration or application deployment. The supplied login-card presentation is kept separate in the next local commit.

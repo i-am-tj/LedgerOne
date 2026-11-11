@@ -20,13 +20,13 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const links = [
-  { href: "/", title: "Overview", icon: LayoutDashboard },
+  { href: "/home", title: "Overview", icon: LayoutDashboard },
   { href: "/settings/appearance", title: "Appearance", icon: Palette },
   { href: "/design-system", title: "Component library", icon: Layers3 },
 ];
 function Brand() {
   return (
-    <Link href="/" className="brand" aria-label="LedgerOne home">
+    <Link href="/home" className="brand" aria-label="LedgerOne home">
       <span className="brand-mark" aria-hidden="true">
         <span />
         <span />
@@ -107,7 +107,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="header-actions">
             <span className="environment-badge">
               <Check size={12} aria-hidden="true" />
-              Local workspace
+              Private workspace
             </span>
             <Button
               variant="ghost"

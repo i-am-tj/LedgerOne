@@ -6,7 +6,7 @@ import { testDatabase } from "../support/database";
 test("P1-S03 anonymous pages/API deny access and prevent auth bypasses", async ({
   page,
 }) => {
-  for (const route of ["/", "/settings/appearance", "/design-system"]) {
+  for (const route of ["/home", "/settings/appearance", "/design-system"]) {
     await page.goto(route);
     await expect(page).toHaveURL(/\/login$/);
     await expect(
@@ -53,7 +53,7 @@ test("P1-S03 sign-in initiation uses Google, state and canonical callback", asyn
   await page.goto("/login");
   const response = await page.request.post("/api/auth/sign-in/social", {
     headers: { origin: "http://127.0.0.1:3100" },
-    data: { provider: "google", callbackURL: "/" },
+    data: { provider: "google", callbackURL: "/home" },
   });
   expect(response.status()).toBe(200);
   const url = new URL((await response.json()).url);
@@ -70,7 +70,7 @@ test("P1-S03 sign-in initiation uses GitHub via adapter, state and canonical cal
   await page.goto("/login");
   const response = await page.request.post("/api/auth/sign-in/social", {
     headers: { origin: "http://127.0.0.1:3100" },
-    data: { provider: "github", callbackURL: "/" },
+    data: { provider: "github", callbackURL: "/home" },
   });
   expect(response.status()).toBe(200);
   const url = new URL((await response.json()).url);
@@ -129,7 +129,7 @@ for (const theme of ["light", "dark"] as const)
 ownerTest(
   "P1-S03 real server session, logout and browser-back denial",
   async ({ page, isMobile, ownerSession }) => {
-    await page.goto("/");
+    await page.goto("/home");
     await expect(
       page.getByRole("heading", { name: "Your money. A little clearer." }),
     ).toBeVisible();
@@ -161,7 +161,7 @@ ownerTest(
     await expect(
       page.getByRole("navigation", { name: "Main navigation" }),
     ).toHaveCount(0);
-    await page.goto("/");
+    await page.goto("/home");
     await expect(page).toHaveURL(/\/login$/);
   },
 );
@@ -170,7 +170,7 @@ ownerTest(
   async ({ page, ownerSession }) => {
     const database = testDatabase();
     try {
-      await page.goto("/");
+      await page.goto("/home");
       await expect(
         page.getByRole("heading", { name: "Your money. A little clearer." }),
       ).toBeVisible();
@@ -192,7 +192,7 @@ ownerTest(
   async ({ page, ownerSession }) => {
     const database = testDatabase();
     try {
-      await page.goto("/");
+      await page.goto("/home");
       await expect(
         page.getByRole("heading", { name: "Your money. A little clearer." }),
       ).toBeVisible();

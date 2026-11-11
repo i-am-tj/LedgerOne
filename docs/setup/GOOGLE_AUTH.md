@@ -97,3 +97,5 @@ npm run test:e2e
 The test-only Google exchange is mocked inside an integration-test auth instance. Browser tests seed short-lived signed sessions directly into the isolated test DB, using a random test secret passed only to their loopback server. There is no production test provider, test credential login, auth bypass flag or hidden login endpoint. These tests prove local control behavior, not a live exchange with Google's servers.
 
 References: [Google web-server OAuth setup](https://developers.google.com/identity/protocols/oauth2/web-server#creatingcred), [Better Auth Google provider](https://better-auth.com/docs/authentication/google), [session policy ADR](../ADR/0002-google-auth-and-server-sessions.md).
+
+Production uses a separate private `.env` and exact HTTPS app origin. See [Supabase production preparation](SUPABASE.md). Successful new sign-ins now return to protected `/home`; `/` is a public preview. Additional provider setup is deferred.

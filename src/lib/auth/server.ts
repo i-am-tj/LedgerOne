@@ -12,18 +12,16 @@ export function getAuthRuntime() {
   return { auth: createAuth(config, getDatabase()), config };
 }
 export async function requirePageSession() {
-  const runtime = getAuthRuntime();
-  if (!runtime) redirect("/login");
-  let session;
-  try {
-    session = await getOwnerSession(
-      runtime.auth,
-      runtime.config,
-      await headers(),
-    );
-  } catch {
-    redirect("/login?error=unavailable");
-  }
+  const session = await optionalPageSession();
   if (!session) redirect("/login");
   return session;
+}
+export async function optionalPageSession() {
+  try {
+    const runtime = getAuthRuntime();
+    if (!runtime) return null;
+    return await getOwnerSession(runtime.auth, runtime.config, await headers());
+  } catch {
+    return null;
+  }
 }

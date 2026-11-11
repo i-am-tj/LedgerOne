@@ -5,6 +5,8 @@ import { LockKeyhole } from "lucide-react";
 import { readAuthConfig } from "@/lib/auth/policy";
 import { GoogleSignIn } from "@/components/auth/auth-controls";
 import { Card } from "@/components/ui/card";
+import Link from "next/link";
+import { optionalPageSession } from "@/lib/auth/server";
 export const metadata: Metadata = { title: "Sign in" };
 export const dynamic = "force-dynamic";
 export default async function Login({
@@ -15,12 +17,17 @@ export default async function Login({
   const config = readAuthConfig(process.env);
   if (config && (await headers()).get("host") !== new URL(config.baseURL).host)
     redirect(`${config.baseURL}/login`);
+  if (await optionalPageSession()) redirect("/home");
   const { error } = await searchParams;
   return (
     <main id="main" className="login-page">
-      <div className="login-brand">
+      <Link
+        href="/"
+        className="login-brand"
+        aria-label="LedgerOne public dashboard"
+      >
         Ledger<span>One</span>
-      </div>
+      </Link>
       <Card className="login-card">
         <span className="section-icon mb-6">
           <LockKeyhole aria-hidden="true" />
@@ -49,7 +56,9 @@ export default async function Login({
         </p>
       </Card>
       <p className="mt-6 text-center text-sm text-muted-foreground">
-        Your money. A little clearer.
+        <Link href="/" className="underline underline-offset-4">
+          Back to public dashboard
+        </Link>
       </p>
     </main>
   );

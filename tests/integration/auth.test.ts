@@ -169,7 +169,7 @@ describe("P1-S03 real PostgreSQL auth flow with mocked Google exchange", () => {
     const flow = await start();
     const response = await finish(flow.state, flow.cookie);
     expect(response.status).toBe(302);
-    expect(response.headers.get("location")).toBe(config.baseURL + "/");
+    expect(response.headers.get("location")).toBe(config.baseURL + "/home");
     const sessionCookie = response.headers
       .getSetCookie()
       .find((value) => value.startsWith("__Secure-ledgerone.session_token="))!;

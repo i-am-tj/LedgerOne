@@ -15,7 +15,7 @@ test("P1-S02 routes, active navigation and mobile menu focus", async ({
   page,
   isMobile,
 }) => {
-  await page.goto("/");
+  await page.goto("/home");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "Your money. A little clearer.",
   );
@@ -55,7 +55,7 @@ test("P1-S02 routes, active navigation and mobile menu focus", async ({
   }
 });
 test("P1-S02 skip link and empty overview", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/home");
   await page.keyboard.press("Tab");
   await expect(
     page.getByRole("link", { name: "Skip to content" }),
@@ -127,7 +127,7 @@ test("P1-S02 form validation, safe rendering and all feedback states", async ({
   );
 });
 test("P1-S02 no dead links and useful not-found recovery", async ({ page }) => {
-  for (const route of ["/", "/settings/appearance", "/design-system"]) {
+  for (const route of ["/home", "/settings/appearance", "/design-system"]) {
     await page.goto(route);
     const links = await page
       .locator('a[href^="/"]')
@@ -150,7 +150,7 @@ test("P1-S02 narrow width, zoom-equivalent reflow and reduced motion", async ({
   await page.emulateMedia({ reducedMotion: "reduce" });
   for (const width of [320, 768, 1024]) {
     await page.setViewportSize({ width, height: 900 });
-    for (const route of ["/", "/settings/appearance", "/design-system"]) {
+    for (const route of ["/home", "/settings/appearance", "/design-system"]) {
       await page.goto(route);
       expect(
         await page.evaluate(
@@ -171,7 +171,7 @@ for (const theme of ["light", "dark"] as const) {
     isMobile,
   }, testInfo) => {
     await page.emulateMedia({ colorScheme: theme });
-    for (const route of ["/", "/settings/appearance", "/design-system"]) {
+    for (const route of ["/home", "/settings/appearance", "/design-system"]) {
       await page.goto(route);
       await expect(page.locator("html")).toHaveClass(new RegExp(theme));
       const results = await new AxeBuilder({ page })
@@ -179,7 +179,7 @@ for (const theme of ["light", "dark"] as const) {
         .analyze();
       expect(results.violations).toEqual([]);
     }
-    await page.goto("/");
+    await page.goto("/home");
     await page.screenshot({
       path: testInfo.outputPath(`overview-${theme}.png`),
       fullPage: true,

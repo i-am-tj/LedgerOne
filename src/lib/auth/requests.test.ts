@@ -105,7 +105,7 @@ describe("P1-S03 auth HTTP surface", () => {
   it("overrides spoofed rate headers, fixes callbacks and prevents caching", async () => {
     const handler = vi.fn(async (request: Request) => {
       expect(request.headers.get("x-ledgerone-auth-bucket")).toBe("127.0.0.1");
-      expect((await request.json()).callbackURL).toBe(config.baseURL + "/");
+      expect((await request.json()).callbackURL).toBe(config.baseURL + "/home");
       return Response.json({ url: "https://accounts.google.com" });
     });
     const result = await handleAuthRequest(

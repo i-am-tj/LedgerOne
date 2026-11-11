@@ -58,7 +58,7 @@ async function readSmallBody(request: Request): Promise<string | null> {
 const signInInput = z
   .object({
     provider: z.enum(["google", "github"]),
-    callbackURL: z.literal("/").optional(),
+    callbackURL: z.literal("/home").optional(),
     errorCallbackURL: z.literal("/login?error=signin").optional(),
   })
   .strict();
@@ -108,7 +108,7 @@ export async function handleAuthRequest(
           return authJSON({ error: "invalid_request" }, 400);
         body = JSON.stringify({
           ...input.data,
-          callbackURL: `${config.baseURL}/`,
+          callbackURL: `${config.baseURL}/home`,
           errorCallbackURL: `${config.baseURL}/login?error=signin`,
         });
       } else {

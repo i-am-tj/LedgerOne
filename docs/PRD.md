@@ -64,3 +64,7 @@ R02 now has an implemented Google-only login/logout boundary, verified exact own
 ## P1-S04 product evidence
 
 R02 gains an implemented resource boundary: allowed identities can access only their own Workspace and latest audit events. R03's audit foundation records workspace mutations atomically and rejects history edits. These APIs have no new UI and contain no monetary account/transaction behavior. Financial R02/R03 tests and all accounting requirements remain pending S05–S08; see the explicit dependency reconciliation in the S04 story. No deployment or full Phase 1 PASS is claimed.
+
+## Public entry clarification — P1-S04A
+
+A visitor can view a data-free dashboard preview at `/` and select Sign in. Private workspace/actions require an allowed session at `/home` and independent server API authorization. The user retained the refreshed login card while deferring additional provider integrations. No public registration or personal financial data is exposed by this entry view.
