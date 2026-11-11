@@ -42,3 +42,7 @@ User chose Supabase PostgreSQL for production and created the GitHub-linked Free
 ## S05 authorization and staged FX approval
 
 The user explicitly authorized completing S05 after the published foundation CI passed. They approved foreign accounts and immutable rate records with foreign-currency posting disabled until detailed FX rounding/carrying-cost review. Core INR/sign/reversal policy remains approved. This permits the S05 schema/accounting evidence, not S06 implementation, financial write exposure, production migrations, independent review claims or deployment. S05's concrete accounting/security review is recorded separately; peer review/merge remains required.
+
+## S05 → S06 handoff authorization
+
+The user authorized GitHub finding/story tracking and S06 delivery after S05 reviewed closure, and selected themselves as the human S05 reviewer. “I will review it” is intent, not approval. GitHub author self-approval is unavailable; retain actual human PR-comment review evidence without fabricating a formal APPROVED review or overriding repository protections. The documented implementation default is private atomic command drafts (persisted editable draft finalization excluded); A05-01 remains explicitly tracked rather than silently fixed. All five findings retain linked acceptance/regression obligations. Hosted migration/grant/deployment approval remains separate. See HANDOFF_S05_S06.md.

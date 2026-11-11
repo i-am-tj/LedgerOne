@@ -1,8 +1,8 @@
 # Current implementation backlog
 
-The user’s 2026-11-11 expanded Phase 1 supersedes the initial S001–S024 execution order. Historical scope remains in archive/BACKLOG_INITIAL.md. Current IDs are P1-S01–P1-S09; no implementation story is done. Phase = milestone; epic = parent issue (fallback labeled parent); story = issue; tasks = checkboxes. No remote resources are created; the user will configure the remote.
+The user’s 2026-11-11 expanded Phase 1 supersedes the initial S001–S024 execution order. Historical scope remains in archive/BACKLOG_INITIAL.md. Current IDs are P1-S01–P1-S09; no implementation story is done. Phase = milestone; epic = parent issue (fallback labeled parent); story = issue; tasks = checkboxes. Remote repository identity and tracker authorization are now confirmed; current Phase 1 issue links and S06 slice ordering are recorded in HANDOFF_S05_S06.md. Historical implementation/merge claims below remain distinct from current issue tracking.
 
-Labels when authorized remotely: `phase:1`, `epic:P1-E1`–`epic:P1-E4`, `type:epic`, `type:story`, `type:bug`, `type:decision`, `priority:P0`, `priority:P1`, `status:planned`, `status:in-progress`, `status:awaiting-review`, `status:blocked`, `status:done`. Trace commits/PRs to the current IDs. One story/PR at a time; required failures and unreviewed/unmerged stories block the next story.
+Current remote workflow labels: `phase:1`, `epic:P1-E1`–`epic:P1-E4`, `type:epic`, `type:story`, `type:bug`, `type:decision`, `priority:P0`, `priority:P1`, `status:planned`, `status:in-progress`, `status:awaiting-review`, `status:blocked`, `status:done`. Trace commits/PRs to the current IDs. One story/PR at a time; required failures and unreviewed/unmerged stories block the next story.
 
 ## Milestone Phase 1
 
@@ -199,6 +199,8 @@ Status: ownership/audit foundation locally verified; see `docs/stories/P1-S04.md
 **Rollback/migration notes:** Disable writes on invariant failure; use linked forward corrections.
 
 **Definition of done:** Demonstrated behavior; server validation/authorization; safe migration recovery; applicable accessibility and empty/loading/error/success states; formatting, lint, typecheck, unit/integration and build green with reproducible evidence; docs current; accounting/security review where applicable; reviewed merge.
+
+S06 detailed delivery plan: [P1-S06](https://github.com/i-am-tj/LedgerOne/issues/7) is the umbrella; ordered implementation slices [P1-S06A](https://github.com/i-am-tj/LedgerOne/issues/8), [P1-S06B](https://github.com/i-am-tj/LedgerOne/issues/9), [P1-S06C](https://github.com/i-am-tj/LedgerOne/issues/10), [P1-S06D](https://github.com/i-am-tj/LedgerOne/issues/11). Full contracts are in corresponding `docs/stories/` files. All remain blocked on S05 human review/merge and reviewed predecessors. Findings A05-01..A05-05 are tracked in `docs/security/S05_FINDINGS.md`; no finding is closed by planning.
 
 ## P1-S07 — Account management and reconciliation
 

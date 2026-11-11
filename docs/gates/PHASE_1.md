@@ -43,3 +43,11 @@ Supabase project creation/GitHub linkage and local environment/private-schema re
 S05 DB foundations now enforce scoped account/journal/currency links, exact positive minor units, commit-time balancing, posted immutability, original opening provenance, exact single linked reversal and successful operation receipt structure. Tests exercise two-user financial read isolation, malformed SQL/rollback and READ COMMITTED/REPEATABLE READ lifecycle races. Fresh private-schema and temporary non-owner writer rehearsal passes with zero Prisma drift; production financial grants remain read-only. Foreign posting is intentionally disabled under the user's staged FX approval.
 
 This is not the phase gate: S06 command authorization/audit/hash-matched replay/correction services, S07 account UI/balance-as-of/reconciliation, S08 classifications and S09 canonical/property/concurrency gate evidence remain unimplemented. Reviewed merge and hosted deployment/backup prerequisites remain pending. Journal fixture success is not claimed as a user transaction workflow. The previously published foundation CI run passed; S05 branch CI must be reported separately.
+
+## S05 adversarial review checkpoint
+
+The fresh [accounting/security review](../security/S05_ADVERSARIAL_REVIEW.md) conditionally approves only the current read-only INR S05 foundation. It records draft header versioning, correction-target intent and invariant-catalog assurance gaps, plus exact S06/S07 preconditions. Existing 80-unit/48-integration suites, fresh private-schema rehearsal and an additional full fresh-DB 48-test run pass; new independent isolation/key races reject safely. This is not a phase PASS or financial API authorization/replay/audit proof. Reviewed merge and S06–S09 implementation/gate evidence remain pending; Phase 1 stays blocked for release.
+
+## S05 → S06 reviewed handoff
+
+S05 PR #1 remains unmerged pending the user’s actual accounting/security review. All five findings have linked GitHub issues and S06/S07 obligations in HANDOFF_S05_S06.md. S06 implementation has not begun; its separate financial write gate is NOT RUN / FAIL closed. Tracking and a conditional foundation review cannot advance any Phase 1 release gate. Financial runtime grants and INR-only FX restriction remain unchanged.

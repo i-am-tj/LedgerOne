@@ -69,3 +69,7 @@ The user approved INR as fixed functional currency, retained original foreign-cu
 - Reversal references must point to an already-posted predecessor, excluding circular draft graphs. Exactly one full reversal per original is allowed, with the exact opposite posting multiset (including duplicate-line multiplicities), not merely equal aggregated totals. Original rows stay POSTED; effective correction status is derived through links. Reversal of a reversal follows the chain. Archived accounts reject all new postings for now, including reversals; any controlled exception needs the S07 workflow/review.
 
 S05 adds no financial write endpoint or UI. Production role grants keep all financial tables read-only until S06 review. No balance cache, transaction template, report, overdraft policy, import or automated exchange rate is implied. Source grants, constraints, portability tests and recovery notes are in ADR-004, the S05 story and TEST_PLAN.
+
+## S06 handoff boundary
+
+The [handoff](HANDOFF_S05_S06.md) selects private atomic command drafts for planned S06; the current child-edit revision is not approved as a full editable-draft version. CORRECT must reverse the explicit authorized original outside its own replacement operation. Financial audit, hash-matched replay/retries, target catalog attestation and actual handler authorization remain planned, not implemented. S07 metadata/opening/archive/reconciliation policy remains separate; no accounting rule or INR-only gate is changed by tracking the findings.

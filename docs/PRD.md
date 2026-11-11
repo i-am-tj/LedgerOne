@@ -72,3 +72,7 @@ A visitor can view a data-free dashboard preview at `/` and select Sign in. Priv
 ## S05 delivery boundary
 
 Chart/owned financial schema and invariant enforcement are implemented for review. Exact INR postings are supported at the DB foundation only; foreign account/rate records are modeled while foreign posting is explicitly disabled by user approval. User account management, transaction capture, balances/reconciliation and command audit/idempotent replay remain S06–S09. No financial UI or public mutation endpoint is presented as working in S05.
+
+## S05 → S06 delivery contract
+
+The user-authorized [GitHub handoff](HANDOFF_S05_S06.md) makes all five S05 findings traceable to S06/S07 issues and acceptance tests. S06 consists of four reviewed slices; runtime write exposure stays disabled until actual handler, replay/audit, correction, concurrency and invariant-drift gate evidence passes. Account metadata/history/reconciliation remains S07. The foundation’s conditional approval does not establish production readiness, implemented commands or Phase 1 PASS.
