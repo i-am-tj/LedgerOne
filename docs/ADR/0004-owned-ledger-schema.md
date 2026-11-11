@@ -1,0 +1,17 @@
+# ADR-004 — Exact owned ledger schema and commit-time invariants
+
+Date: 2026-11-11. Story: P1-S05. Status: implemented locally with green checks; agent technical review recorded; peer review/merge pending. Core policy and staged FX boundary approved; independent review/merge pending.
+
+Accounts have fixed scope/class/kind/currency. Assets/expenses are debit-normal; liabilities/income/equity credit-normal. Amounts are positive bigint minor units plus DEBIT/CREDIT side, maximum 999999999999999999 per leg. PostgreSQL sums use numeric; application arithmetic uses bigint, never JS number. There is no mutable balance cache.
+
+Workspace/journal functional currency is fixed INR. Composite foreign keys repeat workspace/owner/currency, preventing cross-owner/currency contamination. Currency metadata is immutable. Foreign accounts and immutable manual FX quotes support later integration; **S05 postings are INR-only with native=functional and no FX-rate reference**. Conversion/rounding/carrying-cost/valuation postings require a later reviewed migration. User explicitly approved this staged restriction.
+
+DRAFT journals can be incomplete and never affect balances. Atomic DRAFT→POSTED requires a timestamp, successful operation receipt, at least two positive legs, exact balance, active compatible accounts and opening/reversal structural checks. Posted context/postings, operation receipts and FX evidence are immutable, protected against DELETE/TRUNCATE. A reversal is a separate exact opposite posting multiset, one per original; original status/history stays intact. The predecessor must already be posted when linked, preventing circular drafts from validating each other at commit.
+
+Every draft posting/marker edit updates the parent journal revision, locking it and changing its MVCC version. Deferred constraint triggers validate final committed state. This prevents finalization from accepting stale drafts under repeatable read; account locks serialize archive races. Trigger functions pin the containing schema search path and use invoker rights, not SECURITY DEFINER. These controls do not protect against a privileged migration administrator deliberately disabling them.
+
+OpeningBalance links original opening journal/account/provenance; it stores no second amount. The journal contains exactly the target asset/liability leg and opening-equity counterpart. Corrections retain the original marker; S07 defines the workflow. LedgerOperation is an immutable successful-command receipt with scoped key/hash uniqueness and posted journal outcomes in the same transaction. Persisted drafts do not reserve successful-operation keys. Payload matching, authorization, audit and retry orchestration remain S06; schema uniqueness alone is not that service.
+
+Primary mechanics: [constraint triggers](https://www.postgresql.org/docs/17/sql-createtrigger.html), [transaction isolation](https://www.postgresql.org/docs/17/transaction-iso.html), [row locks](https://www.postgresql.org/docs/17/explicit-locking.html). Deferred triggers alone do not prevent stale-snapshot races; parent version writes and actual PostgreSQL tests are required.
+
+Implementation uses forward migrations 004–006 and schema readiness version 6. Explicit pg_temp last prevents implicit temporary-table precedence. Production grants keep financial tables read-only pending S06; the disposable rehearsal temporarily grants only its local test writer and assertion helpers to prove invoker-right constraints.

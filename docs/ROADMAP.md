@@ -28,3 +28,7 @@ S03's agent-owned technical review is recorded at `docs/security/S03_REVIEW.md` 
 ## Authorized foundation amendment
 
 P1-S04A interrupts the S04→S05 transition at the user's request: Supabase production preparation, separate environment profiles and public-entry/private-home navigation. Local checks and review are recorded in PROGRESS; production credentials/domain/roles and release gates remain pending. The user then requested review and separate commits for their OAuth adapter/login-card edits, retaining the card while deferring provider setup. Neither request authorizes Phase 2 or public deployment.
+
+## S05 checkpoint
+
+User authorized S05 after the successful remote foundation pipeline and approved staged foreign-currency schema support. The exact owned schema, deferred balancing, concurrency guards, opening/reversal structure and scoped reads are implemented with local evidence recorded in PROGRESS. Accounting/security peer review and merge precede S06. S06–S09 and the phase gate remain pending; no Phase 2 work starts.

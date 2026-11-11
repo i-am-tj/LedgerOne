@@ -118,3 +118,7 @@ See [production preparation](docs/setup/SUPABASE.md) for the created GitHub-link
 ## Source publication hygiene
 
 Only reviewed source, dependency lockfile, migrations, tests, documentation and synthetic UI evidence belong in Git. Private environment files, credentials, database dumps/exports, uploaded receipts, deployment metadata, build output and raw browser reports stay local. See [pre-push privacy review](docs/security/PRE_PUSH_REVIEW.md). Repository publication does not deploy the application or change its finance release gates.
+
+## P1-S05 owned ledger schema
+
+Apply `npm run db:migrate` for additive S05 migrations/readiness version 6. Account kinds/signs, immutable financial evidence, bigint minor units and commit-time balanced journals are documented in [ACCOUNTING](docs/ACCOUNTING.md) and [ADR-004](docs/ADR/0004-owned-ledger-schema.md). Tests exercise direct SQL, two-user reads and concurrent lifecycle rejection. Financial write APIs/UI, idempotent command replay and reconciliation remain later stories; foreign posting is deliberately disabled pending FX review. `npm run test:schema` proves a fresh private schema and restricted-role behavior locally. No production migration has run.

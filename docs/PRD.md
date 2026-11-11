@@ -68,3 +68,7 @@ R02 gains an implemented resource boundary: allowed identities can access only t
 ## Public entry clarification — P1-S04A
 
 A visitor can view a data-free dashboard preview at `/` and select Sign in. Private workspace/actions require an allowed session at `/home` and independent server API authorization. The user retained the refreshed login card while deferring additional provider integrations. No public registration or personal financial data is exposed by this entry view.
+
+## S05 delivery boundary
+
+Chart/owned financial schema and invariant enforcement are implemented for review. Exact INR postings are supported at the DB foundation only; foreign account/rate records are modeled while foreign posting is explicitly disabled by user approval. User account management, transaction capture, balances/reconciliation and command audit/idempotent replay remain S06–S09. No financial UI or public mutation endpoint is presented as working in S05.

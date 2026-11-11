@@ -8,7 +8,7 @@ This report uses the user's expanded Phase 1 scope (P1-E1–P1-E4; P1-S01–P1-S
 | ------------------------------------ | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
 | Clean setup and migration            | P1-S01 fresh DB/setup command evidence             | Local checks PASS; Compose healthy and migration/integration rerun verified                                  |
 | Private auth and isolation           | P1-S03/P1-S04 two-user/session/CSRF negative tests | S03 local/live sign-in + internal review recorded; S04 Workspace isolation PASS; financial isolation pending |
-| Every journal balanced               | P1-S05/P1-S06 commit-time DB invariants            | Not implemented                                                                                              |
+| Every journal balanced               | P1-S05/P1-S06 commit-time DB invariants            | S05 DB constraints/direct-SQL evidence PASS; S06 service pending                                             |
 | Atomic and idempotent writes         | P1-S06 failure/retry/concurrency evidence          | Not implemented                                                                                              |
 | Opening balances and reversals       | P1-S06/P1-S07 exact expected balances              | Not implemented                                                                                              |
 | Card/transfer/FD/loan classification | P1-S08/P1-S09 independent scenario totals          | Not implemented                                                                                              |
@@ -37,3 +37,9 @@ The agent-owned S03 technical review is recorded, with no local-development bloc
 ## P1-S04A / authentication extension checkpoint
 
 Supabase project creation/GitHub linkage and local environment/private-schema rehearsal are recorded. Public entry and protected home, plus the user's Google/GitHub adapter/login-card changes, have local regression evidence. Additional provider setup, hosted connection/roles/domain/OAuth, broader auth review and backup/restore remain pending. No accounting gate row changes to PASS; S05–S09 are still unimplemented and Phase 1 remains blocked for release.
+
+## S05 schema checkpoint
+
+S05 DB foundations now enforce scoped account/journal/currency links, exact positive minor units, commit-time balancing, posted immutability, original opening provenance, exact single linked reversal and successful operation receipt structure. Tests exercise two-user financial read isolation, malformed SQL/rollback and READ COMMITTED/REPEATABLE READ lifecycle races. Fresh private-schema and temporary non-owner writer rehearsal passes with zero Prisma drift; production financial grants remain read-only. Foreign posting is intentionally disabled under the user's staged FX approval.
+
+This is not the phase gate: S06 command authorization/audit/hash-matched replay/correction services, S07 account UI/balance-as-of/reconciliation, S08 classifications and S09 canonical/property/concurrency gate evidence remain unimplemented. Reviewed merge and hosted deployment/backup prerequisites remain pending. Journal fixture success is not claimed as a user transaction workflow. The previously published foundation CI run passed; S05 branch CI must be reported separately.

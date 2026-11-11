@@ -49,3 +49,7 @@ The guarded command `npm run db:migrate:production` loads production `.env` and 
 Reproducible local rehearsal: `npx tsx scripts/rehearse-production-schema.ts`. It creates only a random local `*_test` DB and random temporary roles, applies all three migrations into `ledgerone`, verifies runtime reads/atomic writes/audit and denied DDL/history access, then removes those temporary resources. It does not connect to Supabase. Existing development DB/session history is preserved.
 
 Primary references: [Supabase Prisma](https://supabase.com/docs/guides/database/prisma), [connection types](https://supabase.com/docs/guides/database/connecting-to-postgres), [GitHub integration](https://supabase.com/docs/guides/deployment/branching/github-integration), [disable the Data API](https://supabase.com/docs/guides/api/securing-your-api), [pg TLS options](https://node-postgres.com/features/ssl), [Prisma PostgreSQL connection options](https://www.prisma.io/docs/orm/v7/core-concepts/supported-databases/postgresql).
+
+## S05 schema update
+
+The grant file now grants SELECT only on the new financial tables; financial writes await S06 review. Apply all migrations through `202611110006_reversal_predecessor` in a later authorized hosted upgrade, then reviewed grants. The local rehearsal checks all six migrations, schema drift, financial read-only defaults and temporary invoker-role ledger constraints solely inside its disposable database. No hosted migration or credential configuration is inferred from local success.

@@ -115,3 +115,17 @@ R02 / T05 boundary: `tests/integration/ownership.test.ts` (10 cases) and `tests/
 | P1-S03 OAuth adapter extension | policy unit tests, auth PostgreSQL integration and browser initiation/mode tests                                                                 | GitHub completion/live admission/linking and all other methods unverified |
 
 These supplement the R01–R20 matrix; no financial invariant or phase gate is inferred from them. Detailed findings and intentional deferrals: `docs/security/AUTH_ADAPTER_REVIEW.md`. Final command output summaries: PROGRESS.
+
+## S05 requirements and executable evidence
+
+| Requirement                 | Evidence                                                                                                                                                          | Scope / limit                                                              |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| R02 / scoped ownership      | `tests/integration/ledger-schema.test.ts`: two-user account/journal reads, composite FK negatives, unchanged rejected outcomes                                    | No new public financial API; S06/S07 must add authenticated endpoint tests |
+| R03 / exact money           | `src/lib/ledger/money.test.ts`: canonical string parsing, 0/2/3 scales, sign/range/large integer roundtrip and manual quote validation                            | No FX rounding/carrying-cost implementation                                |
+| R03 / DB ledger             | Real SQL: deferred balance/rollback, lifecycle, immutable history/evidence, TRUNCATE denial, parent movement, operation keys/hash/outcome checks                  | S06 service audit/payload replay and S09 property harness still pending    |
+| R04 / opening signs         | Owned two-leg asset/card openings against equity, missing/wrong/duplicate marker rejection                                                                        | S07 balance-as-of/reconciliation UI/service still pending                  |
+| R14 / FX boundary           | Owned immutable manual rates, correct reference scales, currency mismatch and foreign posting rejection                                                           | Detailed FX support explicitly staged by user approval                     |
+| R19 / concurrent integrity  | Deterministic lock-wait race, stale REPEATABLE READ edit/archive rejection, serialized draft edits, already-posted reversal predecessor and exact multiset checks | Full S06 retry/reversal command races and S09 gate remain required         |
+| R19 / migration correctness | Applied-file SHA-256 checksums, fresh private-schema zero-drift/restricted-role rehearsal                                                                         | Hosted Supabase migration/connectivity and backup/restore not performed    |
+
+Run `npm run db:migrate:test`, `npm run test:unit`, `npm run test:integration`, `npm run test:schema` (also enforced in CI), then the required lint/types/build/browser pipeline. Keep integration/browser runs sequential on the disposable test DB. Synthetic immutable ledger fixtures remain there; no trigger is disabled to clean them.
