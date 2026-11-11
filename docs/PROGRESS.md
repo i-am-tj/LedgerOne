@@ -21,7 +21,7 @@ Executed full platform verification sequence on Node 22.22.0, npm 10.9.4, with D
 
 ## 2026-11-11 — Phase 2 request prerequisite assessment
 
-The user supplied P2-E1–P2-E4 / P2-S01–P2-S08. Inspected `git status --short`, `git log -5 --oneline`, `git remote -v`, source/schema inventory and the Phase 1 gate. The only commit remains `8996627`; working tree was clean, no remote exists, and Prisma defines only AppMetadata. No Phase 1 ledger or authentication exists. Phase 1 remains blocked, so Phase 2 implementation cannot start under the user's gate rule.
+The user supplied P2-E1–P2-E4 / P2-S01–P2-S08. Inspected `git status --short`, `git log -5 --oneline`, `git remote -v`, source/schema inventory and the Phase 1 gate. The only commit remains `534e118`; working tree was clean, no remote exists, and Prisma defines only AppMetadata. No Phase 1 ledger or authentication exists. Phase 1 remains blocked, so Phase 2 implementation cannot start under the user's gate rule.
 
 Added `docs/gates/PHASE_2.md` to preserve the requested scope and release criteria with an explicit NOT RUN / BLOCKED result. No migrations or application changes. No new application tests were run because this assessment changes documentation only. Next dependency remains P1-S01 review followed by P1-S02; later Phase 1 accounting/security stories and a PASS gate must precede P2-S01. The new Phase 2 request does not supply missing implementation or gate evidence.
 
@@ -207,7 +207,7 @@ This follow-up's formatting/lint/typecheck/unit/integration/build results are re
 
 ## 2026-11-11 — S03 technical review and P1-S04 ownership/audit foundation
 
-Completed the agent-owned S03 technical review in `docs/security/S03_REVIEW.md`, committed separately as `e1f6d4b`. Manual source review plus rerun 38 unit/8 auth-platform integration tests and runtime audit found no blocker for continued local development. The report lists deployment/ownership/retention prerequisites; it is not an independent audit, peer review, remote merge or Phase 1 PASS. This resolves the technical review task the agent undertook rather than assigning OAuth auditing to the user.
+Completed the agent-owned S03 technical review in `docs/security/S03_REVIEW.md`, committed separately as `533003d`. Manual source review plus rerun 38 unit/8 auth-platform integration tests and runtime audit found no blocker for continued local development. The report lists deployment/ownership/retention prerequisites; it is not an independent audit, peer review, remote merge or Phase 1 PASS. This resolves the technical review task the agent undertook rather than assigning OAuth auditing to the user.
 
 Implemented P1-S04's current-resource ownership/audit foundation and verified it locally. No newly merged/done story is claimed. The User→Workspace container is explicit and owner-bound; financial Account/Journal/Posting models do not exist yet. Their specific IDOR/FK tests are explicitly deferred to S05–S08 and remain Phase 1 blockers, never counted as passed by the Workspace scenarios.
 
@@ -300,3 +300,7 @@ Delivery groups: P1-S01 local verification/contributor guidance; P1-S04A environ
 ### Generated Next.js type-file cleanup
 
 Restarting Fast Refresh revealed `next-env.d.ts` switches between `.next/types` and `.next/dev/types` references. The installed Next.js TypeScript guide explicitly requires ignoring this generated file and removing it from Git tracking. A separate tooling commit implements that guidance while retaining the local file; `next dev/build/typegen` regenerates it for fresh checkouts. No application behavior changes. Final restarted-server checks returned public `/` 200, readiness 200 and anonymous `/api/session` 401; private profiles remain mode 0600 and the committed-tree scan found no configured auth secrets/allowlist.
+
+## 2026-11-11 — Authorized first push and privacy audit
+
+The user explicitly requested pushing all implementation commits with no sensitive/unnecessary data. Verified the GitHub destination and push permission; the repository is public and its remote refs were empty. Baseline full-history Gitleaks and an independent comparison against configured secret/allowlist values found zero credential matches. Private commit contact metadata, local filesystem paths and personal planning details were sanitized across the unpushed history, preserving logical commit boundaries and code. Private original-history backup stays outside Git; current documentation references use rewritten hashes. All eight synthetic UI evidence screenshots were reviewed and retained. Expanded ignore rules protect credentials, deployment metadata, dumps/exports and raw runtime/test artifacts. See `docs/security/PRE_PUSH_REVIEW.md`. Final secret/metadata/formatting checks must pass before sending only `main`; remote SHA and CI are verified separately. No application code, dependency or database migration changed in this hygiene step; no finance release/deployment is inferred.

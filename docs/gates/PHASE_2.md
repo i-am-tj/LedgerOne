@@ -6,7 +6,7 @@ The user supplied Phase 2 scope, P2-E1 through P2-E4, on this date. This records
 
 ## Verified prerequisite state
 
-Repository inspected at commit `8996627` (`[P1-S01] Establish local platform, PostgreSQL migration and CI baseline`). Working tree was clean before this report. No remote is configured. `prisma/schema.prisma` defines only AppMetadata. Application source contains the foundation landing page, health routes, database helper and seed guard. There is no implemented authentication, ownership boundary, Account, Journal, Posting or financial posting service.
+Repository inspected at commit `534e118` (`[P1-S01] Establish local platform, PostgreSQL migration and CI baseline`). Working tree was clean before this report. No remote is configured. `prisma/schema.prisma` defines only AppMetadata. Application source contains the foundation landing page, health routes, database helper and seed guard. There is no implemented authentication, ownership boundary, Account, Journal, Posting or financial posting service.
 
 `docs/gates/PHASE_1.md` remains NOT RUN / BLOCKED FOR RELEASE. P1-S01 awaits review; P1-S02 through P1-S09 have not been implemented. The phrase “approved Phase 1 ledger” in the new request does not constitute evidence that the ledger exists or its invariants pass.
 

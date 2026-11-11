@@ -1,6 +1,6 @@
 # P1-S03 technical security review
 
-Date: 2026-11-11 (Asia/Kolkata). Reviewed baseline: `9aaaed9`. Reviewer: implementing agent, manual code review plus automated evidence; not an independent external audit or peer-reviewed merge.
+Date: 2026-11-11 (Asia/Kolkata). Reviewed baseline: `cbcbf67`. Reviewer: implementing agent, manual code review plus automated evidence; not an independent external audit or peer-reviewed merge.
 
 Result: **PASS for continued local development, with release prerequisites below**. No unresolved code defect blocking the current Google-only local auth flow was found. This result does not pass Phase 1 or approve public deployment.
 

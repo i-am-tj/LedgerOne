@@ -6,7 +6,7 @@ Private personal finance, implemented in reviewed increments. **P1-S03 adds Goog
 
 - Node.js 22.22.x (see `.nvmrc`) and npm 10.
 - Docker Engine/Desktop with Compose v2 for PostgreSQL 17.6.
-- Git. No remote is configured by this project.
+- Git. Source repository: [i-am-tj/LedgerOne](https://github.com/i-am-tj/LedgerOne).
 
 ## Fresh checkout
 
@@ -114,3 +114,7 @@ Successful mutations and minimal append-only audit commit together; audit failur
 ## Supabase and provider readiness
 
 See [production preparation](docs/setup/SUPABASE.md) for the created GitHub-linked Supabase database, private schema/role provisioning files and guarded migration commands. Production hosting, database credentials/connectivity, OAuth and backup/restore are pending. No Prisma migration has been sent to Supabase and no app has been deployed. The login card stays active; additional provider setup is deferred. The [adapter review](docs/security/AUTH_ADAPTER_REVIEW.md) distinguishes implemented OAuth abstractions from unconnected UI options.
+
+## Source publication hygiene
+
+Only reviewed source, dependency lockfile, migrations, tests, documentation and synthetic UI evidence belong in Git. Private environment files, credentials, database dumps/exports, uploaded receipts, deployment metadata, build output and raw browser reports stay local. See [pre-push privacy review](docs/security/PRE_PUSH_REVIEW.md). Repository publication does not deploy the application or change its finance release gates.

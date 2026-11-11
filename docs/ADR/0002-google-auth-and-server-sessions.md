@@ -54,4 +54,4 @@ Automatic expiry denial is implemented; a scheduled purge/retention policy for e
 
 ## Technical review checkpoint
 
-Agent-owned technical review is recorded in `docs/security/S03_REVIEW.md` (e1f6d4b), with no blocker for continued local development and explicit release prerequisites. This is not an independent external audit or reviewed remote merge. P1-S04 subsequently implements current-resource ownership/audit; actual financial entity isolation still requires S05–S08 evidence.
+Agent-owned technical review is recorded in `docs/security/S03_REVIEW.md` (533003d), with no blocker for continued local development and explicit release prerequisites. This is not an independent external audit or reviewed remote merge. P1-S04 subsequently implements current-resource ownership/audit; actual financial entity isolation still requires S05–S08 evidence.

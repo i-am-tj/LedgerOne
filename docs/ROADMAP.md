@@ -23,7 +23,7 @@ The user authorized S03. Google-only admission and fixed database sessions are i
 
 ## P1-S04 checkpoint
 
-S03's agent-owned technical review is recorded at `docs/security/S03_REVIEW.md` (commit e1f6d4b); it found no blocker for continued local development and lists release prerequisites without claiming an independent audit. S04 ownership/audit foundation is implemented with passing local two-user Workspace evidence, pending review. Financial account/transaction-specific isolation remains required with S05–S08. User approved the core INR/sign/reversal defaults in the accounting question during S04; no S05 implementation has started. Next story: P1-S05, after this increment's review; full phase gate remains blocked.
+S03's agent-owned technical review is recorded at `docs/security/S03_REVIEW.md` (commit 533003d); it found no blocker for continued local development and lists release prerequisites without claiming an independent audit. S04 ownership/audit foundation is implemented with passing local two-user Workspace evidence, pending review. Financial account/transaction-specific isolation remains required with S05–S08. User approved the core INR/sign/reversal defaults in the accounting question during S04; no S05 implementation has started. Next story: P1-S05, after this increment's review; full phase gate remains blocked.
 
 ## Authorized foundation amendment
 
