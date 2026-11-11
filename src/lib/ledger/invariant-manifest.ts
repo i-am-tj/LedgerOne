@@ -87,6 +87,23 @@ export async function captureLedgerInvariants(
     Object.keys(scope.roles ?? {}).length
   )
     throw new InvariantDriftError(["role:missing"]);
+  // Include privilege paths into and out of the configured roles, including
+  // indirect grantees. Role names alone omit delegation/SET/INHERIT changes.
+  await collect(
+    `WITH RECURSIVE ancestors(oid) AS (
+      SELECT oid FROM pg_roles WHERE rolname=ANY($1::text[])
+      UNION SELECT m.roleid FROM pg_auth_members m JOIN ancestors a ON m.member=a.oid
+    ), grantees(oid) AS (
+      SELECT oid FROM pg_roles WHERE rolname=ANY($1::text[])
+      UNION SELECT m.member FROM pg_auth_members m JOIN grantees g ON m.roleid=g.oid
+    ) SELECT 'membership:'||m.roleid||':'||m.member||':'||m.grantor AS key,
+      jsonb_build_object('role',pg_get_userbyid(m.roleid),'member',pg_get_userbyid(m.member),
+      'grantor',pg_get_userbyid(m.grantor),'admin',m.admin_option,
+      'inherit',m.inherit_option,'set',m.set_option) AS value
+      FROM pg_auth_members m WHERE m.member IN (SELECT oid FROM ancestors)
+      OR m.roleid IN (SELECT oid FROM grantees)`,
+    [Object.keys(scope.roles ?? {})],
+  );
   await collect(
     `SELECT 'migration:'||migration_name AS key,
     jsonb_build_object('checksum',checksum,'finished',finished_at IS NOT NULL,'rolledBack',rolled_back_at IS NOT NULL,'steps',applied_steps_count) AS value
@@ -106,7 +123,8 @@ export async function captureLedgerInvariants(
       : name;
   function normalizeMetadata(value: unknown, field = ""): unknown {
     if (typeof value === "string") {
-      if (field === "owner" || field === "memberships") return roleName(value);
+      if (["owner", "memberships", "role", "member", "grantor"].includes(field))
+        return roleName(value);
       if (field === "acl") {
         const acl =
           /^([a-z_][a-z0-9_]*|)=([A-Za-z*]+)\/([a-z_][a-z0-9_]*)$/.exec(value);
@@ -131,6 +149,14 @@ export async function captureLedgerInvariants(
   const objects: Record<string, string> = {};
   for (const record of records) {
     let key = record.key;
+    const normalized = normalizeMetadata(
+      record.value,
+      key.startsWith("defaultAcl:") ? "acl" : "",
+    );
+    if (key.startsWith("membership:")) {
+      const edge = normalized as Record<string, unknown>;
+      key = `membership:${JSON.stringify([edge.role, edge.member, edge.grantor])}`;
+    }
     for (const role of Object.keys(scope.roles ?? {})) {
       if (key === `role:${role}`) key = `role:${roleName(role)}`;
       if (key.startsWith(`defaultAcl:${role}:`))
@@ -138,12 +164,7 @@ export async function captureLedgerInvariants(
     }
     if (Object.hasOwn(objects, key))
       throw new InvariantDriftError(["catalog:duplicate"]);
-    objects[key] = JSON.stringify(
-      normalizeMetadata(
-        record.value,
-        key.startsWith("defaultAcl:") ? "acl" : "",
-      ),
-    );
+    objects[key] = JSON.stringify(normalized);
   }
   return {
     version: SCHEMA_VERSION,

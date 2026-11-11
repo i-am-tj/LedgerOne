@@ -335,6 +335,89 @@ it("P1-S06A preserves function SQL literals when comparing catalogs", async () =
   }
 });
 
+it.each(["direct", "transitive", "admin", "inherit", "set"] as const)(
+  "P1-S06A detects %s runtime role delegation drift",
+  async (mode) => {
+    const c = await pool.connect();
+    const suffix = randomUUID().replaceAll("-", "");
+    const runtime = `review_runtime_${suffix}`;
+    const outsider = `review_outsider_${suffix}`;
+    const group = `review_group_${suffix}`;
+    const scope = { schema: "public", roles: { [runtime]: "RUNTIME" } };
+    try {
+      await c.query("BEGIN");
+      for (const role of [runtime, outsider, group])
+        await c.query(`CREATE ROLE "${role}" NOLOGIN`);
+      await c.query(`GRANT SELECT ON ledger_account TO "${runtime}"`);
+      if (mode === "transitive")
+        await c.query(`GRANT "${runtime}" TO "${group}"`);
+      else if (mode !== "direct")
+        await c.query(`GRANT "${runtime}" TO "${outsider}"`);
+      const before = await captureLedgerInvariants(c, scope);
+      if (mode === "direct" || mode === "transitive") {
+        expect(
+          (
+            await c.query(
+              "SELECT has_table_privilege($1,'ledger_account','SELECT') AS allowed",
+              [outsider],
+            )
+          ).rows[0].allowed,
+        ).toBe(false);
+        await c.query(
+          `GRANT "${mode === "direct" ? runtime : group}" TO "${outsider}"`,
+        );
+        expect(
+          (
+            await c.query(
+              "SELECT has_table_privilege($1,'ledger_account','SELECT') AS allowed",
+              [outsider],
+            )
+          ).rows[0].allowed,
+        ).toBe(true);
+      } else {
+        await c.query(
+          `GRANT "${runtime}" TO "${outsider}" WITH ${mode.toUpperCase()} ${mode === "admin" ? "TRUE" : "FALSE"}`,
+        );
+      }
+      const after = await captureLedgerInvariants(c, scope);
+      expect(() => assertLedgerInvariants(after, before)).toThrow(
+        "Ledger invariant attestation failed",
+      );
+    } finally {
+      // PostgreSQL roles and their grants are transactional, including failures.
+      await c.query("ROLLBACK");
+      c.release();
+    }
+  },
+);
+
+it("P1-S06A normalizes membership identities without comparing cluster OIDs", async () => {
+  const c = await pool.connect();
+  const suffix = randomUUID().replaceAll("-", "");
+  const runtime = `review_runtime_${suffix}`;
+  const member = `review_member_${suffix}`;
+  try {
+    await c.query("BEGIN");
+    for (const role of [runtime, member])
+      await c.query(`CREATE ROLE "${role}" NOLOGIN`);
+    await c.query(`GRANT "${runtime}" TO "${member}"`);
+    const before = await captureLedgerInvariants(c, {
+      schema: "public",
+      roles: { [runtime]: "RUNTIME", [member]: "MEMBER" },
+    });
+    await c.query(`ALTER ROLE "${runtime}" RENAME TO "${runtime}_new"`);
+    await c.query(`ALTER ROLE "${member}" RENAME TO "${member}_new"`);
+    const after = await captureLedgerInvariants(c, {
+      schema: "public",
+      roles: { [`${runtime}_new`]: "RUNTIME", [`${member}_new`]: "MEMBER" },
+    });
+    expect(() => assertLedgerInvariants(after, before)).not.toThrow();
+  } finally {
+    await c.query("ROLLBACK");
+    c.release();
+  }
+});
+
 it("P1-S06A cleanup refuses to terminate an active reference connection and succeeds after release", async () => {
   const isolated = await createFreshLedgerDatabase(testDatabaseURL());
   const active = new pg.Client({ connectionString: isolated.url });
