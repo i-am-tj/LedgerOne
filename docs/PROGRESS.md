@@ -430,3 +430,7 @@ After actual merge, new `docs/p1-s06b-plan` branch prepares `docs/stories/P1-S06
 ## PR #20 targeted planning review
 
 The owner accepted S06B planning in principle and authorized four targeted clarifications: immutable replay after archive/rename, fresh-snapshot recovery including uncertain COMMIT, mandatory command audit with future controlled consumer-template reasons, and a combined real-handler atomicity/balances/private-draft/replay scenario. Applied without changing B-T01–05/B-AC01–09 identities or expanding feature scope. No implementation before final-head CI and reviewed planning merge. Review/merge evidence is recorded on PR #20; no human/native approval fabricated.
+
+## S06B B-T01 contract implementation
+
+PR #20 reviewed and merged as 75f8795 after final 21df416 CI 43064209449/43064220744 passed; review comment 6802164820 records explicit owner authorization/provenance. New feat/p1-s06b-post branch implements strict bounded raw INR POST parsing and canonical v1 digest with exact decimal strings, calendar/Unicode/UUID/key/body limits, deterministic repeated-leg ordering and immutable DTO contract. 27 new unit cases (116 total) pass; lint/typecheck pass after fixing an ES target fixture and control-regex lint issue. No route/executor/grant exists at this package. B-T02 follows only after these checks pass.
