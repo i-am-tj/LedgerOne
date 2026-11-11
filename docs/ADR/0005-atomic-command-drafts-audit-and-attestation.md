@@ -1,6 +1,6 @@
 # ADR-005 — Private command drafts, scoped audit and invariant attestation
 
-Date: 2026-11-11. Story: P1-S06A. Status: implemented; fresh final accounting/security review recorded in `docs/security/S06A_FINAL_REVIEW.md`; final-head CI and reviewed merge required. The owner authorized merge on a passing final review; no new human/native approval is claimed. S05 owner review/merge is confirmed separately; it does not approve this change automatically.
+Date: 2026-11-11. Story: P1-S06A. Status: implemented, final-head review/checks PASS and merged in PR #18 as `df56d46`; see `docs/security/S06A_FINAL_REVIEW.md`. The owner authorized merge on a passing final review; no new human/native approval is claimed. S05 owner review/merge is confirmed separately; it does not approve this change automatically.
 
 S06 commands will construct drafts privately inside one transaction from a strict validated command. No stored editable-draft finalization endpoint is exposed. The current child-edit revision is not a full draft version; rejecting draft IDs/revisions and hash-conflicting semantic payloads is required in S06B/C. A future editable-draft feature must reopen A05-01 with complete version protection. This selects one option expressly allowed by the user's S06 scope, not an assertion that version coverage was fixed.
 

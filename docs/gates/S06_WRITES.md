@@ -1,6 +1,6 @@
 # S06 financial write-enablement gate
 
-**Status: NOT RUN. Write-enablement recommendation: FAIL (closed).** S05 owner review/merge is confirmed; only S06A controls are implemented locally and await their own review/merge. The S05 conditional approval is not production readiness. No actual financial POST/REVERSE/CORRECT handler or retry orchestrator is implemented. Migration 007/audit contracts and catalog-attestation primitives exist, with control tests; they do not satisfy the complete command/exposure gate.
+**Status: NOT RUN. Write-enablement recommendation: FAIL (closed).** S05 owner review/merge is confirmed; S06A controls passed final review and merged in PR #18 as `df56d46`; S06B/C/D commands and exposure are not implemented. The S05 conditional approval is not production readiness. No actual financial POST/REVERSE/CORRECT handler or retry orchestrator is implemented. Migration 007/audit contracts and catalog-attestation primitives exist, with control tests; they do not satisfy the complete command/exposure gate.
 
 Owner story: [P1-S06D](https://github.com/i-am-tj/LedgerOne/issues/11). Parent: [P1-S06](https://github.com/i-am-tj/LedgerOne/issues/7). Required predecessor sequence: S05 reviewed merge → S06A reviewed merge → S06B reviewed merge → S06C reviewed merge → S06D evidence/review. Published financial grants remain SELECT-only and INR-only posting remains enforced.
 
@@ -36,3 +36,5 @@ S06A control tests run; real financial command/handler/retry gate scenarios rema
 ## S06A evidence boundary
 
 Migration 007, scoped audit/correction tests, catalog mutation tests, local target/reference attestation and private-schema restricted-role audit rehearsal are implemented. W07/W10/W11 have partial control evidence only: mandatory actual command audit, hosted target/provisioning and the complete write-enablement integration remain unproved. W01–W15 remain NOT RUN for final gate acceptance. No feature flag or financial runtime DML grant was enabled.
+
+S06A closure evidence: [final-head decision](https://github.com/i-am-tj/LedgerOne/pull/18#issuecomment-6801618802), 423c6bd CI 89/76/46 in both remote runs, actual merge df56d46. This closes only the control story, not any complete W01–W15 gate row. S06B [detailed plan](../stories/P1-S06B_BREAKDOWN.md) is prepared after merge; all implementation tasks remain unchecked.

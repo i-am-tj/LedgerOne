@@ -177,3 +177,5 @@ S06A current evidence after CI repair: 89 unit / 70 integration / 46 browser PAS
 | S07 OPENING audit                                              | `stories/P1-S07.md` explicit additive audit CHECK/helper/marker extension and atomic rollback/replay/concurrency requirements                                             | Planned; intentionally unsupported by 007                    |
 
 Corrected-source `npm run verify:pipeline`: 89 unit / 76 integration / 46 browser PASS (20.5s), all required pipeline stages PASS. [Final review](security/S06A_FINAL_REVIEW.md) records scope and exact commands. Final publication-head CI/merge evidence is recorded on PR #18. W01–W15 remain unaccepted for complete write enablement.
+
+S06A final publication head 423c6bd passed both remote runs 43060355412/43060363193 (89/76/46); PR #18 merged df56d46. Next story's planned acceptance matrix is [P1-S06B B-AC01–09](stories/P1-S06B_BREAKDOWN.md), mapped to actual handler, SQL role, canonical replay and real retry tests. These future tests have NOT RUN; documentation publication does not change the complete write-gate status.
