@@ -129,3 +129,21 @@ These supplement the R01–R20 matrix; no financial invariant or phase gate is i
 | R19 / migration correctness | Applied-file SHA-256 checksums, fresh private-schema zero-drift/restricted-role rehearsal                                                                         | Hosted Supabase migration/connectivity and backup/restore not performed    |
 
 Run `npm run db:migrate:test`, `npm run test:unit`, `npm run test:integration`, `npm run test:schema` (also enforced in CI), then the required lint/types/build/browser pipeline. Keep integration/browser runs sequential on the disposable test DB. Synthetic immutable ledger fixtures remain there; no trigger is disabled to clean them.
+
+## S05 adversarial review traceability — 2026-11-11
+
+See [decision and exact evidence](security/S05_ADVERSARIAL_REVIEW.md) and [extractable independent probes](security/evidence/S05_ADVERSARIAL_PROBES.md). These documentation probes supplement the existing CI suite; they are not yet a new CI job.
+
+| Review ID | Requirement | Demonstrated evidence                                                                                                       | Regression still required                                                                          |
+| --------- | ----------- | --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| A05-01    | R03 / R19   | Draft date/description change keeps revision 2 and stale CAS finalizes; MVCC child-edit controls still pass                 | Full draft-version conflict protocol or validated private command drafts before relying on CAS     |
+| A05-02    | R03         | Same-operation replacement then its reversal satisfies CORRECT receipt counts                                               | Explicit authorized original target and reject own replacement; concurrent corrections/chain tests |
+| A05-03    | R03 / R14   | 89 sampled catalog definitions match local fresh replay; deliberate scratch invariant removal escapes Prisma diff/checksums | Automated invariant catalog mutation/detection tests and writer-role deployment attestation        |
+| A05-04    | R04 / R14   | Account rename changes historical current-name join, not amounts/classes                                                    | S07 historical-context/current-label distinction and authorized atomic metadata audit              |
+| A05-05    | R02 / R14   | Scoped helper negatives and existing workspace/session tests pass; no financial HTTP endpoint exists                        | Actual financial session-derived ownership/CSRF/IDOR/no-side-effect tests in S06/S07               |
+
+New standalone races cover competing finalization at READ COMMITTED, REPEATABLE READ and SERIALIZABLE plus concurrent same-key receipt insertion. They prove one surviving result and safe database rejection, not successful S06 replay/retry orchestration. A complete additional 48-test integration run passed on the probe's fresh six-migration DB. S06 financial audit requires a forward migration extending the current workspace-only action CHECK and recording operation/target context. Existing opening-marker uniqueness is compatible with a GENERAL correction replacement while retaining original provenance; S07 must test derived opening chains rather than overwrite markers. Foreign posting remains rejected. These conditions do not mark any Phase 1 gate or deferred workflow complete.
+
+## S06 planned gate traceability
+
+The [S06 financial write gate](gates/S06_WRITES.md) enumerates W01–W15: actual-handler identity/scope/CSRF, bounded validation, replay/conflict, POST, exact reversal/correction, atomic audit, private drafts/stale confirmation rejection, real serialization/deadlock retries, target catalog drift and migration checksums, explicit finding deferrals, restricted roles, regressions/FX and human review. All rows remain NOT RUN; no S06 code exists. [Finding issues and stories](security/S05_FINDINGS.md) give concrete positive/negative acceptance and regression scenarios. Existing S05/helper passes are not substituted for these handler-level tests.
