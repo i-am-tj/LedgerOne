@@ -66,3 +66,9 @@ npm run test:e2e
 Playwright starts an isolated production server on loopback port 3100. Keep that port free. It covers desktop/mobile Chromium, keyboard/modal focus, theme persistence, form/error/retry feedback, no-overflow layouts at 320/768/1024px, and automated light/dark accessibility scans. Screenshots and an HTML report are generated under ignored `test-results/` and `playwright-report/`; use `npx playwright show-report` to inspect the report. CI installs Chromium and uploads browser evidence. Other browser engines and full screen-reader testing remain unverified.
 
 See `docs/stories/P1-S02.md` for acceptance, limitations and rollback notes. No new migration is required. Authentication with the selected Google owner allowlist is the next story, P1-S03.
+
+## Daily development and live reload
+
+Use `npm run dev -- --port 3000` for everyday development. Next.js Fast Refresh updates the browser when source files are saved. If port 3000 is occupied by a production `npm run start` session, stop that session with Ctrl+C in its terminal before starting dev; refresh an already-open production tab once after switching. Keep the dev terminal running.
+
+`npm run start` serves the last production build and does not watch source files. Use it after `npm run build` for production-build verification. Docker runs PostgreSQL only; the Next.js watcher runs on the host, so no Docker volume/watcher integration is needed for the current setup.
