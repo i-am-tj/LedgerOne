@@ -1,6 +1,6 @@
 # S05 finding disposition register
 
-Verified input: [S05 adversarial review](S05_ADVERSARIAL_REVIEW.md), reviewed source `1243360`. Conditional S05 approval covers only the read-only INR foundation. Every finding remains open; issue creation is not remediation. The user will perform the human S05 review, which is still pending. Original finding severity/classification is preserved.
+Verified input: [S05 adversarial review](S05_ADVERSARIAL_REVIEW.md), reviewed source `1243360`. Conditional S05 approval covers only the read-only INR foundation. Every finding remains open; issue creation is not remediation. The user confirmed completed human S05 review and merge; evidence: https://github.com/i-am-tj/LedgerOne/pull/1#issuecomment-6796866109. New control implementation remains subject to its own review. Original finding severity/classification is preserved.
 
 | Finding | Severity | Engineering issue                                        | Implementation coverage                                                                                                                                                                                                                  | Current disposition                                                                                               |
 | ------- | -------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
@@ -160,3 +160,7 @@ All exposed-contract mitigations must pass [the write gate](../gates/S06_WRITES.
 **Status:** Open. Required before each relevant financial handler exposure; account-specific cases carry into S07.
 
 **Review/PR:** S05 https://github.com/i-am-tj/LedgerOne/pull/1; successor implementation PRs not opened. Do not close this finding until linked acceptance/evidence is reviewed.
+
+## S06A implementation disposition (review pending)
+
+A05-02: migration 007 rejects same-operation replacement predecessors, with negative and positive correction/audit SQL tests; explicit authorized original through real handlers remains S06C. A05-03: exact catalog comparison, local target-vs-reference CLI, private ACL capture and scratch mutation regressions are implemented; hosted-profile attestation and integration with actual write exposure remain unverified and required at S06D. A05-01: private atomic command drafts selected, but actual payload/stale-confirmation handler regressions remain S06B/C. A05-04 remains deferred to S07 outside the S06 exposed contract. A05-05 actual financial HTTP authorization remains S06B/C. No finding is closed by these partial implementations or by passing S05 fixture tests.

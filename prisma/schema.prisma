@@ -112,16 +112,22 @@ model Workspace {
 }
 
 model AuditEvent {
-  id          String    @id @default(uuid()) @db.Uuid
-  ownerId     String
-  actorId     String
-  workspaceId String    @db.Uuid
-  requestId   String    @db.Uuid
-  action      String
-  occurredAt  DateTime  @default(now())
-  owner       User      @relation(fields: [ownerId], references: [id], onDelete: Restrict)
-  workspace   Workspace @relation(fields: [workspaceId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  id              String           @id @default(uuid()) @db.Uuid
+  ownerId         String
+  actorId         String
+  workspaceId     String           @db.Uuid
+  requestId       String           @db.Uuid
+  action          String
+  occurredAt      DateTime         @default(now())
+  operationId     String?          @db.Uuid
+  targetJournalId String?          @db.Uuid
+  reason          String?          @db.VarChar(500)
+  operation       LedgerOperation? @relation(fields: [operationId, workspaceId, ownerId], references: [id, workspaceId, ownerId], onDelete: Restrict, onUpdate: Restrict)
+  targetJournal   Journal?         @relation("FinancialAuditTarget", fields: [targetJournalId, workspaceId, ownerId], references: [id, workspaceId, ownerId], onDelete: Restrict, onUpdate: Restrict)
+  owner           User             @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  workspace       Workspace        @relation(fields: [workspaceId, ownerId], references: [id, ownerId], onDelete: Restrict)
 
+  @@unique([operationId, workspaceId, ownerId])
   @@index([ownerId, occurredAt, id])
   @@index([requestId])
   @@map("audit_event")
@@ -221,6 +227,7 @@ model LedgerOperation {
   createdAt      DateTime            @default(now()) @db.Timestamptz(3)
   workspace      Workspace           @relation(fields: [workspaceId, ownerId], references: [id, ownerId], onDelete: Restrict, onUpdate: Restrict)
   journals       Journal[]
+  financialAudit AuditEvent?
 
   @@unique([id, workspaceId, ownerId])
   @@unique([workspaceId, ownerId, idempotencyKey])
@@ -248,6 +255,7 @@ model Journal {
   reversal               Journal?         @relation("JournalReversal")
   postings               Posting[]
   opening                OpeningBalance?
+  targetAudits           AuditEvent[]     @relation("FinancialAuditTarget")
 
   @@unique([id, workspaceId, ownerId])
   @@unique([id, workspaceId, ownerId, functionalCurrencyCode])

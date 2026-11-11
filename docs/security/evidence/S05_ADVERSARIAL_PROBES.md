@@ -21,6 +21,10 @@ node /private/tmp/ledgerone-s05-adversarial-review.mjs
 
 The command executes all six migrations and the complete 48-test integration suite on the new database, then independent probes. It saves redacted results to `/private/tmp/ledgerone-s05-adversarial-evidence.json`. Expected acceptance of the documented gaps is evidence of those gaps; exit 0 is not an unconditional accounting approval. The destructive drift experiment is last and runs only in the scratch database.
 
+## Historical reproduction scope
+
+The following source/results target S05 commit `1243360` and its six migrations/48 integration tests. To reproduce historical behavior after later changes, save the source outside the checkout and use that reviewed checkout with its matching generated dependencies. S06 migration 007 intentionally changes correction/audit behavior; its automated `command-controls.test.ts` regressions are the current verification. Do not run the historical harness on the new schema and interpret its old expected counts/acceptances as current invariants.
+
 ## Executed source
 
 ```javascript

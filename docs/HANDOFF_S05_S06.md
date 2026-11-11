@@ -1,89 +1,54 @@
 # S05 → S06 engineering handoff
 
-**Recommendation: CONDITIONAL PASS for tracking/planning only.** S05 reviewed closure is BLOCKED on the user's completed human review and reviewed merge of [PR #1](https://github.com/i-am-tj/LedgerOne/pull/1). S06 implementation is NOT STARTED. The [financial write gate](gates/S06_WRITES.md) is NOT RUN / FAIL (closed). Phase 1 remains blocked for release. No accounting/security finding is marked fixed by documentation.
+**Recommendation: CONDITIONAL PASS for S06A review readiness; full S06 financial write gate: FAIL (closed).** No financial API write, production readiness or Phase 1 completion is claimed.
 
-## Existing state and authorization
+## S05 closure — confirmed
 
-Starting branch: `feat/p1-s05-ledger-schema`; implementation head `12433608f7a7de51f3f445dd333a74b77fd9fd4b`; main `ace657b`. Prior adversarial review documentation was local/uncommitted. Remote repository `i-am-tj/LedgerOne` is confirmed; PR #1 is open and unmerged. GitHub review submissions and inline review threads were empty at inspection. The user explicitly authorized tracker creation, reviewed S05 closure and S06 delivery after dependencies. The user selected themselves as the human reviewer: “I will review it” records intent, not completed approval.
+PR #1 merged source `12433608f7a7de51f3f445dd333a74b77fd9fd4b` as `54efed5e266847ec66c0a54caf15b9c4e5fb358a`. The owner confirmed they personally reviewed and merged it; [review evidence](https://github.com/i-am-tj/LedgerOne/pull/1#issuecomment-6796866109) transparently records that statement. Formal GitHub review submissions remain empty; no native APPROVED review is fabricated. Original remote checks passed. S05 closure issue [#6](https://github.com/i-am-tj/LedgerOne/issues/6) is completed. The conditional read-only INR foundation scope and all five finding obligations remain intact.
 
-GitHub author self-approval is unavailable; a human review by the user can be recorded as an explicit PR conversation comment naming the final head, accounting/security acceptance, finding deferrals and any requested changes. Keep that permalink and GitHub review-state distinction visible; do not manufacture an APPROVED review or bypass required protection. If repository rules require another reviewer, that requirement still applies. No external review identity was inferred or contacted.
+The merge occurred while the handoff was being prepared and before the two new documentation commits. New work moved to `feat/p1-s06a-command-controls` on merged main at the user's instruction; those docs and S06A code belong to the new PR, not PR #1. Historical pending-review observations in PROGRESS remain dated evidence, superseded by this confirmation.
 
-## GitHub delivery hierarchy
+## GitHub hierarchy and ordered delivery
 
-Phase = [Phase 1 milestone](https://github.com/i-am-tj/LedgerOne/milestone/1). Epic = parent issue; stories = implementation/tracking issues; tasks = unchecked story checkboxes. Labels cover `phase:*`, `epic:*`, `type:*`, `priority:*`, `status:*`. Parent issue bodies and child links record hierarchy without claiming native sub-issue relations were configured. Existing unrelated tracker resources were preserved.
+Phase = [Phase 1 milestone](https://github.com/i-am-tj/LedgerOne/milestone/1); parent epic [P1-E3 #2](https://github.com/i-am-tj/LedgerOne/issues/2); sub-epics [controls #3](https://github.com/i-am-tj/LedgerOne/issues/3), [command workflows #4](https://github.com/i-am-tj/LedgerOne/issues/4), [write gate #5](https://github.com/i-am-tj/LedgerOne/issues/5). Issue bodies/labels record parentage; tasks are checkboxes. Sixteen epic/story/finding issues and the required workflow labels were created; no native sub-issue configuration is claimed.
 
-- [P1-E3](https://github.com/i-am-tj/LedgerOne/issues/2) — Ledger domain and accounts
-- [P1-E3A](https://github.com/i-am-tj/LedgerOne/issues/3) — Command control and audit foundation
-- [P1-E3B](https://github.com/i-am-tj/LedgerOne/issues/4) — Authenticated transactional command workflows
-- [P1-E3C](https://github.com/i-am-tj/LedgerOne/issues/5) — Financial write-enablement evidence
+| Order  | Story                                                         | Scope                                                                             | Status                                                  |
+| ------ | ------------------------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Parent | [P1-S06 #7](https://github.com/i-am-tj/LedgerOne/issues/7)    | Authenticated audited idempotent command aggregate                                | In progress in S06A only                                |
+| 1      | [P1-S06A #8](https://github.com/i-am-tj/LedgerOne/issues/8)   | Additive audit/correction controls and invariant attestation                      | Implemented locally; final checks/review/merge required |
+| 2      | [P1-S06B #9](https://github.com/i-am-tj/LedgerOne/issues/9)   | Real-handler POST, trusted actor, canonical replay, atomic audit and full retries | Blocked on reviewed S06A merge                          |
+| 3      | [P1-S06C #10](https://github.com/i-am-tj/LedgerOne/issues/10) | Exact authorized REVERSE/CORRECT and concurrent correction semantics              | Blocked on reviewed S06B merge                          |
+| 4      | [P1-S06D #11](https://github.com/i-am-tj/LedgerOne/issues/11) | Actual-role/handler/drift/concurrency write-enablement gate                       | Blocked on reviewed S06C merge                          |
+| Next   | [P1-S07 #12](https://github.com/i-am-tj/LedgerOne/issues/12)  | Account metadata/opening history/native reconciliation                            | Deferred until reviewed S06 completion                  |
 
-## Ordered story/PR plan
+Full mandatory contracts and acceptance/unit/integration/security/concurrency/recovery requirements are in corresponding `docs/stories/P1-S06{,A,B,C,D}.md` and `P1-S07.md`, mirrored into their issues. One implementation slice/PR at a time; no next slice until required checks and reviewed merge pass.
 
-| Order     | Story                                                                                                                         | Dependency and outcome                                                                                           | PR/status                                                                  |
-| --------- | ----------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| 0         | [P1-S05](https://github.com/i-am-tj/LedgerOne/issues/6) — Reviewed closure of the owned ledger schema                         | S04 foundation; source 1243360; verified adversarial review; completed human accounting/security review on PR #1 | [PR #1](https://github.com/i-am-tj/LedgerOne/pull/1), human review pending |
-| 1         | [P1-S06](https://github.com/i-am-tj/LedgerOne/issues/7) — Authenticated audited idempotent financial commands                 | P1-S05 reviewed merge; then P1-S06A → P1-S06B → P1-S06C → P1-S06D, one reviewed story/PR at a time               | No implementation PR; blocked on reviewed predecessors                     |
-| 2         | [P1-S06A](https://github.com/i-am-tj/LedgerOne/issues/8) — Financial command controls, audit schema and invariant attestation | P1-S05 reviewed and merged; A05-01/A05-02 contract selection documented                                          | No implementation PR; blocked on reviewed predecessors                     |
-| 3         | [P1-S06B](https://github.com/i-am-tj/LedgerOne/issues/9) — Authenticated POST with canonical replay and atomic audit          | P1-S06A reviewed merge and required checks green; trusted session/ownership boundary                             | No implementation PR; blocked on reviewed predecessors                     |
-| 4         | [P1-S06C](https://github.com/i-am-tj/LedgerOne/issues/10) — Authorized exact REVERSE and CORRECT commands                     | P1-S06B reviewed merge with POST/replay/audit/retry tests green                                                  | No implementation PR; blocked on reviewed predecessors                     |
-| 5         | [P1-S06D](https://github.com/i-am-tj/LedgerOne/issues/11) — Financial write-enablement gate and reviewed release evidence     | P1-S06C reviewed merge; A05-01..A05-05 disposition recorded; no red required checks                              | No implementation PR; blocked on reviewed predecessors                     |
-| after S06 | [P1-S07](https://github.com/i-am-tj/LedgerOne/issues/12) — Account lifecycle, opening history and reconciliation              | P1-S06 reviewed completion and passing write gate; finding A05-04; controlled archived-correction review         | No implementation PR; blocked on reviewed predecessors                     |
+## Finding traceability
 
-Every slice has a full mandatory story contract in `docs/stories/P1-S06{A,B,C,D}.md` and its issue: inputs, outputs, dependencies, tasks, acceptance criteria, unit/integration/security/concurrency tests, edge cases, recovery and review references. The P1-S06 umbrella is a tracking story, not an extra implementation PR. One child story/PR may be active; do not stack unreviewed implementations.
+| Finding       | Issue                                                 | Required delivery and current limit                                                                                                                                           |
+| ------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A05-01 Medium | [#13](https://github.com/i-am-tj/LedgerOne/issues/13) | S06A/B/D: private atomic drafts selected; editable saved draft finalization excluded. Actual strict/stale handler tests remain B/C. DB revision is not a full header version. |
+| A05-02 Medium | [#14](https://github.com/i-am-tj/LedgerOne/issues/14) | S06A/C/D: same-operation predecessor SQL defense implemented/tested in 007; exact authorized original selection/locking through real handlers remains C.                      |
+| A05-03 Medium | [#15](https://github.com/i-am-tj/LedgerOne/issues/15) | S06A/D: catalog comparator/mutation tests/local operator attestation implemented; actual production profile/permissions and pre-exposure integration remain unverified.       |
+| A05-04 Low    | [#16](https://github.com/i-am-tj/LedgerOne/issues/16) | S07, checked by S06D: audited current-label/original-context policy; no account mutation or original-name reporting exposed in S06.                                           |
+| A05-05 Medium | [#17](https://github.com/i-am-tj/LedgerOne/issues/17) | S06B/C/D and S07: real financial handler authorization tests not yet implemented. Existing DB/helper tests are insufficient.                                                  |
 
-## Finding dispositions
+All five issues remain open for their full reviewed acceptance. [Finding register](security/S05_FINDINGS.md) preserves exact verified scenarios/severity/impact/fixes/regressions. No conditional approval has been converted to production readiness.
 
-- [A05-01](https://github.com/i-am-tj/LedgerOne/issues/13) (Medium) → [P1-S06A](https://github.com/i-am-tj/LedgerOne/issues/8), [P1-S06B](https://github.com/i-am-tj/LedgerOne/issues/9), [P1-S06D](https://github.com/i-am-tj/LedgerOne/issues/11). Open. Planned deferral of editable persisted drafts outside S06 exposed contract; mitigation not implemented yet.
-- [A05-02](https://github.com/i-am-tj/LedgerOne/issues/14) (Medium) → [P1-S06A](https://github.com/i-am-tj/LedgerOne/issues/8), [P1-S06C](https://github.com/i-am-tj/LedgerOne/issues/10), [P1-S06D](https://github.com/i-am-tj/LedgerOne/issues/11). Open. Resolution required before CORRECT exposure.
-- [A05-03](https://github.com/i-am-tj/LedgerOne/issues/15) (Medium) → [P1-S06A](https://github.com/i-am-tj/LedgerOne/issues/8), [P1-S06D](https://github.com/i-am-tj/LedgerOne/issues/11). Open. Required before write enablement.
-- [A05-04](https://github.com/i-am-tj/LedgerOne/issues/16) (Low) → [P1-S07](https://github.com/i-am-tj/LedgerOne/issues/12), [P1-S06D](https://github.com/i-am-tj/LedgerOne/issues/11). Open, explicitly deferred to S07; not resolved by S06 compilation.
-- [A05-05](https://github.com/i-am-tj/LedgerOne/issues/17) (Medium) → [P1-S06B](https://github.com/i-am-tj/LedgerOne/issues/9), [P1-S06C](https://github.com/i-am-tj/LedgerOne/issues/10), [P1-S06D](https://github.com/i-am-tj/LedgerOne/issues/11), [P1-S07](https://github.com/i-am-tj/LedgerOne/issues/12). Open. Required before each relevant financial handler exposure; account-specific cases carry into S07.
+## S06A implementation and acceptance
 
-Detailed acceptance criteria/regression requirements and unchanged verified scenarios are in [the finding register](security/S05_FINDINGS.md) and [adversarial review](security/S05_ADVERSARIAL_REVIEW.md).
+Migration `202611110007_command_audit_controls` is additive over unchanged 001–006 and advances readiness to 7. It adds immutable financial audit action/reason/scoped operation/target references with unique audit per operation; legacy workspace actions retain null financial context. Deferred checks validate action/operation kind and exact journal target. CORRECT cannot reverse a journal in the same operation. Existing receipts/SQL fixtures are not retroactively invented as audited commands: S06B must guarantee mandatory audit insertion in its command transaction.
 
-## Selected S06 contract (planned, not implemented)
+The catalog verifier captures CHECK definitions/validation, triggers/enabled state, function bodies/search paths/security/ACL, schema/table ownership/ACL/default privileges, roles/memberships when configured, columns, indexes, enums, readiness and applied migration history. It compares the same schema/profile; SQL source/literals remain unmodified by metadata role aliases. Consistent reads use REPEATABLE READ/read-only with pinned search path. `npm run ledger:attest` attests only the actual guarded local test schema against a fresh reference; private-schema rehearsal separately verifies audit/permissions. Hosted/private production attestation remains an explicit prerequisite. No source/DB dump or credential is emitted by the verifier.
 
-- Private atomic command drafts only. Do not expose stored draft finalization or treat the current revision as a full header version. Reject draftId/revision/internal ownership fields; changed semantic input under an existing key conflicts. This explicitly defers the underlying editable-draft feature in A05-01 rather than pretending its DB counter was fixed.
-- POST accepts strict bounded INR legs, finite explicit dates and immutable command context. REVERSE generates legs only from the exact authorized original; CORRECT atomically reverses that original plus one replacement and rejects its own replacement as predecessor. No client reversal legs/owner IDs.
-- Derive actor/request ID and posted timestamp on the server. Repeat ownership and archive/type/currency checks inside the financial transaction; use deterministic locks. Canonical versioned semantic hashes include trusted scope and preserve duplicate-leg multiplicity; replay returns the original outcome/audit and changed payload conflicts.
-- Ledger, immutable successful receipt and linked financial audit commit together, including deferred SQL checks. Current workspace-only audit actions require a forward migration before financial audit works. Retry complete transactions only for classified 40001/40P01 failures with bounded attempts/timeouts; unknown/uncertain outcomes require idempotent outcome lookup, not blind reposting.
-- Catalog drift attestation is a pre-write prerequisite; compare the actual target to reviewed fresh replay. Prisma diff and migration checksums are necessary but insufficient. Keep published runtime financial grants read-only and the INR FX restriction unchanged during planning/development; temporary isolated test writer grants are not production enablement.
-- S07 owns audited account rename/archive/restore, historical-label policy, opening-chain interpretation and reconciliation. S06 adds no account metadata mutation or historical original-name report. Opening corrections retain the original unique marker and use reversal/GENERAL replacement chains. No silent unarchive or balance overwrite.
+Acceptance demonstrated by SQL tests: exact POST/REVERSE/CORRECT audit target, duplicate audit rejection, append-only audit, unchanged counts on invalid audit/commit, wrong scope/action/target/reason rejection, original legacy action compatibility, own-replacement rejection and temporary-schema spoofing failure. Scratch mutations cover disabled triggers, changed/unvalidated CHECKs, unexpected helper/security/search-path/function changes, grants and migration history. Existing S05 cases remain required. Final full command results are in PROGRESS.
 
-## Concrete S05 human review checklist
+Changed source: Prisma financial audit relations; migration 007; schema version; invariant module/server-only entry and unit tests; local disposable-reference helper/operator CLI; new command-control integration tests; restricted-role rehearsal; CI/pipeline/package scripts. No financial command route/UI, financial runtime grant, FX restriction or production environment is changed.
 
-Review the final PR head/diff and linked evidence; record requested changes or explicit acceptance in PR #1. Suggested completed-review comment (fill only after review, not a prefilled approval):
+## Gate and remaining risks
 
-> Reviewed head `<actual SHA>`. Accounting/security result: `<approved / changes requested>`. Checked INR signs/balance/ownership, posted financial meaning, reversal multiset/cycle rules, archive restrictions, concurrency/search paths, applied migrations and test evidence. Finding dispositions A05-01..A05-05: `<accepted deferrals/required changes>`. This accepts only the documented read-only S05 scope; no production readiness or financial write enablement. Remaining requests: `<list or none>`.
+[W01–W15](gates/S06_WRITES.md) remain NOT RUN for full S06 acceptance; write-enablement recommendation is FAIL. Missing: actual session-derived HTTP commands/two-user attacks, canonical payload/hash replay/conflicts, mandatory transactional audit, deterministic service locks, real serialization/deadlock retries, exact authorized correction service, full restricted-runtime gate and approved target profile/grants. Partial schema/control tests do not substitute for these commands.
 
-- [ ] Reviewer completed accounting/security review of the final source head and evidence.
-- [ ] A05-01..A05-05 accepted as tracked requirements/explicit exclusions or requested changes resolved.
-- [ ] Required local/remote checks pass at the final head; grants/FX restrictions unchanged.
-- [ ] Actual human review permalink/result recorded; no author/agent-generated peer approval substituted.
-- [ ] S05 definition of done satisfied and reviewed merge SHA recorded.
+Preserve SELECT-only financial runtime grants and the INR-only FX CHECK. New posted history is corrected only by exact linked reversals. S07 must preserve original opening provenance and derive correction chains; audit metadata/archive/restore and explicit reconciliation differences without balance overwrite or silent unarchive. Production deployment, hosted SQL/grants, backup/restore, paid services and real-bank connections remain outside this change.
 
-## Completion report
-
-Implemented stories: none in this handoff. Completed preparation: verified S05 review inputs recorded; Phase 1 milestone/epic/story/finding tracker created and cross-linked; four S06 slice contracts, finding register, write-gate and concrete PR review checklist prepared. Source files/migrations changed: none; only Markdown documentation. Issues resolved: none; A05-01..A05-05 remain open with testable acceptance and successor links.
-
-Acceptance status: traceability and planning PASS; S05 human review/merge PENDING; S06 behavior and write-gate tests NOT RUN. Exact executed foundation commands/results and commit/PR evidence are recorded in PROGRESS after validation. Do not substitute prior S05 passes for unimplemented S06 acceptance.
-
-Executed local verification (Node 22.22.0/npm 10.9.4, Docker PostgreSQL 17.6, private loopback dev/test profile):
-
-| Exact command, invoked by `npm run verify:pipeline`                                     | Result                                                                                                       |
-| --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `npm run db:up`, `npm run db:generate`, `npm run db:migrate`, `npm run db:migrate:test` | PASS; healthy local DB, generated client, six existing migrations and no pending migration in dev/test       |
-| `npm run format:check`, `npm run lint`, `npm run typecheck`                             | PASS; zero lint warnings                                                                                     |
-| `npm run test:unit`                                                                     | PASS, 80 tests / 5 files                                                                                     |
-| `npm run test:integration`                                                              | PASS, 48 tests / 4 files                                                                                     |
-| `npm run test:schema`                                                                   | PASS; fresh private schema, restricted roles, six migrations and Prisma diff; A05-03 limitations still apply |
-| `npm run build`                                                                         | PASS; no financial write route added                                                                         |
-| `npm run test:e2e`                                                                      | PASS, 46 desktop/mobile Chromium tests in 35.0s                                                              |
-| `python3 scripts/check_foundation.py`                                                   | PASS; structural checks only                                                                                 |
-| `npm run verify:pipeline`                                                               | Exit 0; all above checks complete                                                                            |
-
-These are current S05/foundation regressions; S06 W01–W15 remain NOT RUN. Final-head GitHub CI is reported on PR #1 after publication and must be green before merge. Review/evidence and handoff/tracker changes are separate documentation commits on the S05 branch; no S06 implementation branch or PR was started.
-
-Security/accounting risks: the verified version/intent/drift gaps remain until their exposed-contract mitigations are implemented/tested; financial audit schema/HTTP authorization/replay/retries are not yet present. Metadata and account/reconciliation workflows remain S07. Supabase runtime provisioning/connectivity, deployment and backup/restore remain separate unverified operations. No hosted SQL/grant/public deployment/paid service or real-bank action is included.
-
-Next implementation story: P1-S06A, only after S05's completed human review and reviewed merge. A future PASS must name implemented stories, final PR/review/merge evidence and actual gate outputs; it cannot be inferred from this planning document.
+Next: complete/review/merge the S06A PR; only then begin S06B. No S06A review/merge or complete Phase 1 PASS is inferred from compiled code or owner approval of the earlier S05 PR.

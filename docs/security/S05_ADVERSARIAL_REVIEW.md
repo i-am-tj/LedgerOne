@@ -6,6 +6,8 @@ Date: 2026-11-11. Reviewed source: `12433608f7a7de51f3f445dd333a74b77fd9fd4b` on
 
 Initial review made no changes to application code, migrations or existing tests. After evidence collection, only Markdown review/evidence/progress documentation was changed. Existing test DB fixtures were exercised by its guarded integration suite; all independent mutation/drift experiments and the additional full fresh-DB suite used disposable local databases. Development catalogs were read only. No hosted database, OAuth account, deployment, secret or production grant was changed.
 
+> Subsequent state: the owner confirmed human review and merged S05 source `1243360` as `54efed5`; [evidence](https://github.com/i-am-tj/LedgerOne/pull/1#issuecomment-6796866109). This document preserves the original review and verified scenarios. See the current handoff/finding register for S06A implementation and remaining conditions.
+
 ## Findings
 
 ### A05-01 — Medium — Draft revision does not version header financial meaning

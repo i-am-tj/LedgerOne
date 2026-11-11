@@ -51,3 +51,9 @@ The fresh [accounting/security review](../security/S05_ADVERSARIAL_REVIEW.md) co
 ## S05 → S06 reviewed handoff
 
 S05 PR #1 remains unmerged pending the user’s actual accounting/security review. All five findings have linked GitHub issues and S06/S07 obligations in HANDOFF_S05_S06.md. S06 implementation has not begun; its separate financial write gate is NOT RUN / FAIL closed. Tracking and a conditional foundation review cannot advance any Phase 1 release gate. Financial runtime grants and INR-only FX restriction remain unchanged.
+
+## Confirmed S05 closure and active S06A slice
+
+The owner explicitly confirmed: “It was reviewed by me and merged. So please for anything new use s06 branch or a different handoff branch.” [Human review evidence](https://github.com/i-am-tj/LedgerOne/pull/1#issuecomment-6796866109) records this confirmation without fabricating a native GitHub APPROVED review. PR #1 merged implementation `1243360` at `54efed5e266847ec66c0a54caf15b9c4e5fb358a`; its two original foundation CI checks passed. Tracker #6 is closed as completed. Earlier pending-review statements in historical checkpoints describe the state when written, not the current closure status.
+
+New work is on `feat/p1-s06a-command-controls`, based on the owner's merged main. Post-merge review/handoff documentation was carried onto this separate branch. S06A #8 is the only active implementation slice: migration 007 adds scoped immutable financial audit context and rejects CORRECT's same-operation predecessor; invariant attestation/mutation regressions cover SQL/privilege/migration state. It adds no financial write handler or runtime grant. S06B/C/D remain blocked until the active slice's required checks, human review and reviewed merge. Findings remain open for their full linked acceptance; the complete S06 write gate and Phase 1 gate remain closed.
