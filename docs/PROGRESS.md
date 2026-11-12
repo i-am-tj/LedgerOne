@@ -488,3 +488,7 @@ Owner accepted `8f014eb` architectural direction/restricted boundaries with two 
 ## S06C planning merge and C-T01 implementation checkpoint
 
 Planning PR #25 merged amended head 1611bba as b31ab0b after owner acceptance and both exact-head full CI runs (144/132/48 each). Separate branch feat/p1-s06c-corrections implements strict correction contracts/exact inverse/result-shape checks and a single runner entry point, plus the required [SQL lock matrix](reports/P1-S06C_LOCK_MATRIX.md). Local full checkpoint pipeline 160/135/48 PASS; subsequent result-shape unit additions 162 PASS plus typecheck/lint. [Implementation evidence](reports/P1-S06C.md) distinguishes those snapshots. Matrix/refactor source review and real PostgreSQL implicit FK/account/archive/inversion regressions clear C-T01's prerequisite before C-T02. No R/C handlers yet, issue #10 remains open; normal writes, published grants and INR restriction unchanged.
+
+## S06C C-T02 — exact REVERSE vertical slice
+
+After C-T01 lock-matrix/refactor review was recorded on draft PR #26, implemented REVERSE through the same guarded dispatcher/runner, account-first target locks, bounded immutable provenance, exact opposite multiset, transactional audit and immutable replay. CORRECT remains disabled pending C-T03. Local 162 unit / 148 integration PASS, typecheck/lint PASS. Cross-command recovery gate and final adversarial review remain pending; normal Next writes/published grants unchanged.

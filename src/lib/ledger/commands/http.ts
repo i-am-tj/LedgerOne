@@ -7,7 +7,7 @@ import {
   CommandError,
   idempotencyKey,
   invalid,
-  parsePost,
+  parseCommand,
   readCommandBody,
   unavailable,
   uuid,
@@ -16,7 +16,7 @@ import { throwIfAborted, withinDeadline } from "./retry";
 import type { PostExecutor } from "./executor";
 
 export type PostTrace = Readonly<{
-  command: "ledger.POST";
+  command: "ledger.POST" | "ledger.REVERSE" | "ledger.CORRECT";
   requestId: string;
   status: number;
   durationMs: number;
@@ -33,6 +33,7 @@ export async function postRequest(
   const requestId = randomUUID();
   const started = performance.now();
   let response: Response;
+  let commandName: PostTrace["command"] = "ledger.POST";
   try {
     throwIfAborted(request.signal);
     if (request.method !== "POST")
@@ -64,8 +65,9 @@ export async function postRequest(
     const key = idempotencyKey(request.headers.get("idempotency-key"));
     // Closed production exposure must not wait for an untrusted upload.
     if (!executor) throw unavailable();
-    const command = parsePost(await readCommandBody(request));
-    const outcome = await executor.post(
+    const command = parseCommand(await readCommandBody(request));
+    commandName = `ledger.${command.kind}`;
+    const outcome = await executor.execute(
       authorize,
       workspace.data,
       key,
@@ -82,7 +84,7 @@ export async function postRequest(
   response.headers.set("X-Request-ID", requestId);
   try {
     log({
-      command: "ledger.POST",
+      command: commandName,
       requestId,
       status: response.status,
       durationMs: Math.round(performance.now() - started),
