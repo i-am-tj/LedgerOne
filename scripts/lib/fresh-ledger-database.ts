@@ -2,6 +2,16 @@
 import pg from "pg";
 import { randomBytes } from "node:crypto";
 import { spawnSync } from "node:child_process";
+import {
+  cpSync,
+  mkdtempSync,
+  mkdirSync,
+  readdirSync,
+  writeFileSync,
+  rmSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 import { databaseSettings } from "../../src/lib/profile";
 
 // Never force-terminate a pool that is still completing its asynchronous close.
@@ -31,6 +41,20 @@ export async function dropDisposableLedgerDatabase(
   await admin.query(`DROP DATABASE "${name}"`);
 }
 export async function createFreshLedgerDatabase(source: string) {
+  return createLocalLedgerDatabase(source, "public");
+}
+// Separate local-only composition; the original public factory stays strict.
+export async function createLocalPrivateLedgerDatabase(
+  source: string,
+  upgrade = false,
+) {
+  return createLocalLedgerDatabase(source, "ledgerone", upgrade);
+}
+async function createLocalLedgerDatabase(
+  source: string,
+  schema: "public" | "ledgerone",
+  upgrade = false,
+) {
   databaseSettings({ LEDGERONE_ENV: "test", DATABASE_URL: source });
   const input = new URL(source);
   if (
@@ -64,26 +88,99 @@ export async function createFreshLedgerDatabase(source: string) {
     }
     const target = new URL(input);
     target.pathname = `/${name}`;
-    target.searchParams.set("schema", "public");
+    target.searchParams.set("schema", schema);
+    if (schema === "ledgerone") {
+      const provision = new pg.Client({ connectionString: target.toString() });
+      try {
+        await provision.connect();
+        await provision.query('CREATE SCHEMA "ledgerone"');
+      } finally {
+        await provision.end();
+      }
+    }
+    const environment = {
+      ...process.env,
+      LEDGERONE_ENV: "test",
+      DATABASE_URL: target.toString(),
+      DIRECT_DATABASE_URL: target.toString(),
+      TEST_DATABASE_URL: target.toString(),
+    };
+    let upgradeFrom: string | null = null;
+    if (upgrade) {
+      const directory = mkdtempSync(
+        join(tmpdir(), "ledgerone-private-upgrade-"),
+      );
+      try {
+        const migrations = join(directory, "migrations");
+        mkdirSync(migrations);
+        cpSync(
+          "prisma/migrations/migration_lock.toml",
+          join(migrations, "migration_lock.toml"),
+        );
+        const names = readdirSync("prisma/migrations")
+          .filter((n) => /^20261111000[1-6]_/.test(n))
+          .sort();
+        if (names.length !== 6)
+          throw new Error("Expected six predecessor migrations");
+        for (const name of names)
+          cpSync(join("prisma/migrations", name), join(migrations, name), {
+            recursive: true,
+          });
+        const config = join(directory, "prisma.config.ts");
+        writeFileSync(
+          config,
+          `import {defineConfig} from ${JSON.stringify(resolve("node_modules/prisma/config.js"))};\nexport default defineConfig({schema:${JSON.stringify(resolve("prisma/schema.prisma"))},migrations:{path:${JSON.stringify(migrations)}},datasource:{url:process.env.DATABASE_URL}});\n`,
+          { mode: 0o600 },
+        );
+        const predecessor = spawnSync(
+          process.execPath,
+          [
+            "node_modules/prisma/build/index.js",
+            "migrate",
+            "deploy",
+            "--config",
+            config,
+          ],
+          { encoding: "utf8", env: environment },
+        );
+        if (predecessor.status !== 0)
+          throw new Error(
+            "Private predecessor migration failed (output withheld)",
+          );
+        const inspector = new pg.Client({
+          connectionString: target.toString(),
+        });
+        try {
+          await inspector.connect();
+          const version = await inspector.query(
+            "SELECT value FROM ledgerone.app_metadata WHERE key='schema_version'",
+          );
+          const history = await inspector.query(
+            "SELECT count(*)::int AS count FROM ledgerone._prisma_migrations WHERE finished_at IS NOT NULL",
+          );
+          if (version.rows[0]?.value !== "6" || history.rows[0]?.count !== 6)
+            throw new Error("Private predecessor history mismatch");
+          upgradeFrom = "6";
+        } finally {
+          await inspector.end();
+        }
+      } finally {
+        rmSync(directory, { recursive: true, force: true });
+      }
+    }
     const result = spawnSync(
       process.execPath,
       ["node_modules/prisma/build/index.js", "migrate", "deploy"],
       {
         encoding: "utf8",
-        env: {
-          ...process.env,
-          LEDGERONE_ENV: "test",
-          DATABASE_URL: target.toString(),
-          DIRECT_DATABASE_URL: target.toString(),
-          TEST_DATABASE_URL: target.toString(),
-        },
+        env: environment,
       },
     );
     if (result.status !== 0)
       throw new Error(
         "Fresh reference migration failed (output withheld to protect credentials)",
       );
-    return { url: target.toString(), cleanup };
+    return { url: target.toString(), cleanup, upgradeFrom };
   } catch (error) {
     if (created) await cleanup();
     throw error;

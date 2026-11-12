@@ -1,6 +1,6 @@
 # S06D documentation-only planning report
 
-**Decision: owner ACCEPTED WITH TWO MINOR DOCUMENTATION AMENDMENTS, incorporated.** Amended-head required checks and reviewed planning merge pending; isolated local implementation is authorized only after that merge. Hosted and production operations remain unauthorized. S06D technical W01–W15 gate remains NOT RUN / FAIL, normal-runtime writes disabled, published financial grants SELECT-only, posting INR-only. This is not technical implementation approval or production readiness.
+**Decision: owner ACCEPTED WITH TWO MINOR DOCUMENTATION AMENDMENTS, incorporated.** Amended head 2a7ec7c passed both required CI checks and merged as d048d8b; isolated local implementation follows in separate PR #30. Precise totals and the corrected flaky-test/procedural evidence are recorded on PR #28 and in P1-S06D.md. Earlier pending statements below are historical. Hosted and production operations remain unauthorized. S06D technical W01–W15 gate remains NOT RUN / FAIL, normal-runtime writes disabled, published financial grants SELECT-only, posting INR-only. This is not technical implementation approval or production readiness.
 
 ## Delivered scope
 

@@ -1,8 +1,12 @@
+import { readFileSync } from "node:fs";
 import { createHmac, randomBytes, randomUUID } from "node:crypto";
 import pg from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../../src/generated/prisma/client";
-import { createFreshLedgerDatabase } from "../../scripts/lib/fresh-ledger-database";
+import {
+  createFreshLedgerDatabase,
+  createLocalPrivateLedgerDatabase,
+} from "../../scripts/lib/fresh-ledger-database";
 import { testDatabaseURL } from "./database";
 import { captureLedgerInvariants } from "../../src/lib/ledger/invariants";
 import { createAuth } from "../../src/lib/auth/create-auth";
@@ -14,14 +18,44 @@ import {
   postRequest,
   type PostTrace,
 } from "../../src/lib/ledger/commands/http";
-export async function postHarness() {
-  const lease = await createFreshLedgerDatabase(testDatabaseURL());
-  const admin = new pg.Pool({ connectionString: lease.url, max: 10 });
+export async function postHarness(
+  options: { schema?: "public" | "ledgerone"; upgrade?: boolean } = {},
+) {
+  const schema = options.schema ?? "public";
+  if (schema !== "public" && schema !== "ledgerone")
+    throw new Error("Unsupported fixture schema");
+  if (options.upgrade && schema !== "ledgerone")
+    throw new Error("Private upgrade fixture required");
+  const lease =
+    schema === "public"
+      ? await createFreshLedgerDatabase(testDatabaseURL())
+      : await createLocalPrivateLedgerDatabase(
+          testDatabaseURL(),
+          options.upgrade,
+        );
+  const admin = new pg.Pool({
+    connectionString: lease.url,
+    max: 10,
+    options: `-c search_path=pg_catalog,${schema},pg_temp`,
+  });
   const database = new PrismaClient({
-    adapter: new PrismaPg({ connectionString: lease.url }),
+    adapter: new PrismaPg({ connectionString: lease.url }, { schema }),
   });
   const role = `post_writer_${randomBytes(6).toString("hex")}`,
     password = randomBytes(24).toString("hex");
+  const verifierRole = `post_verifier_${randomBytes(6).toString("hex")}`;
+  const authRole = `post_auth_${randomBytes(6).toString("hex")}`;
+  const privateRoles = schema === "ledgerone" ? [verifierRole, authRole] : [];
+  const scope = {
+    schema,
+    roles: {
+      [role]: "RUNTIME",
+      ...(schema === "ledgerone"
+        ? { [verifierRole]: "VERIFIER", [authRole]: "AUTH" }
+        : {}),
+    },
+  };
+  let authDatabase = database;
   let probe:
     | ((stage: Stage, c: pg.PoolClient, attempt: number) => Promise<void>)
     | undefined;
@@ -51,13 +85,15 @@ export async function postHarness() {
   const runtime = { config, auth: createAuth(config, database) };
   async function cleanup() {
     await executor?.close();
+    if (authDatabase !== database) await authDatabase.$disconnect();
     await database.$disconnect();
     await admin.end();
     await lease.cleanup();
     const source = new pg.Client({ connectionString: testDatabaseURL() });
     await source.connect();
     try {
-      await source.query(`DROP ROLE IF EXISTS "${role}"`);
+      for (const name of [role, ...privateRoles])
+        await source.query(`DROP ROLE IF EXISTS "${name}"`);
     } finally {
       await source.end();
     }
@@ -66,30 +102,64 @@ export async function postHarness() {
     await admin.query(
       `CREATE ROLE "${role}" LOGIN PASSWORD '${password}' NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS`,
     );
-    await admin.query(`GRANT CONNECT ON DATABASE "${new URL(lease.url).pathname.slice(1)}" TO "${role}"; GRANT USAGE ON SCHEMA public TO "${role}";
+    await admin.query(`GRANT CONNECT ON DATABASE "${new URL(lease.url).pathname.slice(1)}" TO "${role}"; GRANT USAGE ON SCHEMA "${schema}" TO "${role}";
       GRANT SELECT ON workspace,ledger_account,ledger_operation,journal,posting,audit_event,currency,opening_balance,fx_rate TO "${role}";
       GRANT INSERT ON ledger_operation,journal,posting,audit_event TO "${role}";
       GRANT UPDATE(id) ON workspace,ledger_account TO "${role}";
       GRANT UPDATE(status,"postedAt","operationId",revision) ON journal TO "${role}"`);
+    if (schema === "ledgerone") {
+      for (const name of privateRoles)
+        await admin.query(
+          `CREATE ROLE "${name}" LOGIN PASSWORD '${password}' NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS`,
+        );
+      await admin.query(
+        `GRANT USAGE ON SCHEMA ledgerone TO "${verifierRole}","${authRole}"; GRANT SELECT ON ledgerone.app_metadata,ledgerone._prisma_migrations TO "${verifierRole}"`,
+      );
+      await admin.query(
+        readFileSync(
+          "docs/setup/supabase-runtime-grants.sql",
+          "utf8",
+        ).replaceAll("ledgerone_app", authRole),
+      );
+      const authURL = new URL(lease.url);
+      authURL.username = authRole;
+      authURL.password = password;
+      authDatabase = new PrismaClient({
+        adapter: new PrismaPg(
+          { connectionString: authURL.toString() },
+          { schema },
+        ),
+      });
+      runtime.auth = createAuth(config, authDatabase);
+    }
     const c = await admin.connect();
     let expected;
     try {
-      expected = await captureLedgerInvariants(c, {
-        schema: "public",
-        roles: { [role]: "RUNTIME" },
-      });
+      expected = await captureLedgerInvariants(c, scope);
     } finally {
       c.release();
     }
     const url = new URL(lease.url);
     url.username = role;
     url.password = password;
-    executor = await PostExecutor.disposable({
-      runtimeURL: url.toString(),
-      verifierURL: lease.url,
-      expected,
-      probe: async (...args) => probe?.(...args),
-    });
+    const verifierURL = new URL(lease.url);
+    if (schema === "ledgerone") {
+      verifierURL.username = verifierRole;
+      verifierURL.password = password;
+    }
+    const reopen = async (baseline = expected) => {
+      const settings = {
+        runtimeURL: url.toString(),
+        verifierURL: verifierURL.toString(),
+        expected: baseline,
+        probe: async (...args: [Stage, pg.PoolClient, number]) =>
+          probe?.(...args),
+      };
+      return schema === "ledgerone"
+        ? PostExecutor.localPrivateVerification({ ...settings, authRole })
+        : PostExecutor.disposable(settings);
+    };
+    executor = await reopen();
     for (const u of users) {
       await database.user.create({
         data: {
@@ -128,6 +198,13 @@ export async function postHarness() {
       users,
       runtime,
       role,
+      schema,
+      upgradeFrom: lease.upgradeFrom,
+      verifierRole,
+      authRole,
+      authDatabase,
+      scope,
+      reopen,
       expected,
       traces,
       recordTrace: (trace: PostTrace) => logger(trace),

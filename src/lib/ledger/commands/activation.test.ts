@@ -26,6 +26,30 @@ it.each(["production", "development", undefined])(
     expect(pool).not.toHaveBeenCalled();
   },
 );
+
+it.each([
+  { runtime: "remote", auth: "fixture_auth" },
+  { runtime: "local", auth: "fixture;SETROLE" },
+  { runtime: "local", auth: "fixture" },
+])(
+  "D-T02 private target/role guard rejects $runtime/$auth without connections",
+  async ({ runtime, auth }) => {
+    vi.stubEnv("LEDGERONE_ENV", "test");
+    const privateURL = local.replace("schema=public", "schema=ledgerone");
+    await expect(
+      PostExecutor.localPrivateVerification({
+        runtimeURL:
+          runtime === "remote"
+            ? privateURL.replace("127.0.0.1", "remote.invalid")
+            : privateURL,
+        verifierURL: privateURL.replace("fixture:fixture", "verifier:fixture"),
+        authRole: auth,
+        expected: { version: "7", objects: {} },
+      }),
+    ).rejects.toBeInstanceOf(Error);
+    expect(pool).not.toHaveBeenCalled();
+  },
+);
 it.each([
   "postgresql://fixture:fixture@remote.invalid:5432/ledgerone_controls_0123456789abcdef_test?schema=public",
   "postgresql://fixture:fixture@127.0.0.1:5432/ledgerone?schema=public",
@@ -59,3 +83,44 @@ it("review capability rejects a verifier on another generated database before co
   ).rejects.toBeInstanceOf(Error);
   expect(pool).not.toHaveBeenCalled();
 });
+
+it.each([
+  "schema=public",
+  "schema=ledgerone%3Bpublic",
+  "schema=%22ledgerone%22",
+  "schema=pg_temp",
+  "schema=ledgerone&options=-csearch_path=public",
+])(
+  "D-T02 private verifier rejects schema/identifier injection before connection: %s",
+  async (schema) => {
+    vi.stubEnv("LEDGERONE_ENV", "test");
+    await expect(
+      PostExecutor.localPrivateVerification({
+        runtimeURL: local.replace("schema=public", schema),
+        verifierURL: local
+          .replace("fixture:fixture", "verifier:fixture")
+          .replace("schema=public", schema),
+        authRole: "fixture_auth",
+        expected: { version: "7", objects: {} },
+      }),
+    ).rejects.toBeInstanceOf(Error);
+    expect(pool).not.toHaveBeenCalled();
+  },
+);
+it.each(["production", "development", undefined])(
+  "D-T02 private factory refuses %s before connection",
+  async (profile) => {
+    vi.stubEnv("LEDGERONE_ENV", profile);
+    await expect(
+      PostExecutor.localPrivateVerification({
+        runtimeURL: local.replace("schema=public", "schema=ledgerone"),
+        verifierURL: local
+          .replace("fixture:fixture", "verifier:fixture")
+          .replace("schema=public", "schema=ledgerone"),
+        authRole: "fixture_auth",
+        expected: { version: "7", objects: {} },
+      }),
+    ).rejects.toBeInstanceOf(Error);
+    expect(pool).not.toHaveBeenCalled();
+  },
+);

@@ -6,6 +6,7 @@ import {
   assertLedgerInvariants,
   readLedgerInvariants,
   type InvariantManifest,
+  type InvariantScope,
 } from "../invariants";
 import {
   CommandError,
@@ -79,6 +80,12 @@ type Probe = (
   client: pg.PoolClient,
   attempt: number,
 ) => Promise<void>;
+type DisposableOptions = {
+  runtimeURL: string;
+  verifierURL: string;
+  expected: InvariantManifest;
+  probe?: Probe;
+};
 export class PostExecutor {
   private constructor(
     private readonly pool: pg.Pool,
@@ -86,13 +93,23 @@ export class PostExecutor {
     private readonly role: string,
     private readonly expected: InvariantManifest,
     private readonly probe?: Probe,
+    private readonly scope: InvariantScope = { schema: "public" },
   ) {}
-  static async disposable(options: {
-    runtimeURL: string;
-    verifierURL: string;
-    expected: InvariantManifest;
-    probe?: Probe;
-  }) {
+  static async disposable(options: DisposableOptions) {
+    return this.createLocal(options, "public");
+  }
+  // Offline local verification only. No production/hosted factory or env switch.
+  // Never called by the native Next adapter or selected by request data.
+  static async localPrivateVerification(
+    options: DisposableOptions & { authRole: string },
+  ) {
+    return this.createLocal(options, "ledgerone", options.authRole);
+  }
+  private static async createLocal(
+    options: DisposableOptions,
+    schema: "public" | "ledgerone",
+    authRole?: string,
+  ) {
     if (process.env.LEDGERONE_ENV !== "test") throw unavailable();
     const urls = [options.runtimeURL, options.verifierURL].map((source) => {
       databaseSettings({ LEDGERONE_ENV: "test", DATABASE_URL: source });
@@ -100,7 +117,7 @@ export class PostExecutor {
       if (
         !["localhost", "127.0.0.1", "[::1]"].includes(url.hostname) ||
         !/^\/ledgerone_controls_[a-f0-9]{16}_test$/.test(url.pathname) ||
-        url.searchParams.get("schema") !== "public"
+        url.searchParams.get("schema") !== schema
       )
         throw unavailable();
       return url;
@@ -111,9 +128,23 @@ export class PostExecutor {
     )
       throw unavailable();
     const role = decodeURIComponent(urls[0]!.username);
+    const verifierRole = decodeURIComponent(urls[1]!.username);
+    const roles: Record<string, string> = { [role]: "RUNTIME" };
+    if (schema === "ledgerone") {
+      if (
+        !authRole ||
+        !/^[a-z_][a-z0-9_]{0,62}$/.test(authRole) ||
+        !/^[a-z_][a-z0-9_]{0,62}$/.test(verifierRole) ||
+        new Set([role, verifierRole, authRole]).size !== 3
+      )
+        throw unavailable();
+      roles[verifierRole] = "VERIFIER";
+      roles[authRole] = "AUTH";
+    }
     if (!/^[a-z_][a-z0-9_]{0,62}$/.test(role)) throw unavailable();
     const pool = new pg.Pool({
       connectionString: options.runtimeURL,
+      options: `-c search_path=pg_catalog,${schema},pg_temp`,
       max: 6,
       connectionTimeoutMillis: 1500,
       statement_timeout: 2000,
@@ -121,6 +152,7 @@ export class PostExecutor {
     });
     const verifier = new pg.Pool({
       connectionString: options.verifierURL,
+      options: `-c search_path=pg_catalog,${schema},pg_temp`,
       max: 2,
       connectionTimeoutMillis: 1500,
       statement_timeout: 2000,
@@ -132,6 +164,7 @@ export class PostExecutor {
       role,
       options.expected,
       options.probe,
+      { schema, roles },
     );
     pool.on("error", () => {
       result.failed = true;
@@ -155,17 +188,49 @@ export class PostExecutor {
   private async attest() {
     if (this.failed) throw unavailable();
     assertLedgerInvariants(
-      await readLedgerInvariants(this.verifier, {
-        schema: "public",
-        roles: { [this.role]: "RUNTIME" },
-      }),
+      await readLedgerInvariants(this.verifier, this.scope),
       this.expected,
     );
-    const r = await this.pool
-      .query(`SELECT r.rolsuper OR r.rolcreaterole OR r.rolcreatedb OR r.rolreplication OR r.rolbypassrls
-      OR EXISTS (SELECT 1 FROM pg_class WHERE relnamespace='public'::regnamespace AND pg_has_role(current_user,relowner,'MEMBER'))
-      OR has_schema_privilege(current_user,'public','CREATE') AS unsafe FROM pg_roles r WHERE rolname=current_user`);
+    const r = await this.pool.query(
+      `SELECT r.rolsuper OR r.rolcreaterole OR r.rolcreatedb OR r.rolreplication OR r.rolbypassrls
+      OR EXISTS (SELECT 1 FROM pg_catalog.pg_class WHERE relnamespace=$1::pg_catalog.regnamespace AND pg_catalog.pg_has_role(current_user,relowner,'MEMBER'))
+      OR pg_catalog.has_schema_privilege(current_user,$1,'CREATE') AS unsafe FROM pg_catalog.pg_roles r WHERE rolname=current_user`,
+      [this.scope.schema],
+    );
     if (r.rows.length !== 1 || r.rows[0].unsafe) throw unavailable();
+    if (this.scope.schema === "ledgerone") {
+      for (const [name, identity] of Object.entries(this.scope.roles!)) {
+        const state = await this.verifier.query(
+          `SELECT
+          r.rolsuper OR r.rolcreaterole OR r.rolcreatedb OR r.rolreplication OR r.rolbypassrls
+          OR EXISTS (SELECT 1 FROM pg_catalog.pg_auth_members m WHERE m.member=r.oid OR m.roleid=r.oid)
+          OR pg_catalog.pg_has_role(r.oid,(SELECT datdba FROM pg_catalog.pg_database WHERE datname=pg_catalog.current_database()),'MEMBER')
+          OR pg_catalog.has_schema_privilege(r.rolname,$1,'CREATE') OR pg_catalog.has_schema_privilege(r.rolname,'public','CREATE')
+          OR EXISTS (SELECT 1 FROM pg_catalog.pg_class c WHERE c.relnamespace=$1::pg_catalog.regnamespace AND pg_catalog.pg_has_role(r.oid,c.relowner,'MEMBER'))
+          OR EXISTS (SELECT 1 FROM pg_catalog.pg_proc p WHERE p.pronamespace=$1::pg_catalog.regnamespace AND pg_catalog.pg_has_role(r.oid,p.proowner,'MEMBER'))
+          OR EXISTS (SELECT 1 FROM pg_catalog.pg_class c WHERE c.relnamespace=$1::pg_catalog.regnamespace AND c.relkind IN ('r','p')
+            AND ($3='VERIFIER' OR ($3='AUTH' AND c.relname=ANY($4::text[])))
+            AND pg_catalog.has_table_privilege(r.rolname,c.oid,'INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER')) AS unsafe
+          FROM pg_catalog.pg_roles r WHERE r.rolname=$2`,
+          [
+            this.scope.schema,
+            name,
+            identity,
+            [
+              "currency",
+              "ledger_account",
+              "journal",
+              "posting",
+              "ledger_operation",
+              "opening_balance",
+              "fx_rate",
+            ],
+          ],
+        );
+        if (state.rows.length !== 1 || state.rows[0].unsafe)
+          throw unavailable();
+      }
+    }
   }
   async post(
     authorize: () => Promise<Actor>,
@@ -296,7 +361,9 @@ export class PostExecutor {
       await this.probe?.("connected", c, attempt);
       remaining(deadline);
       await query("BEGIN ISOLATION LEVEL SERIALIZABLE");
-      await query("SET LOCAL search_path=pg_catalog,public,pg_temp");
+      await query(
+        `SET LOCAL search_path=pg_catalog,"${this.scope.schema}",pg_temp`,
+      );
       const budget = remaining(deadline);
       await query(
         "SELECT set_config('statement_timeout',$1,true),set_config('lock_timeout',$2,true),set_config('transaction_timeout',$3,true)",
