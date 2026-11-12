@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import type pg from "pg";
 import { beforeAll, afterAll, it, expect } from "vitest";
 import { postHarness } from "../support/post-harness";
+import { postRequest } from "../../src/lib/ledger/commands/http";
 let h: Awaited<ReturnType<typeof postHarness>>;
 beforeAll(async () => {
   h = await postHarness();
@@ -703,4 +704,31 @@ it("B-T05 operational trace failure cannot change a committed outcome or duplica
   } finally {
     h.setLogger();
   }
+});
+
+it("S06B-R01 closed capability refuses an unread body without waiting", async () => {
+  const before = await counts();
+  const stream = new ReadableStream<Uint8Array>({ start() {} });
+  const init = {
+    method: "POST",
+    headers: {
+      origin: h.runtime.config.baseURL,
+      "content-type": "application/json",
+      "idempotency-key": randomUUID(),
+      cookie: h.cookie(0),
+    },
+    body: stream,
+    duplex: "half" as const,
+  };
+  const response = await postRequest(
+    new Request(h.runtime.config.baseURL, init),
+    h.users[0]!.workspace,
+    h.runtime,
+    null,
+    h.recordTrace,
+  );
+  expect(response.status).toBe(503);
+  expect(stream.locked).toBe(false);
+  expect(await counts()).toEqual(before);
+  await stream.cancel();
 });

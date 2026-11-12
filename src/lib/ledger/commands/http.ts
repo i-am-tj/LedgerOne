@@ -55,8 +55,9 @@ export async function postRequest(
     const workspace = uuid.safeParse(workspaceId);
     if (!workspace.success) throw new CommandError(404, "not_found");
     const key = idempotencyKey(request.headers.get("idempotency-key"));
-    const command = parsePost(await readCommandBody(request));
+    // Closed production exposure must not wait for an untrusted upload.
     if (!executor) throw unavailable();
+    const command = parsePost(await readCommandBody(request));
     const outcome = await executor.post(
       authorize,
       workspace.data,

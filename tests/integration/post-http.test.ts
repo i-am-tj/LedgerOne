@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { request as nativeRequest } from "node:http";
 import { beforeAll, afterAll, it, expect } from "vitest";
 import { postHarness } from "../support/post-harness";
 import { postHTTP } from "../support/post-http";
@@ -264,3 +265,35 @@ it("B-AC08 real HTTP disconnect after COMMIT replays the durable original exactl
     await pending;
   }
 });
+
+it("S06B-R01 real partial HTTP upload receives timeout without financial work", async () => {
+  const before = await snapshot();
+  let request: ReturnType<typeof nativeRequest> | undefined;
+  try {
+    const result = await new Promise<{ status: number; body: string }>(
+      (resolve, reject) => {
+        request = nativeRequest(
+          url(),
+          { method: "POST", headers: headers(randomUUID()) },
+          (response) => {
+            let body = "";
+            response.setEncoding("utf8");
+            response.on("data", (chunk) => {
+              body += chunk;
+            });
+            response.on("end", () =>
+              resolve({ status: response.statusCode!, body }),
+            );
+          },
+        );
+        request.on("error", reject);
+        request.write("{");
+      },
+    );
+    expect(result.status).toBe(408);
+    expect(JSON.parse(result.body)).toEqual({ error: "request_timeout" });
+    expect(await snapshot()).toEqual(before);
+  } finally {
+    request?.destroy();
+  }
+}, 10000);

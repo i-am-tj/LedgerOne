@@ -154,33 +154,71 @@ export function idempotencyKey(value: string | null): string {
     throw invalid();
   return value;
 }
+// S06B-R01: total upload budget, independent of chunk arrival/Content-Length.
+export const BODY_READ_TIMEOUT_MS = 5000;
 export async function readCommandBody(request: Request): Promise<unknown> {
   if (
     request.headers.get("content-type")?.split(";")[0]?.trim().toLowerCase() !==
     "application/json"
   )
     throw invalid();
+  if (request.signal.aborted) throw unavailable();
   const reader = request.body?.getReader();
   if (!reader) throw invalid();
+  const deadline = performance.now() + BODY_READ_TIMEOUT_MS;
   const chunks: Uint8Array[] = [];
   let size = 0;
+  let failure: CommandError | undefined;
+  let rejectRead: ((error: unknown) => void) | undefined;
+  function stop(error: CommandError) {
+    if (failure) return;
+    failure = error;
+    rejectRead?.(error);
+    // Stream cleanup is untrusted work: never await a hanging cancel callback.
+    void reader!.cancel(error).catch(() => {});
+  }
+  const onAbort = () => stop(unavailable());
+  const onTimeout = () => stop(new CommandError(408, "request_timeout"));
+  request.signal.addEventListener("abort", onAbort, { once: true });
+  const timer = setTimeout(onTimeout, BODY_READ_TIMEOUT_MS);
+  if (request.signal.aborted) onAbort();
   try {
     while (true) {
-      const { done, value } = await reader.read();
+      if (performance.now() >= deadline) onTimeout();
+      if (failure) throw failure;
+      const { done, value } = await new Promise<
+        ReadableStreamReadResult<Uint8Array>
+      >((resolve, reject) => {
+        rejectRead = reject;
+        reader.read().then(
+          (result) => {
+            rejectRead = undefined;
+            resolve(result);
+          },
+          (error) => {
+            rejectRead = undefined;
+            reject(error);
+          },
+        );
+      });
+      if (failure) throw failure;
       if (done) break;
       size += value.byteLength;
       if (size > 128 * 1024) {
-        await reader.cancel();
-        throw invalid();
+        stop(invalid());
+        throw failure;
       }
-      chunks.push(value);
+      if (value.byteLength) chunks.push(value);
     }
     return JSON.parse(
       new TextDecoder("utf-8", { fatal: true }).decode(Buffer.concat(chunks)),
     );
-  } catch {
+  } catch (error) {
+    if (error instanceof CommandError) throw error;
     throw invalid();
   } finally {
+    clearTimeout(timer);
+    request.signal.removeEventListener("abort", onAbort);
     reader.releaseLock();
   }
 }

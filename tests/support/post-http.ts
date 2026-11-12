@@ -7,9 +7,6 @@ import type { postHarness } from "./post-harness";
 export async function postHTTP(h: Awaited<ReturnType<typeof postHarness>>) {
   const server = createServer(async (req, res) => {
     try {
-      const chunks: Buffer[] = [];
-      for await (const chunk of req) chunks.push(Buffer.from(chunk));
-      const body = Buffer.concat(chunks);
       const url = new URL(req.url!, h.runtime.config.baseURL);
       const id =
         /^\/api\/workspaces\/([^/]+)\/ledger\/commands$/.exec(
@@ -19,18 +16,49 @@ export async function postHTTP(h: Awaited<ReturnType<typeof postHarness>>) {
       for (const [name, value] of Object.entries(req.headers))
         if (value !== undefined)
           headers.set(name, Array.isArray(value) ? value.join(", ") : value);
+      const controller = new AbortController();
+      req.on("aborted", () => controller.abort());
+      res.on("close", () => {
+        if (!res.writableEnded) controller.abort();
+      });
+      let cancelled = false;
+      const iterator = req[Symbol.asyncIterator]();
+      const body = new ReadableStream<Uint8Array>({
+        async pull(stream) {
+          try {
+            const next = await iterator.next();
+            if (cancelled) return;
+            if (next.done) stream.close();
+            else stream.enqueue(Buffer.from(next.value));
+          } catch (error) {
+            if (!cancelled) stream.error(error);
+          }
+        },
+        cancel() {
+          cancelled = true;
+          req.pause();
+        },
+      });
+      const init = {
+        method: req.method,
+        headers,
+        signal: controller.signal,
+        ...(!["GET", "HEAD"].includes(req.method ?? "")
+          ? { body, duplex: "half" as const }
+          : {}),
+      };
       const response = await postRequest(
-        new Request(url, {
-          method: req.method,
-          headers,
-          ...(body.length ? { body } : {}),
-        }),
+        new Request(url, init),
         id,
         h.runtime,
         h.executor,
         h.recordTrace,
       );
       if (res.destroyed) return;
+      if (!req.complete) {
+        res.shouldKeepAlive = false;
+        res.setHeader("connection", "close");
+      }
       res.writeHead(response.status, Object.fromEntries(response.headers));
       res.end(await response.text());
     } catch {

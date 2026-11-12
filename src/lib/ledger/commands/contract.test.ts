@@ -1,4 +1,4 @@
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
 import {
   parsePost,
   requestHash,
@@ -180,4 +180,71 @@ it("B-T05 canonical command and every leg are frozen across asynchronous authori
   expect(Object.isFrozen(p)).toBe(true);
   expect(Object.isFrozen(p.legs)).toBe(true);
   expect(p.legs.every(Object.isFrozen)).toBe(true);
+});
+
+it("S06B-R01 stalled upload expires at the total read deadline", async () => {
+  vi.useFakeTimers();
+  try {
+    const request = new Request("http://localhost", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: new ReadableStream({ start() {} }),
+      duplex: "half",
+    } as RequestInit);
+    const pending = readCommandBody(request);
+    const rejected = expect(pending).rejects.toMatchObject({
+      status: 408,
+      code: "request_timeout",
+    });
+    await vi.advanceTimersByTimeAsync(5001);
+    await rejected;
+  } finally {
+    vi.useRealTimers();
+  }
+});
+it("S06B-R01 aborted upload and hostile cancel cleanup settle without waiting", async () => {
+  const controller = new AbortController();
+  const request = new Request("http://localhost", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    signal: controller.signal,
+    body: new ReadableStream({
+      start() {},
+      cancel() {
+        return new Promise(() => {});
+      },
+    }),
+    duplex: "half",
+  } as RequestInit);
+  const pending = readCommandBody(request);
+  controller.abort();
+  await expect(pending).rejects.toMatchObject({ status: 503 });
+  const oversized = new Request("http://localhost", {
+    method: "POST",
+    headers: { "content-type": "application/json", "content-length": "1" },
+    body: new ReadableStream({
+      start(c) {
+        c.enqueue(new Uint8Array(131073));
+      },
+      cancel() {
+        return new Promise(() => {});
+      },
+    }),
+    duplex: "half",
+  } as RequestInit);
+  await expect(readCommandBody(oversized)).rejects.toMatchObject({
+    status: 400,
+  });
+});
+it("S06B-R01 accepts exactly 128 KiB but rejects one extra byte", async () => {
+  const req = (count: number) =>
+    new Request("http://localhost", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: "{}" + " ".repeat(count - 2),
+    });
+  await expect(readCommandBody(req(131072))).resolves.toEqual({});
+  await expect(readCommandBody(req(131073))).rejects.toMatchObject({
+    status: 400,
+  });
 });
