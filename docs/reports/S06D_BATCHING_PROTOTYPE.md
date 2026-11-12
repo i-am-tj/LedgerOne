@@ -37,3 +37,50 @@ All DB commands in this report explicitly use `LEDGERONE_ENV=test`, `DATABASE_UR
 `npx vitest run --project verification tests/verification/ssi.benchmark.ts`: **1 pass**, 7.13s at prototype 95f1efe. [Sanitized artifact](../evidence/s06d/BATCHING_SSI_DIAGNOSIS.json) records actual 40001 exceptions at COMMIT, journal finalization, audit insertion and reads despite disjoint accounts. No SQLSTATE fixture is injected. Real runtime predicate locks include page locks on journal/posting/audit/account indexes and a relation-level predicate lock on the receipt-key index. Standalone equivalent validation/result queries use existing index or bitmap scans after this sample; adding a guessed missing index is not justified. These equivalent EXPLAINs are not a trace of every cached nested trigger plan and locks are not a full SSI dependency graph. The routine/phase evidence confirms SSI aborts beyond the posting INSERT, but does not prove one unique root cause.
 
 PostgreSQL explains that predicate locks can be coarsened and query plans affect serialization conflicts. [Official PostgreSQL 17 documentation](https://www.postgresql.org/docs/17/transaction-iso.html#XACT-SERIALIZABLE). We do not change planner/predicate-lock settings, disable triggers, add an index or widen retry limits in this prototype. Diagnostic hooks add overhead; their abort rate and latency are excluded from the before/after performance comparison. All diagnostic aggregate journals balance, no drafts/audit gaps survive, and owned cleanup completed without force termination.
+
+## Matching 48-cell comparison — capacity remains FAIL
+
+Batched measurement head `85cbdfafc57b1a45cf36b85f2b07fd12bcf664a7`, clean at campaign start; execution digest `5eba37c0ce00d5538207d2d367b9395ef7756b4cfcb461e2206e7fcb73af3255`. Its catalog digest equals the baseline exactly (`8bce7905c92637cc89c31c876f47cefae1e38f52075ee77566e88328207b9547`). Workload descriptors are pairwise identical. [Full after artifact](../evidence/s06d/BATCHING_AFTER_SMOKE.json); 44 PASS / 4 FAIL, Vitest 144.73s, exit 1. There are 892 measured requests in each campaign; baseline 14 failed / 225 serialization aborts in 1,113 attempts, batch 18 failed / 296 aborts in 1,178 attempts. These mixed-workload totals are disclosure, not a representative SLA or evidence of a statistically established rate increase. Both have zero cancellations/unmeasured/setup failures. No deadlock occurs in these capacity samples; genuine deadlocks are reproduced separately in tests. All aggregate safety checks remain true.
+
+Posting persistence includes server UUID generation/JSON preparation plus driver/database time; command latency includes authentication/attestation/retries. Posting values sum all executed insertion phases/attempts and both journals for CORRECT; a request failing before insertion has no posting observation. Quantiles retain failures; a maximum-case before median containing failures is not a successful-throughput claim. All matrix p99 values are **NOT PROVEN** (too few samples). Client COMMIT includes deferred validation/network; no separate server-only trigger timing is fabricated. Handler-local benchmark uses the real request/service path but not Next HTTP transport; real HTTP/security/transport faults are separate tests.
+
+| Workload (max union, c1) | N before/after | Posting p50/p95 ms before → after | Command p50/p95 ms before → after | Success before → after |
+| ------------------------ | -------------- | --------------------------------- | --------------------------------- | ---------------------- |
+| POST 500                 | 3/3            | 329.06/424.93 → 54.03/54.36       | 1212.16/1331.57 → 709.45/720.96   | 3 → 3                  |
+| REVERSE 500              | 3/3            | 628.05/663.94 → 58.55/62.76       | 3131.62/3256.48 → 1666.81/1671.68 | 3 → 3                  |
+| CORRECT 500              | 3/3            | 1078.64/1633.69 → 108.12/190.20   | 4382.17/5118.05 → 2937.10/3017.90 | 1 → 3                  |
+| POST 50                  | 30/30          | 24.22/56.69 → 4.68/8.56           | 82.44/151.95 → 56.67/78.10        | 30 → 30                |
+| REVERSE 50               | 30/30          | 20.98/39.58 → 6.42/7.38           | 80.78/115.97 → 75.45/133.34       | 30 → 30                |
+| CORRECT 50               | 30/30          | 50.73/69.19 → 12.80/21.26         | 175.53/221.77 → 134.68/177.08     | 30 → 30                |
+
+All six batched single-command MAX 500-leg/small/max-union cells positively succeed (three requests each), including 500+500/1,000-account CORRECT. Four-way and six-way shared maximum correction stress each produce one success, with respectively three/five bounded failures; both **positive stress FAIL**. Safe rejection is not capacity success.
+
+| Failed batched representative cell (small union, c4, N=32) | Success/failure | Real 40001 / attempts | Failure at attempt 3 |
+| ---------------------------------------------------------- | --------------- | --------------------- | -------------------- |
+| POST 2                                                     | 30/2            | 34/64                 | 2                    |
+| REVERSE 2                                                  | 30/2            | 36/66                 | 2                    |
+| REVERSE 50                                                 | 27/5            | 39/66                 | 5                    |
+| CORRECT 2                                                  | 31/1            | 33/64                 | 1                    |
+
+Thus the prototype improves measured insertion costs but does **not** resolve #32. Required four-way failures remain above 1%; do not advance D-T04/D-T05 or close capacity. Critical results and remaining review/SSI proposal are recorded separately below.
+
+## Matching critical-tail comparison
+
+`npx vitest run --project verification tests/verification/critical.benchmark.ts` at 85cbdfa: **exit 1; 1 PASS / 1 FAIL**, 268.90s. [Full after critical artifact](../evidence/s06d/BATCHING_AFTER_CRITICAL.json). Documentation-only dirty state at launch; exact execution digest remains `5eba37c0ce00d5538207d2d367b9395ef7756b4cfcb461e2206e7fcb73af3255`. Neither workload, retry bounds nor the 240s per-cell cap changed.
+
+| Critical workload | N before → after | Posting p50/p95/p99 ms before → after            | Command p50/p95/p99 ms before → after               | Fail/cancel/unmeasured before → after |
+| ----------------- | ---------------- | ------------------------------------------------ | --------------------------------------------------- | ------------------------------------- |
+| POST 2 / c4       | 1000 → 1000      | 1.51/4.62/7.30 → 1.15/3.84/7.54                  | 50.46/162.92/209.16 → 54.76/146.57/212.74           | 7/0/0 → 3/0/0                         |
+| CORRECT 50 / c1   | 790 → 574        | 50.56/102.19/NOT PROVEN → 17.58/44.99/NOT PROVEN | 162.99/284.26/NOT PROVEN → 141.88/292.67/NOT PROVEN | 0/1/210 → 0/1/426                     |
+
+POST2: baseline 429 actual 40001/1,422 attempts and seven third-attempt failures versus batch 290/1,287 and three third-attempt failures (0.7% → 0.3%). Both empirical critical cells PASS, but neither has 100% success and the medians/tails do not improve uniformly. CORRECT50: no serialization/deadlock aborts; baseline 790 measured requests versus batch 574, despite a lower batch insertion/command median. Both exhaust the same **setup-inclusive** resource budget; setup is completed before measured commands, not interleaved. More unmeasured requests after batching are reported, not extrapolated as throughput or hidden. Posting phase observations are 790 before/573 after, since the after cancellation occurred before its insertion timer; command denominators retain both cancellations. Critical p99 qualification is an empirical sample statistic, not a population/hosted guarantee. No value is invented for insufficient samples.
+
+All aggregate accounting safety checks pass. The canceled command is not presumed committed or rolled back from its transport result alone. Harness afterAll cleanup completed (no cleanup hook errors); the separate SSI artifact records successful cleanup. A post-campaign local catalog check records remaining generated fixtures below. No active/unrelated connection is terminated.
+
+## D-T03 assessment and next decision
+
+**Recommendation: FAIL / retain #32 open.** The local batch source and full ordinary regression pipeline are verified, but representative and maximum concurrent stress still fail and the correction critical p99 remains NOT PROVEN. Do not merge PR #30, advance D-T04/D-T05, close #11/A05 findings or declare S06/Phase 1 complete. [Fresh insertion-path assessment](../security/S06D_BATCHING_PATH_REVIEW.md) records author-context review with no fabricated independent approval; independent accounting/security review and a new owner decision remain pending. [Separate SSI follow-up proposal](../plans/S06D_SSI_FOLLOWUP_PROPOSAL.md) is documentation only and requires its own review before experimentation. No further optimization, planner setting, retry, limit, migration or grant change is made here.
+
+Exact protected-file comparison against 4aed8b3 covers migrations001–007, published bootstrap/runtime grants, retry policy, command contract/original/result code and the native null writer route. All are byte-unchanged. No hosted operation or production activation occurs. Local changes are limited to executor insertion, posting timer, test/diagnostic tools and traceable documentation/evidence.
+
+Post-campaign catalog check on explicit local dummy `ledgerone_test`: **0 remaining generated `ledgerone_controls_*_test` databases / 0 generated post writer/auth/verifier roles**. This is a read-only aggregate check, not a cleanup operation. macOS 26.3.1; npm 10.9.4. Raw logs stay private; only sanitized aggregate evidence is published.

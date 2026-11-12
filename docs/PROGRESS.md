@@ -530,3 +530,9 @@ At clean 1b29221, critical benchmark 1 passed / 1 failed (265.98s): POST2/c4 1,0
 ## 2026-11-12 — S06D bounded batching local prototype authorized
 
 Owner reviewed #30 at 4aed8b3/proposal 1b29221 and explicitly authorized only the bounded posting insertion prototype, preserving every invariant, existing limits, retry/deadline policies and closed production gate. [Authorization](https://github.com/i-am-tj/LedgerOne/pull/30#issuecomment-6826341877). New approval supersedes the historical pending-proposal status above, without altering its FAIL/NOT PROVEN evidence. [Prototype report](reports/S06D_BATCHING_PROTOTYPE.md) tracks exact row-loop versus batch source and verification. PR #30 stays draft, #32 stays open; D-T04/D-T05 do not advance.
+
+## 2026-11-12 — bounded batching implemented; D-T03 remains FAIL
+
+Metric-only row-loop 31b5341 and batch source 95f1efe/measurement 85cbdfa have matching fresh local database profiles/catalog digest and unchanged workload/retry/limit contracts. Full local pipeline 220/242/48 PASS; fourteen new private-role HTTP/accounting/fault cases, real 40001/40P01, cancellation and COMMIT/replay evidence pass. [Exact comparison](reports/S06D_BATCHING_PROTOTYPE.md): 48-cell before/after both 44P/4F; larger insertion costs fall but four-way retry exhaustion persists. Batched critical POST 1000 observations/p99 212.74ms/0.3% failures; CORRECT 574 observations/426 unmeasured/p99 NOT PROVEN. Max concurrent stress still FAIL; no accounting side effects/imbalance/audit gaps observed.
+
+PR #30 stays draft and #32 open. Author-context fresh assessment is not independent approval; new review decision required. [Separate SSI proposal](plans/S06D_SSI_FOLLOWUP_PROPOSAL.md) is unapproved documentation. Zero generated fixture DBs/roles remain after owned cleanup; no unrelated/active connection terminated. D-T04/D-T05, hosted work, grants, native writer, full S06 and Phase 1 remain closed.

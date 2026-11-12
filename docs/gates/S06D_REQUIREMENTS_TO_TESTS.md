@@ -37,3 +37,7 @@ For each W row record L/P local result and H hosted result separately, with exac
 ## Current implementation checkpoint
 
 [Local checkpoint report](S06D_LOCAL_CHECKPOINT.md): D-T01/D-T02 local components verified; D-T03 capacity FAIL #32, correction critical p99 NOT PROVEN. D-T04 and final review/merge outstanding. W14 cannot pass on ordinary green CI while its required capacity evidence fails; all H-dependent criteria remain NOT RUN. No final W or complete S06D PASS and no production authorization.
+
+## D-T03 local prototype evidence (does not change final W results)
+
+[Exact local prototype report](../reports/S06D_BATCHING_PROTOTYPE.md) adds fourteen real private-role accounting/security/fault cases relevant to W01–W04/W06–W10/W13/W14, with full 220/242/48 regression PASS. This is D-T03 verification only, not execution or acceptance of D-T04's complete W matrix. Required W14 capacity remains FAIL #32; W15 review/merge remains NOT RUN: four required matrix failures, concurrent max stress failure and CORRECT critical p99 NOT PROVEN. Independent review, target-specific hosted W assertions, final evidence/reviewed merge remain outstanding. Original A05 issues stay open; final W results and gate remain closed.
