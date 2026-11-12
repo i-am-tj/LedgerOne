@@ -196,7 +196,6 @@ export class PostExecutor {
     command: FinancialCommand,
     signal?: AbortSignal,
   ): Promise<{ result: FinancialResult; replayed: boolean }> {
-    if (command.kind === "CORRECT") throw unavailable(); // C-T03 follows reviewed C-T02.
     throwIfAborted(signal);
     const deadline = performance.now() + 10000;
     const first = await withinDeadline(
@@ -251,7 +250,6 @@ export class PostExecutor {
     deadline: number,
     signal?: AbortSignal,
   ): Promise<{ result: FinancialResult; replayed: boolean }> {
-    if (command.kind === "CORRECT") throw unavailable();
     throwIfAborted(signal);
     const actor = await withinDeadline(
         authorize(),
@@ -348,7 +346,14 @@ export class PostExecutor {
               command.originalJournalId,
             );
       if (command.kind !== "POST") await this.probe?.("discovered", c, attempt);
-      const ids = [...new Set(legs.map((l) => l.accountId))].sort();
+      const ids = [
+        ...new Set(
+          [
+            ...legs,
+            ...(command.kind === "CORRECT" ? command.replacement.legs : []),
+          ].map((l) => l.accountId),
+        ),
+      ].sort();
       const accounts = await query(
         'SELECT id,"archivedAt","currencyCode" FROM ledger_account WHERE "workspaceId"=$1 AND "ownerId"=$2 AND id=ANY($3::uuid[]) ORDER BY id FOR UPDATE',
         [workspace, actor.ownerId, ids],
@@ -385,6 +390,20 @@ export class PostExecutor {
         legs,
         command.kind === "POST" ? null : command.originalJournalId,
       );
+      if (command.kind === "CORRECT")
+        await this.writeJournal(
+          query,
+          c,
+          attempt,
+          actor,
+          workspace,
+          op,
+          randomUUID(),
+          command.replacement.effectiveAt,
+          command.replacement.description,
+          command.replacement.legs,
+          null,
+        );
       await query(
         'INSERT INTO audit_event(id,"workspaceId","ownerId","actorId","requestId",action,"operationId","targetJournalId",reason) VALUES($1,$2,$3,$3,$4,$5,$6,$7,$8)',
         [
@@ -392,7 +411,11 @@ export class PostExecutor {
           workspace,
           actor.ownerId,
           actor.requestId,
-          command.kind === "POST" ? "ledger.posted" : "ledger.reversed",
+          command.kind === "POST"
+            ? "ledger.posted"
+            : command.kind === "REVERSE"
+              ? "ledger.reversed"
+              : "ledger.corrected",
           op,
           command.kind === "POST" ? journal : command.originalJournalId,
           command.reason,

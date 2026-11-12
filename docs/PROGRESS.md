@@ -492,3 +492,7 @@ Planning PR #25 merged amended head 1611bba as b31ab0b after owner acceptance an
 ## S06C C-T02 — exact REVERSE vertical slice
 
 After C-T01 lock-matrix/refactor review was recorded on draft PR #26, implemented REVERSE through the same guarded dispatcher/runner, account-first target locks, bounded immutable provenance, exact opposite multiset, transactional audit and immutable replay. CORRECT remains disabled pending C-T03. Local 162 unit / 148 integration PASS, typecheck/lint PASS. Cross-command recovery gate and final adversarial review remain pending; normal Next writes/published grants unchanged.
+
+## S06C C-T03 — atomic correction and cross-month tests
+
+Shared runner now commits exact-original reversal plus GENERAL replacement with one receipt/audit. Local 162 unit / 160 integration PASS, typecheck/lint PASS; cross-month/restatement/timezone balances and immutable timestamps, replacement/audit rollback, exact target/repeated correction and core opening provenance boundaries demonstrated. No production writer, grants, schema or exposed S07 workflow. C-T04 and final C gate remain pending.
