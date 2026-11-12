@@ -1,6 +1,6 @@
 # S06D documentation-only planning report
 
-**Decision: prepared for owner planning review; implementation NOT AUTHORIZED.** Planning acceptance/reviewed merge pending. S06D technical W01–W15 gate remains NOT RUN / FAIL, normal-runtime writes disabled, published financial grants SELECT-only, posting INR-only. This is not technical implementation approval or production readiness.
+**Decision: owner ACCEPTED WITH TWO MINOR DOCUMENTATION AMENDMENTS, incorporated.** Amended-head required checks and reviewed planning merge pending; isolated local implementation is authorized only after that merge. Hosted and production operations remain unauthorized. S06D technical W01–W15 gate remains NOT RUN / FAIL, normal-runtime writes disabled, published financial grants SELECT-only, posting INR-only. This is not technical implementation approval or production readiness.
 
 ## Delivered scope
 
@@ -84,3 +84,11 @@ PY
 [PR #28](https://github.com/i-am-tj/LedgerOne/pull/28), branch `docs/p1-s06d-plan`, publishes separate closure and planning commits. Exact final head/current-head CI evidence is recorded on that PR after completion. Issue #11 and epic #5 are OPEN / planned, C predecessor satisfied; #7 and parent #2 remain open, S07 #12 blocked. Original #13–#17 remain open with disposition links; #10/#27 and sub-epics #3/#4 remain closed. No implementation or production activation acceptance is claimed.
 
 Secret screening: `node /private/tmp/ledgerone-scan-stage.mjs` PASS (configured private auth/allowlist values withheld); Gitleaks 8.30.1 exact staged export PASS and branch-history scan PASS (56 commits, no leaks). Only the named planning branch was pushed, with no private environment/log/generated files. GitHub connector mutation returned 403, so authenticated `gh` performed the authorized issue/PR publication; no repository protection was bypassed.
+
+## Owner acceptance and incorporated amendments
+
+The owner explicitly reviewed PR #28/head 5917115, D-T01–05, D-AC01–12 and all supporting plans and accepted with two documentation amendments. Performance now distinguishes unchanged protocol maxima (500 legs / 1,000-account correction union) from measured operational capacity, with P0 correctness/smoke, P1 representative measurements, P2 designated critical-tail sampling and P3 maximum-size positive stress or FAIL. Insufficient samples remain NOT PROVEN; no accounting control is weakened or validation limit reduced.
+
+Local readiness is a separate checkpoint: after planning merge D-T01–D-T04 may develop and verify local adapters, restricted roles, performance tooling and combined commands without hosted permission. Hosted evidence remains NOT RUN until separate target-specific read/provisioning/write approval. Explicit identifier handling, search_path, trigger/function/FK resolution, role inheritance and public/temporary schema shadowing regressions are mandatory. A local PASS never satisfies hosted-dependent W rows or overall S06D PASS.
+
+The acceptance authorizes documentation amendments, reviewed planning merge and subsequent isolated local implementation. It does not authorize hosted reads/mutations, production deployment/grants/rollback or consumer raw posting. Exact amended-head checks, CI, final planning decision/provenance and actual merge are recorded on PR #28; #11 must remain open. Earlier pending-acceptance checkpoints above are historical.
