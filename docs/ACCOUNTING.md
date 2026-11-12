@@ -1,8 +1,8 @@
 # Accounting contract
 
-> Current status (2026-11-12): S06B completed/reviewed merge `5af4c19`; S06C planning merged `b31ab0b`; guarded implementation, corrected review and actual closure are tracked in [PR #26](https://github.com/i-am-tj/LedgerOne/pull/26). Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. [Verified closure](reports/S06B_CLOSURE.md). Earlier dated checkpoints retain the state and decisions recorded at the time.
+> Current status (2026-11-12): S06C completed/reviewed merge `3502754` at corrected head `c22488b`; #10/#27 closed. [Verified closure](reports/S06C_CLOSURE.md). S06D predecessor satisfied; detailed planning awaits acceptance and reviewed planning merge. A05-01–05 remain open. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. Earlier dated checkpoints retain their original decisions and evidence.
 
-Status: core INR/sign/reversal policy and staged FX support approved. S05, S06A and S06B have reviewed merges; S06C/D and S07–S09 workflows remain pending. Worked business examples below are still illustrative templates, not claims of implemented transaction commands.
+Status: core INR/sign/reversal policy and staged FX support approved. S05 and S06A–C have reviewed merges; S06D verification and S07–S09 workflows remain pending. Worked business examples below are still illustrative templates, not claims of implemented transaction commands.
 
 ## Ledger conventions
 
@@ -86,10 +86,14 @@ New work is on `feat/p1-s06a-command-controls`, based on the owner's merged main
 
 Raw POST commits one GENERAL journal, exact positive INR legs, one immutable receipt and one matching ledger.posted audit atomically. Authorized replay reads immutable journal/posting/audit data before new-post account eligibility; archived/renamed accounts do not affect the original result. Required bounded audit reason remains hashed/persisted; future consumer templates may supply controlled defaults without ordinary-user typing. Known serialization/deadlock aborts retry full transactions; uncertain COMMIT requires same-key recovery on a fresh transaction. No S05/S06A SQL invariant, sign, currency gate, migration or production grant is changed. Corrections/OPENING/FX are outside this increment.
 
-## S06C proposed correction contract
+## Historical S06C planning checkpoint
 
 The [S06C plan](stories/P1-S06C_BREAKDOWN.md) and proposed [ADR-007](ADR/0007-shared-command-lock-order-and-correction-targets.md) define exact opposite multisets, explicit originals, one-operation CORRECT, account-first locking and immutable replay. These are planning contracts pending acceptance and implementation. Original history is unchanged; S07 retains exposed OPENING/account correction/reconciliation.
 
 ## Implemented guarded S06C boundary
 
-Accepted plan/ADR-007 is implemented in restricted disposable tests in [PR #26](https://github.com/i-am-tj/LedgerOne/pull/26), pending independent review/reviewed merge. POST/REVERSE/CORRECT share authentication, retry/transaction lifecycle and journal persistence. Period arithmetic uses each journal's effectiveAt; postedAt is immutable database finalization provenance. Cross-month/restatement/boundary queries include original and correction children separately. No consumer reporting UI, closed-period or as-known-at feature is claimed. Archive/opening-derived fresh commands remain excluded pending S07; replay remains immutable after archive. No production exposure/grant/FX change.
+Accepted plan/ADR-007 is implemented and reviewed/merged in [PR #26](https://github.com/i-am-tj/LedgerOne/pull/26), corrected c22488b / merge 3502754. POST/REVERSE/CORRECT share authentication, retry/transaction lifecycle and journal persistence. Period arithmetic uses each journal's effectiveAt; postedAt is immutable database finalization provenance. Cross-month/restatement/boundary queries include original and correction children separately. No consumer reporting UI, closed-period or as-known-at feature is claimed. Archive/opening-derived fresh commands remain excluded pending S07; replay remains immutable after archive. No production exposure/grant/FX change.
+
+## S06D accounting verification boundary
+
+[W01–W15](gates/S06D_REQUIREMENTS_TO_TESTS.md) must prove combined POST/REVERSE/CORRECT, immutable semantic replay, exact multiset/target/audit, date/period behavior and safe concurrency on actual roles/profile. Technical PASS does not authorize arbitrary consumer journals or implement expense/income/transfer/loan/investment business rules. S07 retains OPENING/account workflows and their mandatory audit extension. Original A05 findings remain individually tracked and open during planning.

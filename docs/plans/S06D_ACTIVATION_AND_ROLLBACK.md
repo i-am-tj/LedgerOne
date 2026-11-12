@@ -1,0 +1,41 @@
+# S06D technical acceptance versus production activation
+
+**Non-executed design.** Technical S06D approval must have no activation side effect. Normal-runtime financial grants remain SELECT-only and native financial routes retain null capability throughout planning and verification. The generic raw financial endpoint remains unavailable to consumers even after S06D technical PASS. There is no approved exposure flag to toggle.
+
+## Distinct decisions
+
+| Decision                                   | Required evidence                                                                                                                                                                                         | What it permits                                                                                         |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Planning acceptance                        | Detailed D plan accepted at exact head and reviewed planning merge                                                                                                                                        | Separate implementation branch/PR; local isolated verification work only                                |
+| Isolated hosted verification authorization | Exact owner-approved O-HREAD/O-HDDL/O-HWRITE target/scripts/workload/cost/cleanup scopes                                                                                                                  | Only listed operations on synthetic-only verification target; no production grants or consumer endpoint |
+| S06D technical gate acceptance             | D-AC01–12, final W01–15 PASS, accepted dispositions, capacity and target evidence, independent review, current CI and reviewed implementation merge                                                       | Record restricted engine verification readiness; normal-runtime financial writes remain disabled        |
+| Future typed business command acceptance   | Separate accepted stories for Expense/Income/Transfer/Card Payment/Loan/Investment as applicable, business classification/amount/account/sign rules, positive/negative authorization and raw-bypass tests | Review a specific consumer feature; no generic journal capability inherited                             |
+| Production activation                      | Separate explicit owner O-PROD approval of exact deployment/grant/endpoint release and operational prerequisites                                                                                          | Execute only the approved scoped release, never an unrestricted raw API                                 |
+
+S07 owns accounts/opening/account correction/reconciliation and its audit requirement. S08 owns approved baseline business templates; investment or other later templates require their own story. Credit card settlement/principal/FD/investment transfers must not become expenses; loan proceeds must not become income. S06D does not implement those rules or authorize callers to manufacture journals to bypass them. Phase 1 still requires S07–S09 and its full quality gate.
+
+## Future activation prerequisites — all unexecuted
+
+1. Complete technical gate with exact supported schema/role/connection/capacity envelope, no exposed-contract finding and accepted scoped limitations. Verify the release head matches reviewed evidence; new heads require renewed checks/review.
+2. Accept and implement the specific typed business stories. Inventory routes/imports so consumers cannot submit arbitrary posting legs, operation IDs or internal writer capabilities. Native raw command routes remain denied regardless of environment, header or role claims.
+3. Establish separately approved hosting/domain/TLS, OAuth redirect/session/allowlist and user isolation configuration, secrets custody/rotation, network access and monitoring. Supabase project creation does not configure app hosting.
+4. Demonstrate approved backup/restore on an isolated restore target and recovery objectives appropriate to stored finance; record restore verification, data retention/export/delete policy and incident ownership. No unapproved production dump/restore or paid service is implied. S06 technical PASS is not backup/restore evidence.
+5. Prepare exact candidate production role/schema/migration/grant delta and typed-route deployment manifest at the reviewed SHA. Normal app, migrator, verifier and any later financial service role stay distinct; no broad ALL, DDL, TRUNCATE, BYPASSRLS, ownership or service-key shortcuts. Keep published current grants unchanged until explicit permission covers an actual change.
+6. Prepare a concrete non-executed runbook, target identity/TLS checks, safe abort conditions and rollback commands/deltas. Request owner approval **after** artifacts are reviewable; obtain O-PROD and explicitly scoped O-ROLLBACK. No automatic approval from a merged plan, credentials, time or green CI.
+7. Only within that separate authorized release: verify target/history/catalog/ACLs, apply exactly approved additive changes, re-attest with actual roles, deploy only approved typed routes and execute approved synthetic health checks. Fail closed on mismatch/unavailable state; pause before any unapproved follow-up action.
+
+S06D deliverable is this design plus a reproducible verification report, not execution of steps 3–7. If production readiness is missing, report the gap rather than widening D scope or labelling the product production-ready.
+
+## Rollback contract — requires its own authorized scope
+
+A future incident runbook must identify who can stop the typed command entry point, drain owned request/pool resources, revoke only the newly approved financial writer privileges and roll back the app to the reviewed read-only release. Preauthorize those concrete emergency actions in O-ROLLBACK; absent that scope, do safe local containment and request owner action for hosted changes. Technical gate acceptance alone confers no hosted rollback authority.
+
+Preserve every committed journal, posting, operation receipt and financial audit. Never delete history, mutate amounts/targets/dates, rewrite applied migrations or manufacture rollback after ambiguous COMMIT. Classify pending outcomes, close/destroy only owned clients as needed, and reconcile through the same authorized idempotency key in a fresh snapshot before any reissue. Reversal/correction requires a separately valid authenticated command, not ad hoc SQL repair.
+
+Disable verification composition and close its owned pools on local verification failure; normal-runtime grants/routes already deny writes. Hosted verification disposal must follow its approved owned-resource manifest and normal zero-connection cleanup; never force-drop or terminate unrelated sessions. Do not clean fixture rows out of a shared financial database.
+
+For schema issues, prefer reviewed forward additive repair and re-attestation. A restore is a separately approved recovery operation with explicit point-in-time/data-loss assessment and verified replay/audit/idempotency consistency; it is not an automatic SQL down migration. After any authorized permission/schema rollback, verify effective privileges, history/catalog digest, route denial, readiness and safe same-key recovery without exposing raw commands. Record exact before/after manifest, operator/approval, times and residual risks.
+
+## Release evidence template
+
+Record release/commit and PR/review provenance; approved typed story IDs; W matrix and capacity profile; target/role/TLS/catalog/history digests; approved mutation and rollback hashes; backup/restore evidence; approval scopes/time window; execution/health results; uncertain outcomes and recovery; remaining limitations; actual route/privilege state. Until separate production authorization and successful execution exist, activation status is **NOT AUTHORIZED / NOT RUN**, irrespective of S06D technical decision.

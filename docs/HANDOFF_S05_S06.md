@@ -1,6 +1,6 @@
 # S05 → S06 engineering handoff
 
-> Current status (2026-11-12): S06B completed/reviewed merge `5af4c19`; S06C planning merged `b31ab0b`; guarded implementation, corrected review and actual closure are tracked in [PR #26](https://github.com/i-am-tj/LedgerOne/pull/26). Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. [Verified closure](reports/S06B_CLOSURE.md). Earlier dated checkpoints retain the state and decisions recorded at the time.
+> Current status (2026-11-12): S06C completed/reviewed merge `3502754` at corrected head `c22488b`; #10/#27 closed. [Verified closure](reports/S06C_CLOSURE.md). S06D predecessor satisfied; detailed planning awaits acceptance and reviewed planning merge. A05-01–05 remain open. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. Earlier dated checkpoints retain their original decisions and evidence.
 
 S06A review artifact: [PR #18](https://github.com/i-am-tj/LedgerOne/pull/18), implementation commit `cf37cda`; required local pipeline **89 unit / 70 integration / 46 browser tests PASS**, plus schema/attestation/build. Remote checks and human review are reported on the PR.
 
@@ -70,3 +70,7 @@ The next story is P1-S06B #9, with its [detailed plan](stories/P1-S06B_BREAKDOWN
 ## S06B implementation review handoff — 2026-11-12 (historical checkpoint)
 
 Planning PR #20 merged 75f8795 after review at 21df416. Separate implementation PR #21 contains sequential B-T01–05 with immutable archived-account replay, fresh-snapshot/uncertain-COMMIT recovery, mandatory audit and real HTTP atomicity/isolation/balance/replay coverage. Final source 004252e complete local pipeline PASS: 129 unit / 119 integration / 48 browser (19.5s). [Report](reports/P1-S06B.md) records exact commands, roles, source files, limits and review prerequisites. Final-head CI/accounting/security review and reviewed merge remain required; no S06C work or production write/grant/phase-gate enablement. Original findings #13–#17 remain open for full linked acceptance.
+
+## Current handoff — S06C closed; S06D planning
+
+S06C corrected c22488b merged 3502754; #10/#27 closed, final 166 unit / 212 integration / 48 browser. [Verified closure](reports/S06C_CLOSURE.md) retains BLOCKED/fixes/review provenance. [S06D detailed plan](stories/P1-S06D_BREAKDOWN.md) is documentation only: predecessor satisfied, acceptance and reviewed planning merge pending. All original A05 findings open; actual target/capacity evidence missing; no hosted operation authorized. Normal writes disabled, published grants SELECT-only, INR-only, raw consumers denied; full S06 and Phase 1 gates closed.

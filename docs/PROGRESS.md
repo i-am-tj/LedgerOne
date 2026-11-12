@@ -1,6 +1,6 @@
 # Progress and evidence
 
-> Current status (2026-11-12): S06B completed/reviewed merge `5af4c19`; S06C planning merged `b31ab0b`; guarded implementation, corrected review and actual closure are tracked in [PR #26](https://github.com/i-am-tj/LedgerOne/pull/26). Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. [Verified closure](reports/S06B_CLOSURE.md). Earlier dated checkpoints retain the state and decisions recorded at the time.
+> Current status (2026-11-12): S06C completed/reviewed merge `3502754` at corrected head `c22488b`; #10/#27 closed. [Verified closure](reports/S06C_CLOSURE.md). S06D predecessor satisfied; detailed planning awaits acceptance and reviewed planning merge. A05-01–05 remain open. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. Earlier dated checkpoints retain their original decisions and evidence.
 
 ## 2026-11-11 — P1-S01 Docker Compose and outage verification
 
@@ -508,3 +508,9 @@ Full final `npm run verify:pipeline` PASS: 165 unit / 194 integration / 48 brows
 ## S06C independent adversarial review — initial BLOCKED and corrected approval
 
 At owner's explicit request reviewed exact 2922ce3 with new negative probes before implementation changes. Found Medium R01/#27: valid legacy receipt can misbind date/description/replacement to canonical hash and return 200. Initial BLOCKED evidence committed 697d2f1; source fixes ac2a8cd and 0124a5a apply one pure semantic reconstruction/hash check across shared POST/R/C without changing v1 hashes/DTO/grants/schema. New 18 probes cover genuine 40001/40P01, TCP COMMIT ACK loss, real ancestry boundaries, actual HTTP two-user/calendar/metadata replay and max distinct account capacity. Final local full pipeline 166/212/48 PASS (1.0m browser). [Review](security/S06C_INDEPENDENT_REVIEW.md) preserves all decisions and provenance; corrected source approved only for production-disabled C. Final-head push/PR CI and actual merge/closure belong on PR #26/#10/#27 before further advancement. S06D hosted validation/full write gate/Phase 1 closed; S07 not started.
+
+## 2026-11-12 — S06C closure reconciliation and S06D planning
+
+Verified PR #26 merged 3502754 at corrected c22488b; #10/#27 closed and original A05 #13–#17 open. [Closure report](reports/S06C_CLOSURE.md) records exact-head CI, final 166/212/48 evidence and honest native COMMENTED/user-confirmed reviewed-merge provenance. Initial BLOCKED evidence, correction commits and independent probes remain preserved.
+
+Prepared documentation-only [S06D breakdown](stories/P1-S06D_BREAKDOWN.md), [W matrix](gates/S06D_REQUIREMENTS_TO_TESTS.md), target/role permissions, performance campaign, findings disposition and activation/rollback design. No S06D implementation, migration, dependency, source, grant, environment or workflow change. Exact planning checks/PR evidence are recorded in [the planning report](reports/P1-S06D_PLANNING.md). Next action is owner acceptance and reviewed planning merge, followed by a separate implementation branch/PR; hosted actions need additional explicit approval. Normal writes disabled; full S06 and Phase 1 incomplete.
