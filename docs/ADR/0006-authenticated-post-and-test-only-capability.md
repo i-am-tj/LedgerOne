@@ -1,5 +1,7 @@
 # ADR-006 — Authenticated POST, immutable replay and closed production exposure
 
+> Current status (2026-11-12): S06B completed/reviewed merge `5af4c19`; S06C predecessor satisfied, planning acceptance pending. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. [Verified closure](../reports/S06B_CLOSURE.md).
+
 Date: 2026-11-11. Story P1-S06B / PR #21. Status: implemented/tested locally; final-head accounting/security review and reviewed merge pending. Planning PR #20 was reviewed/merged before implementation; that approval is not implementation acceptance.
 
 The only HTTP command is strict raw INR POST. The shared server-only handler derives identity from the real verified, unexpired, currently allowlisted database session. Client owner/actor/draft/revision/hash/FX fields are rejected. Each attempt revalidates the session and owned workspace. No new sign-in provider, consumer template or UI is added.

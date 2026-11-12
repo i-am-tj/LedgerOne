@@ -1,6 +1,6 @@
 # P1-S06B — Detailed POST command delivery plan
 
-**Status: code/tests implemented in guarded disposable databases; final-head review/merge pending. Normal-runtime financial writes remain disabled.** Prepared after S06A merged. This expands [story P1-S06B](P1-S06B.md), [issue #9](https://github.com/i-am-tj/LedgerOne/issues/9), under [epic P1-E3B / #4](https://github.com/i-am-tj/LedgerOne/issues/4). Phase is milestone #1; task packages below are checkboxes within this one implementation story, not separate partially exposed APIs. Implementation [PR #21](https://github.com/i-am-tj/LedgerOne/pull/21). The planning PR #20 merged after the four targeted clarifications; this does not approve the implementation.
+**Status: completed/reviewed merge `5af4c19` at corrected head `173fd32`; APPROVED for the production-disabled contract only. Normal-runtime financial writes remain disabled.** See [closure evidence](../reports/S06B_CLOSURE.md). Prepared after S06A merged. This expands [story P1-S06B](P1-S06B.md), [issue #9](https://github.com/i-am-tj/LedgerOne/issues/9), under [epic P1-E3B / #4](https://github.com/i-am-tj/LedgerOne/issues/4). Phase is milestone #1; task packages below are checkboxes within this one implementation story, not separate partially exposed APIs. Implementation [PR #21](https://github.com/i-am-tj/LedgerOne/pull/21). The planning PR #20 merged after the four targeted clarifications; this does not approve the implementation.
 
 **Predecessor:** reviewed [PR #18](https://github.com/i-am-tj/LedgerOne/pull/18), head `423c6bd148ce86048ea3c3fa8e1510c45a72fb4c`, merged as `df56d4647169f289ac22aef8338f5f8fd8dc964a`. [Decision and exact-head CI](https://github.com/i-am-tj/LedgerOne/pull/18#issuecomment-6801618802): APPROVED for S06A only; 89 unit / 76 integration / 46 browser PASS in both remote runs. S06A-R01 #19 resolved; A05 issues #13–#17 remain open. This is not production readiness.
 
@@ -20,7 +20,7 @@ The following defaults are explicit implementation/review contracts, not descrip
 
 | Field                  | Validation / canonical meaning                                                                                                                                                                                                                   |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| HTTP body              | application/json; bounded streaming read, at most 128 KiB regardless of Content-Length; reject invalid UTF-8/JSON, array/null root and unknown keys                                                                                              |
+| HTTP body              | application/json; bounded streaming read with a five-second wall deadline (408 on timeout), at most 128 KiB regardless of Content-Length; reject invalid UTF-8/JSON, array/null root and unknown keys                                            |
 | Idempotency-Key header | one key matching existing SQL `^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$`; no default generated for caller, no silent truncation                                                                                                                       |
 | kind                   | literal POST; no OPENING/REVERSE/CORRECT or saved-draft confirmation                                                                                                                                                                             |
 | effectiveAt            | valid offset-bearing RFC3339 instant, year 0001–9999, at most millisecond precision matching timestamptz(3); reject invalid calendar dates, leap seconds, missing offset and silent precision truncation; canonical UTC instant                  |
@@ -49,7 +49,7 @@ Exclude idempotency key, generated IDs/timestamps/request IDs and secrets from t
 
 ## Ordered implementation tasks
 
-Implementation tasks/tests below are complete in PR #21; final publication-head checks/review/merge remain required. Deliver as one reviewed POST vertical slice in its own PR, with the route unavailable outside guarded test activation. No other implementation story starts while its required checks are red.
+Implementation tasks/tests below are complete in merged PR #21; final publication-head checks/review/merge are recorded in the closure evidence. Deliver as one reviewed POST vertical slice in its own PR, with the route unavailable outside guarded test activation. No other implementation story starts while its required checks are red.
 
 ### B-T01 — Payload, exact amounts, canonical representation
 
@@ -88,7 +88,7 @@ Implementation tasks/tests below are complete in PR #21; final publication-head 
 - [x] Temporary least-privilege writer and reviewed attestation baseline exist only inside guarded disposable local test DBs; test both privilege denial and service authorization. Keep published production financial grants SELECT-only. Authentication mocks or owner/superuser-only tests do not satisfy this requirement.
 - [x] Attestation failure/unknown version/connection failure prevents command execution in the guarded test activation path. Production exposure remains unavailable until S06D validates the deployed target/profile and the complete gate, even if S06B tests pass.
 - [x] Add one combined end-to-end HTTP-boundary POST scenario with real session/database writer: pause before COMMIT and prove an independent connection cannot see the private draft, receipt, postings or audit; release and verify exactly one balanced journal/receipt/audit, expected debit-normal/credit-normal balances and no DRAFT rows; replay and compare the complete financial result deeply, including after account archive/rename. Include a failed-audit/deferred-COMMIT sibling assertion proving zero partial financial rows and unchanged balances. No exposed test hook or UI is added.
-- [ ] Complete final publication-head CI/accounting/security review and reviewed merge. Local re-run of every S05/S06A regression, format/lint/typecheck/build/unit/integration/schema/attestation and relevant browser checks. Attach exact commands, counts, role/profile and SHA; request accounting/security review of the final implementation head and merge only after its checks/review.
+- [x] Complete final publication-head CI/accounting/security review and reviewed merge. Local re-run of every S05/S06A regression, format/lint/typecheck/build/unit/integration/schema/attestation and relevant browser checks. Attach exact commands, counts, role/profile and SHA; request accounting/security review of the final implementation head and merge only after its checks/review.
 
 ## Acceptance criteria and test traceability
 
@@ -112,7 +112,7 @@ Implementation tasks/tests below are complete in PR #21; final publication-head 
 
 **Finding/gate links:** A05-01 #13 → B-AC06; A05-05 #17 → B-AC04; A05-03 #15 → B-AC09 plus S06D hosted integration. W01–W04/W08/W09 are primary B evidence; W07/W10/W13 need actual handler/profile integration. A05-02 remains S06C exact authorized original; A05-04 remains S07 metadata lifecycle. S07 OPENING audit extension is separate and is not smuggled into POST.
 
-**GitHub references:** Story [#9](https://github.com/i-am-tj/LedgerOne/issues/9), epic [#4](https://github.com/i-am-tj/LedgerOne/issues/4), umbrella [#7](https://github.com/i-am-tj/LedgerOne/issues/7), next correction story [#10](https://github.com/i-am-tj/LedgerOne/issues/10), write gate [#11](https://github.com/i-am-tj/LedgerOne/issues/11). Implementation PR: #21; [reproducible evidence/limits](../reports/P1-S06B.md). Code/test packages B-T01–05 implemented; final-head review and reviewed merge pending.
+**GitHub references:** Story [#9](https://github.com/i-am-tj/LedgerOne/issues/9), epic [#4](https://github.com/i-am-tj/LedgerOne/issues/4), umbrella [#7](https://github.com/i-am-tj/LedgerOne/issues/7), next correction story [#10](https://github.com/i-am-tj/LedgerOne/issues/10), write gate [#11](https://github.com/i-am-tj/LedgerOne/issues/11). Implementation PR: #21; [reproducible evidence/limits](../reports/P1-S06B.md). Code/test packages B-T01–05 completed; final-head review and reviewed merge verified. Earlier evidence checkpoints below retain their original chronology.
 
 ## Targeted plan review
 
