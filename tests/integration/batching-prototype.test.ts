@@ -19,19 +19,24 @@ afterAll(async () => {
   await http?.close();
   await h?.cleanup();
 });
-async function counts() {
+async function counts(fixture = h) {
   return (
-    await h.admin.query(`SELECT
+    await fixture.admin.query(`SELECT
     (SELECT count(*)::int FROM ledgerone.journal) journals,
     (SELECT count(*)::int FROM ledgerone.posting) postings,
     (SELECT count(*)::int FROM ledgerone.ledger_operation) receipts,
     (SELECT count(*)::int FROM ledgerone.audit_event) audits`)
   ).rows[0];
 }
-function payload(n: number, ids?: ReturnType<typeof randomUUID>[]) {
-  const p = h.payload();
+function payload(
+  n: number,
+  ids?: ReturnType<typeof randomUUID>[],
+  fixture = h,
+) {
+  const p = fixture.payload();
   p.legs = Array.from({ length: n }, (_, i) => ({
-    accountId: ids?.[i] ?? (i % 2 ? h.users[0]!.bank : h.users[0]!.expense),
+    accountId:
+      ids?.[i] ?? (i % 2 ? fixture.users[0]!.bank : fixture.users[0]!.expense),
     side: i % 2 ? "CREDIT" : "DEBIT",
     currency: "INR",
     amount: "9999999999999999.99",
@@ -43,25 +48,27 @@ async function call(
   key = randomUUID(),
   user: number | null = 0,
   extra: Record<string, string> = {},
+  context = { h, http },
 ) {
+  const { h: fixture, http: server } = context;
   return fetch(
-    `${http.origin}/api/workspaces/${h.users[0]!.workspace}/ledger/commands`,
+    `${server.origin}/api/workspaces/${fixture.users[0]!.workspace}/ledger/commands`,
     {
       method: "POST",
       headers: {
-        origin: http.origin,
+        origin: server.origin,
         "content-type": "application/json",
         "idempotency-key": key,
-        ...(user === null ? {} : { cookie: h.cookie(user) }),
+        ...(user === null ? {} : { cookie: fixture.cookie(user) }),
         ...extra,
       },
       body: JSON.stringify(body),
     },
   );
 }
-async function checkJournal(id: string, n: number) {
+async function checkJournal(id: string, n: number, fixture = h) {
   const q = (
-    await h.admin.query(
+    await fixture.admin.query(
       `SELECT j.revision,
     count(p.id)::int n,count(DISTINCT p.id)::int ids,
     sum(CASE p.side WHEN 'DEBIT' THEN p."functionalMinor" ELSE -p."functionalMinor" END)::text balance,
@@ -163,43 +170,202 @@ it.each([2, 50, 500])(
   20000,
 );
 
+async function waitOwnedStatements(
+  fixture: Awaited<ReturnType<typeof postHarness>>,
+  pids: number[],
+) {
+  const until = performance.now() + 5000;
+  while (true) {
+    const active = (
+      await fixture.admin.query(
+        "SELECT count(*)::int n FROM pg_catalog.pg_stat_activity WHERE pid=ANY($1::int[]) AND state='active'",
+        [pids],
+      )
+    ).rows[0].n;
+    if (active === 0) return;
+    if (performance.now() >= until)
+      throw new Error("Owned test statement remains active; cleanup refused");
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+}
+
+it("S06D-R04 isolated in-flight fixture cannot change another fixture's financial counts", async () => {
+  const before = await counts(),
+    fixture = await postHarness({ schema: "ledgerone" }),
+    server = await postHTTP(fixture);
+  const c = await fixture.admin.connect();
+  const blocker = await fixture.admin.connect();
+  await blocker.query("SELECT pg_advisory_lock(7628824)");
+  const pid = (await c.query("SELECT pg_backend_pid() AS pid")).rows[0].pid;
+  let running: Promise<unknown> | undefined;
+  try {
+    expect(
+      (
+        await call(
+          fixture.payload(),
+          undefined,
+          0,
+          {},
+          { h: fixture, http: server },
+        )
+      ).status,
+    ).toBe(201);
+    running = c.query("SELECT pg_advisory_xact_lock(7628824)");
+    let observed = false;
+    const until = performance.now() + 1000;
+    while (performance.now() < until) {
+      observed = (
+        await fixture.admin.query(
+          "SELECT EXISTS(SELECT 1 FROM pg_catalog.pg_stat_activity WHERE pid=$1 AND state='active' AND wait_event='advisory') AS active",
+          [pid],
+        )
+      ).rows[0].active;
+      if (observed) break;
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+    expect(observed).toBe(true);
+    let settled = false;
+    const waiting = waitOwnedStatements(fixture, [pid]).then(() => {
+      settled = true;
+    });
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    expect(settled).toBe(false);
+    await blocker.query("SELECT pg_advisory_unlock(7628824)");
+    await waiting;
+    await running;
+    expect(await counts()).toEqual(before);
+    expect(
+      (
+        await fixture.admin.query(
+          "SELECT count(*)::int n FROM pg_catalog.pg_stat_activity WHERE pid=$1 AND state='active'",
+          [pid],
+        )
+      ).rows[0].n,
+    ).toBe(0);
+  } finally {
+    await blocker.query("SELECT pg_advisory_unlock(7628824)");
+    blocker.release();
+    await running;
+    c.release();
+    await server.close();
+    await fixture.cleanup();
+  }
+}, 15000);
+
 it("D-T03 500+500 correction locks 1000 distinct accounts and commits exact authorized children", async () => {
-  const u = h.users[0]!,
+  const fixture = await postHarness({ schema: "ledgerone" });
+  const server = await postHTTP(fixture);
+  const context = { h: fixture, http: server };
+  const pids = new Set<number>();
+  let attemptedKey: ReturnType<typeof randomUUID> | undefined;
+  let attemptedBody: unknown;
+  let firstStatus: number | undefined;
+  let commitFailure: string | undefined;
+  const metrics: { stage: string; durationMs: number; attempt: number }[] = [];
+  fixture.setMetrics((event) => metrics.push(event));
+  fixture.setProbe(async (stage, c) => {
+    if (stage === "connected")
+      pids.add((await c.query("SELECT pg_backend_pid() AS pid")).rows[0].pid);
+  });
+  const u = fixture.users[0]!,
     ids = Array.from({ length: 1000 }, () => randomUUID());
-  await h.admin.query(
-    `INSERT INTO ledgerone.ledger_account(id,"workspaceId","ownerId",name,type,kind,"currencyCode","updatedAt")
+  try {
+    // Preserve the original shared fixture's 12 journals / 2,208 postings /
+    // 9 receipts/audits. Isolation must not make the positive capacity case
+    // easier by silently dropping its preceding synthetic history.
+    for (const n of [2, 50, 500]) {
+      const p = payload(n, undefined, fixture);
+      const posted = await call(p, undefined, 0, {}, context);
+      expect(posted.status).toBe(201);
+      const original: PostResult = await posted.json();
+      const { kind: _kind, reason: _reason, ...replacement } = p;
+      void _kind;
+      void _reason;
+      const corrected = await call(
+        {
+          kind: "CORRECT",
+          originalJournalId: original.journalId,
+          effectiveAt: "2026-02-01T00:00:00Z",
+          reason: "Equivalent preceding synthetic history",
+          replacement,
+        },
+        undefined,
+        0,
+        {},
+        context,
+      );
+      expect(corrected.status).toBe(201);
+      const changed: CorrectResult = await corrected.json();
+      expect(
+        (
+          await call(
+            {
+              kind: "REVERSE",
+              originalJournalId: changed.replacement.journalId,
+              effectiveAt: "2026-03-01T00:00:00Z",
+              reason: "Equivalent preceding synthetic history",
+            },
+            undefined,
+            0,
+            {},
+            context,
+          )
+        ).status,
+      ).toBe(201);
+    }
+    expect(await counts(fixture)).toEqual(await counts());
+    await fixture.admin.query(
+      `INSERT INTO ledgerone.ledger_account(id,"workspaceId","ownerId",name,type,kind,"currencyCode","updatedAt")
     SELECT x,$2,$3,'Batch union fixture',CASE WHEN ord%2=1 THEN 'EXPENSE'::ledgerone."AccountClass" ELSE 'ASSET'::ledgerone."AccountClass" END,
     CASE WHEN ord%2=1 THEN 'EXPENSE'::ledgerone."AccountKind" ELSE 'BANK'::ledgerone."AccountKind" END,'INR',NOW()
     FROM unnest($1::uuid[]) WITH ORDINALITY a(x,ord)`,
-    [ids, u.workspace, u.id],
-  );
-  const source = await call(payload(500, ids.slice(0, 500)));
-  expect(source.status).toBe(201);
-  const original: PostResult = await source.json();
-  let locked: string[] = [];
-  h.setProbe(async (stage, c) => {
-    if (stage !== "connected") return;
-    const query = c.query.bind(c);
-    c.query = (async (...args: unknown[]) => {
-      if (
-        typeof args[0] === "string" &&
-        args[0].includes("FROM ledger_account") &&
-        args[0].includes("FOR UPDATE")
-      )
-        locked = (args[1] as unknown[][])[2] as string[];
-      try {
-        return await (query as (...v: unknown[]) => Promise<unknown>)(...args);
-      } finally {
-        if (args[0] === "COMMIT" || args[0] === "ROLLBACK") c.query = query;
-      }
-    }) as pg.PoolClient["query"];
-  });
-  try {
+      [ids, u.workspace, u.id],
+    );
+    const source = await call(
+      payload(500, ids.slice(0, 500), fixture),
+      undefined,
+      0,
+      {},
+      context,
+    );
+    expect(source.status).toBe(201);
+    const original: PostResult = await source.json();
+    let locked: string[] = [];
+    fixture.setProbe(async (stage, c) => {
+      if (stage !== "connected") return;
+      pids.add((await c.query("SELECT pg_backend_pid() AS pid")).rows[0].pid);
+      const query = c.query.bind(c);
+      c.query = (async (...args: unknown[]) => {
+        if (
+          typeof args[0] === "string" &&
+          args[0].includes("FROM ledger_account") &&
+          args[0].includes("FOR UPDATE")
+        )
+          locked = (args[1] as unknown[][])[2] as string[];
+        try {
+          return await (query as (...v: unknown[]) => Promise<unknown>)(
+            ...args,
+          );
+        } catch (error) {
+          if (args[0] === "COMMIT") {
+            const e = error as { code?: string; message?: string };
+            commitFailure = /^[0-9A-Z]{5}$/.test(e.code ?? "")
+              ? e.code
+              : e.message === "Query read timeout"
+                ? "driver-read-timeout"
+                : "transport-or-other";
+          }
+          throw error;
+        } finally {
+          if (args[0] === "COMMIT" || args[0] === "ROLLBACK") c.query = query;
+        }
+      }) as pg.PoolClient["query"];
+    });
     const {
       kind: _kind,
       reason: _reason,
       ...replacement
-    } = payload(500, ids.slice(500));
+    } = payload(500, ids.slice(500), fixture);
     void _kind;
     void _reason;
     const body = {
@@ -209,16 +375,79 @@ it("D-T03 500+500 correction locks 1000 distinct accounts and commits exact auth
       reason: "Maximum union regression",
       replacement,
     };
-    const key = randomUUID(),
-      response = await call(body, key);
+    const key = randomUUID();
+    attemptedKey = key;
+    attemptedBody = body;
+    const response = await call(body, key, 0, {}, context);
+    firstStatus = response.status;
+    if (response.status !== 201)
+      console.info(
+        "D-T03 maximum isolated capacity FAIL",
+        JSON.stringify({ status: response.status, commitFailure, metrics }),
+      );
     expect(response.status).toBe(201);
     const r: CorrectResult = await response.json();
     expect(locked).toEqual([...ids].sort());
-    await checkJournal(r.reversal.journalId, 500);
-    await checkJournal(r.replacement.journalId, 500);
-    expect(await (await call(body, key)).json()).toEqual(r);
+    await checkJournal(r.reversal.journalId, 500, fixture);
+    await checkJournal(r.replacement.journalId, 500, fixture);
+    expect(await (await call(body, key, 0, {}, context)).json()).toEqual(r);
   } finally {
-    h.setProbe(undefined);
+    fixture.setProbe(undefined);
+    // A 503 at COMMIT can still complete. Only wait for our owned backend;
+    // never assume rollback or let it contaminate subsequent test counts.
+    try {
+      await waitOwnedStatements(fixture, [...pids]);
+      if (firstStatus === 503 && attemptedKey) {
+        const rows = (
+          await fixture.admin.query(
+            `SELECT o.id,
+        (SELECT count(*)::int FROM ledgerone.journal j WHERE j."operationId"=o.id) journals,
+        (SELECT count(*)::int FROM ledgerone.posting p JOIN ledgerone.journal j ON j.id=p."journalId" WHERE j."operationId"=o.id) postings,
+        (SELECT count(*)::int FROM ledgerone.audit_event a WHERE a."operationId"=o.id) audits
+        FROM ledgerone.ledger_operation o WHERE o."idempotencyKey"=$1`,
+            [attemptedKey],
+          )
+        ).rows;
+        console.info(
+          "D-T03 uncertain maximum outcome",
+          JSON.stringify({
+            firstStatus,
+            commitFailure,
+            receipts: rows.length,
+            journals: rows[0]?.journals ?? 0,
+            postings: rows[0]?.postings ?? 0,
+            audits: rows[0]?.audits ?? 0,
+          }),
+        );
+        expect(rows.length).toBeLessThanOrEqual(1);
+        if (rows.length === 1) {
+          expect({
+            journals: rows[0].journals,
+            postings: rows[0].postings,
+            audits: rows[0].audits,
+          }).toEqual({ journals: 2, postings: 1000, audits: 1 });
+          const replay = await call(
+            attemptedBody,
+            attemptedKey,
+            0,
+            {},
+            context,
+          );
+          expect(replay.status).toBe(200);
+          const result: CorrectResult = await replay.json();
+          await checkJournal(result.reversal.journalId, 500, fixture);
+          await checkJournal(result.replacement.journalId, 500, fixture);
+          expect(
+            await (
+              await call(attemptedBody, attemptedKey, 0, {}, context)
+            ).json(),
+          ).toEqual(result);
+        }
+      }
+    } finally {
+      await server.close();
+      await fixture.cleanup();
+    }
   }
 }, 20000);
 
