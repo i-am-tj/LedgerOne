@@ -645,19 +645,21 @@ export class PostExecutor {
           this.metrics,
           "sql.postings",
           async () => {
-            for (const l of legs)
-              await query(
-                'INSERT INTO posting(id,"journalId","workspaceId","ownerId","accountId","currencyCode",side,"nativeMinor","functionalMinor") VALUES($1,$2,$3,$4,$5,\'INR\',$6,$7,$7)',
-                [
-                  randomUUID(),
-                  journal,
-                  workspace,
-                  actor.ownerId,
-                  l.accountId,
-                  l.side,
-                  l.minor,
-                ],
-              );
+            // Internal legs are already validated/canonical. Preserve every
+            // duplicate, generate identities on the server, and bind monetary
+            // quantities as strings; PostgreSQL numeric performs the conversion.
+            if (legs.length < 2 || legs.length > 500) throw unavailable();
+            const rows = legs.map((l) => ({
+              id: randomUUID(),
+              accountId: l.accountId,
+              side: l.side,
+              minor: l.minor,
+            }));
+            const inserted = await query(
+              'INSERT INTO posting(id,"journalId","workspaceId","ownerId","accountId","currencyCode",side,"nativeMinor","functionalMinor") SELECT x.id,$2,$3,$4,x."accountId",\'INR\',x.side::"PostingSide",x.minor::numeric,x.minor::numeric FROM jsonb_to_recordset($1::jsonb) AS x(id uuid,"accountId" uuid,side text,minor text)',
+              [JSON.stringify(rows), journal, workspace, actor.ownerId],
+            );
+            if (inserted.rowCount !== legs.length) throw unavailable();
           },
           attempt,
         );
