@@ -1,5 +1,7 @@
 # P1-S06C — Detailed REVERSE and CORRECT delivery plan
 
+> Implementation checkpoint: planning PR #25 merged `b31ab0b` after owner acceptance/amendments and exact-head CI. C-T01 contracts/lock matrix are locally verified; C-T02–05 and all R/C handler acceptance remain pending. See [implementation evidence](../reports/P1-S06C.md). Issue #10 remains open; financial writes/full S06/Phase 1 gates remain closed.
+
 **Status: planning only; implementation NOT STARTED.** Expands [P1-S06C](P1-S06C.md), story [#10](https://github.com/i-am-tj/LedgerOne/issues/10), epic [P1-E3B / #4](https://github.com/i-am-tj/LedgerOne/issues/4), under Phase 1 milestone [#1](https://github.com/i-am-tj/LedgerOne/milestone/1). Five task packages are checkboxes in this one story, delivered sequentially with tests in a separate implementation PR after planning acceptance/reviewed merge. This documentation PR completes no implementation task.
 
 **Predecessor satisfied:** S06B [PR #21](https://github.com/i-am-tj/LedgerOne/pull/21), corrected head `173fd32b293f0beb50369b8aee1347e8395152b0`, merged `5af4c192e533c4c0d4c640363bbb034b818a8404`. [Verified closure](../reports/S06B_CLOSURE.md): #9/#22–#24 closed, final APPROVED for the production-disabled contract only, both exact-head CI runs passed 144 unit / 132 integration / 48 browser. Initial BLOCKED evidence remains intact. This satisfies dependency, not S06C planning or implementation approval.

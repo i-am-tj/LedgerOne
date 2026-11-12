@@ -484,3 +484,7 @@ Prepared [five-package S06C breakdown](stories/P1-S06C_BREAKDOWN.md) and propose
 ## S06C owner planning acceptance — documentation amendments
 
 Owner accepted `8f014eb` architectural direction/restricted boundaries with two minor amendments before planning merge. Added explicit independent effective-date/cross-period contributions and immutable posting timestamps, cross-month regressions, and a mandatory C-T01 SQL lock-acquisition matrix including implicit trigger/FK/deferred locks and inversion tests before C-T02. Required updated-head checks, review/merge and separate implementation PR remain the advancement path. Acceptance does not approve implementation results, normal-runtime writes or production deployment.
+
+## S06C planning merge and C-T01 implementation checkpoint
+
+Planning PR #25 merged amended head 1611bba as b31ab0b after owner acceptance and both exact-head full CI runs (144/132/48 each). Separate branch feat/p1-s06c-corrections implements strict correction contracts/exact inverse/result-shape checks and a single runner entry point, plus the required [SQL lock matrix](reports/P1-S06C_LOCK_MATRIX.md). Local full checkpoint pipeline 160/135/48 PASS; subsequent result-shape unit additions 162 PASS plus typecheck/lint. [Implementation evidence](reports/P1-S06C.md) distinguishes those snapshots. Matrix/refactor source review and real PostgreSQL implicit FK/account/archive/inversion regressions clear C-T01's prerequisite before C-T02. No R/C handlers yet, issue #10 remains open; normal writes, published grants and INR restriction unchanged.

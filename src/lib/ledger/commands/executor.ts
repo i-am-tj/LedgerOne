@@ -153,6 +153,17 @@ export class PostExecutor {
     command: PostCommand,
     signal?: AbortSignal,
   ): Promise<{ result: PostResult; replayed: boolean }> {
+    return this.execute(authorize, workspace, key, command, signal);
+  }
+  // One transaction/authentication/retry lifecycle. C-T02 extends its closed
+  // command union; no consumer writer or alternative orchestration is added.
+  async execute(
+    authorize: () => Promise<Actor>,
+    workspace: string,
+    key: string,
+    command: PostCommand,
+    signal?: AbortSignal,
+  ): Promise<{ result: PostResult; replayed: boolean }> {
     throwIfAborted(signal);
     const deadline = performance.now() + 10000;
     const first = await withinDeadline(

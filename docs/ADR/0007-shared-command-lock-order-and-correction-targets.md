@@ -1,6 +1,6 @@
 # ADR-007 — Shared financial command locking and explicit correction targets
 
-**Status: owner accepted with minor documentation amendments incorporated; planning merge/checks pending; not implemented.** Story [P1-S06C](../stories/P1-S06C_BREAKDOWN.md), [issue #10](https://github.com/i-am-tj/LedgerOne/issues/10). Predecessor: reviewed S06B merge `5af4c19`. This ADR adds no writer, grants, schema or migration. INR-only and SELECT-only financial runtime grants remain unchanged.
+**Status: owner accepted with minor documentation amendments incorporated; planning merged `b31ab0b` with exact-head checks; C-T01 evidence recorded, R/C handlers not yet implemented.** Story [P1-S06C](../stories/P1-S06C_BREAKDOWN.md), [issue #10](https://github.com/i-am-tj/LedgerOne/issues/10). Predecessor: reviewed S06B merge `5af4c19`. This ADR adds no writer, grants, schema or migration. INR-only and SELECT-only financial runtime grants remain unchanged.
 
 ## Context
 
