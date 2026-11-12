@@ -192,7 +192,7 @@ R01 #22 → stalled/aborted/oversized upload, hostile cancel cleanup, real parti
 
 Corrected adversarial source 977f701 full `npm run verify:pipeline`: PASS 144 unit / 132 integration / 48 browser (19.5s), all required stages. See the review for exact evidence and merge conditions. Original S05/S06A tests pass; no applied migration/grant/invariant meaning changed.
 
-## S06C planned traceability
+## S06C planned traceability (historical planning checkpoint)
 
 [C-AC01–10](stories/P1-S06C_BREAKDOWN.md) maps five ordered task packages to unit, real-handler PostgreSQL, security, concurrency and default-deny browser regressions. All S06C scenarios remain PLANNED / NOT RUN; S06B passing tests do not establish S06C correctness.
 
