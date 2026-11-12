@@ -1,12 +1,12 @@
 # ADR-007 — Shared financial command locking and explicit correction targets
 
-**Status: proposed for S06C planning acceptance; not implemented.** Story [P1-S06C](../stories/P1-S06C_BREAKDOWN.md), [issue #10](https://github.com/i-am-tj/LedgerOne/issues/10). Predecessor: reviewed S06B merge `5af4c19`. This ADR adds no writer, grants, schema or migration. INR-only and SELECT-only financial runtime grants remain unchanged.
+**Status: owner accepted with minor documentation amendments incorporated; planning merge/checks pending; not implemented.** Story [P1-S06C](../stories/P1-S06C_BREAKDOWN.md), [issue #10](https://github.com/i-am-tj/LedgerOne/issues/10). Predecessor: reviewed S06B merge `5af4c19`. This ADR adds no writer, grants, schema or migration. INR-only and SELECT-only financial runtime grants remain unchanged.
 
 ## Context
 
 S06B already has one authenticated command boundary and one bounded SERIALIZABLE transaction/retry runner. Its order is workspace → idempotency receipt → sorted accounts → private journal/postings/audit. REVERSE/CORRECT additionally contend on existing journals. Locking an original first and then its accounts would invert POST and future lifecycle operations, and database triggers acquire additional locks. Resolving that order is a prerequisite to handler implementation.
 
-## Proposed decision
+## Accepted planning direction
 
 Reuse and generalize the existing server-only runner with a closed typed command plan, preserving POST v1 behavior and its regression suite. One owner/session resolver, invariant verifier, connection lifecycle, retry classifier, deadline/cancellation policy and transactional audit path serve all commands. No nested call to public POST from CORRECT, duplicated executor, alternate authentication or independent retry loop.
 
@@ -46,4 +46,10 @@ Rejecting all reverse/correct operations after archive is conservative and may r
 
 ## Required evidence
 
-C-T01 review confirms trigger-aware order and unchanged POST contracts before C-T02. C-T04 proves cross-command/lifecycle races, exact target conflicts, fresh retry/replay and unknown-COMMIT recovery; C-T05 proves real-handler security and atomic audit. This proposed ADR is accepted only with the recorded planning decision/reviewed planning merge. Story completion still requires final adversarial review and reviewed implementation merge. Neither acceptance enables production writes.
+C-T01 must first publish `docs/reports/P1-S06C_LOCK_MATRIX.md`: SQL acquisition order/modes/resources for POST, REVERSE, CORRECT and future account archival; explicit and implicit trigger/FK locks, including parent ownership/workspace/operation/journal/audit checks, deferred constraint/finalization locks, source references and inversion risks. Real PostgreSQL barrier tests cover reversed inputs, POST/archival contention, implicit locks and deliberately inverted external fixtures. Record matrix/test/refactor review and unchanged POST contracts before C-T02 handlers. Future archival remains a fixture/contract, not exposed S07 implementation. C-T04 proves cross-command/lifecycle races, exact target conflicts, fresh retry/replay and unknown-COMMIT recovery; C-T05 proves real-handler security and atomic audit. Owner acceptance in chat is conditional on the two incorporated documentation amendments and updated-head CI/reviewed planning merge. Story completion still requires final adversarial review and reviewed implementation merge. Neither acceptance enables production writes.
+
+## Effective dates, reporting periods and immutable posting times
+
+Original, reversal and replacement each contribute at their own explicit `effectiveAt`; their `postedAt` server/database finalization timestamps remain independent, immutable and stable on replay. Period queries use half-open reporting-timezone boundaries (default Asia/Kolkata); do not hide the original, infer a replacement date, or net all children into the original/current month. January expense 1,000 / February reversal 1,000 / March replacement 900 produce January +1,000, February -1,000, March +900, cumulative +900. Explicit January reversal and replacement instead recompute January to +900. Backdating may therefore change a recomputed historical period; closed-period and as-known-at reporting workflows are not implemented by S06C.
+
+C-T03/C-T05 require actual-handler cross-month totals and balance-as-of queries, explicit prior-period restatement, timezone boundaries, immutable original/new effective and posted timestamps, stable replay and atomic failure across all affected periods. These are planned ledger regressions, not consumer reports/UI. See the detailed story's correction-date contract.
