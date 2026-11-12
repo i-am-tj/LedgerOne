@@ -1,5 +1,7 @@
 # Phase 1 gate — Foundation, accounting engine and security
 
+> Current status (2026-11-12): S06B completed/reviewed merge `5af4c19`; S06C predecessor satisfied, planning acceptance pending. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. [Verified closure](../reports/S06B_CLOSURE.md). Earlier dated checkpoints retain the state and decisions recorded at the time.
+
 Date: 2026-11-11 (Asia/Kolkata). Result: **NOT RUN / BLOCKED FOR RELEASE**.
 
 This report uses the user's expanded Phase 1 scope (P1-E1–P1-E4; P1-S01–P1-S09), superseding the earlier three-story foundation phase. No Phase 2 implementation is authorized by a partial Phase 1 result.

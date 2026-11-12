@@ -1,6 +1,8 @@
 # Accounting contract
 
-Status: core INR/sign/reversal policy and staged FX support approved. S05 schema constraints are implemented locally; review/merge and S06–S09 workflows remain pending. Worked business examples below are still illustrative templates, not claims of implemented transaction commands.
+> Current status (2026-11-12): S06B completed/reviewed merge `5af4c19`; S06C predecessor satisfied, planning acceptance pending. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. [Verified closure](reports/S06B_CLOSURE.md). Earlier dated checkpoints retain the state and decisions recorded at the time.
+
+Status: core INR/sign/reversal policy and staged FX support approved. S05, S06A and S06B have reviewed merges; S06C/D and S07–S09 workflows remain pending. Worked business examples below are still illustrative templates, not claims of implemented transaction commands.
 
 ## Ledger conventions
 
@@ -83,3 +85,7 @@ New work is on `feat/p1-s06a-command-controls`, based on the owner's merged main
 ## S06B implementation checkpoint
 
 Raw POST commits one GENERAL journal, exact positive INR legs, one immutable receipt and one matching ledger.posted audit atomically. Authorized replay reads immutable journal/posting/audit data before new-post account eligibility; archived/renamed accounts do not affect the original result. Required bounded audit reason remains hashed/persisted; future consumer templates may supply controlled defaults without ordinary-user typing. Known serialization/deadlock aborts retry full transactions; uncertain COMMIT requires same-key recovery on a fresh transaction. No S05/S06A SQL invariant, sign, currency gate, migration or production grant is changed. Corrections/OPENING/FX are outside this increment.
+
+## S06C proposed correction contract
+
+The [S06C plan](stories/P1-S06C_BREAKDOWN.md) and proposed [ADR-007](ADR/0007-shared-command-lock-order-and-correction-targets.md) define exact opposite multisets, explicit originals, one-operation CORRECT, account-first locking and immutable replay. These are planning contracts pending acceptance and implementation. Original history is unchanged; S07 retains exposed OPENING/account correction/reconciliation.

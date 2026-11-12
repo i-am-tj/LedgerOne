@@ -1,5 +1,7 @@
 # Progress and evidence
 
+> Current status (2026-11-12): S06B completed/reviewed merge `5af4c19`; S06C predecessor satisfied, planning acceptance pending. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. [Verified closure](reports/S06B_CLOSURE.md). Earlier dated checkpoints retain the state and decisions recorded at the time.
+
 ## 2026-11-11 — P1-S01 Docker Compose and outage verification
 
 Executed full platform verification sequence on Node 22.22.0, npm 10.9.4, with Docker Compose v5.7.0 and PostgreSQL 17.6 (`postgres:17.6-alpine`) container via Colima runtime. All verification commands executed cleanly and exited code 0:
@@ -472,3 +474,9 @@ Reviewed exact PR #21 head fd889e4 without changing implementation/tests. Fresh 
 Initial exact-head review BLOCKED fd889e4 with confirmed Medium R01–R03; issues #22/#23/#24. Separate fixes 1316e8c (bounded/cancellable streaming), 67a6db7 (pre-COMMIT cancellation/identity/fresh recovery), be952e5 (bounded verifier SQL and cleanup). Extra permanent review regressions 977f701. Targeted 144 unit / 56 POST+HTTP integration checks, lint and typecheck PASS before full corrected pipeline. Unchanged migrations 001–007/Prisma schema/INR constraints/production grant bytes; no production enablement or S06C work. Review provenance and future typed business-interface preconditions are explicit. Final full pipeline/current-head review/CI/merge evidence follows, not inferred from initial report or checked PR boxes.
 
 Final corrected source 977f701: `npm run verify:pipeline` PASS **144 unit / 132 integration / 48 browser (19.5s)** and all required format/lint/typecheck/build/schema/attestation/migration/foundation stages. Final technical decision APPROVED for S06B's production-disabled contract, superseding initial BLOCKED only after three issue-linked corrections and new regression evidence. The authoritative adversarial review records source/line/repro/impact/fix/test for each finding, remaining future business-template constraints and agent-only provenance. Publication-head CI/actual merge are recorded on PR #21 and are required before story closure; no human/native approval or production gate PASS is fabricated. No S06C work.
+
+## 2026-11-12 — S06B closure reconciliation and S06C planning
+
+Verified GitHub PR #21 merged corrected head `173fd32` as `5af4c19`, story #9 and R01–R03 #22–#24 closed. [Closure evidence](reports/S06B_CLOSURE.md) preserves initial BLOCKED history and final APPROVED production-disabled scope. S06C dependency satisfied; C implementation has not started.
+
+Prepared [five-package S06C breakdown](stories/P1-S06C_BREAKDOWN.md) and proposed [ADR-007](ADR/0007-shared-command-lock-order-and-correction-targets.md), with account-first global locking, shared B primitives, exact explicit-original reversal/correction, atomic audit/replay, cancellation and uncertain-COMMIT recovery, S07 boundaries and actual-handler acceptance requirements. [Planning review](reports/P1-S06C_PLANNING.md) records checks and remaining acceptance gate. Documentation only: no source, tests, migrations, grants, environment or runtime modifications. S06D/full financial write gate stays closed; Phase 1 incomplete.

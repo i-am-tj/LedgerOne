@@ -1,10 +1,12 @@
-# Architecture proposal
+# Architecture and implementation boundaries
 
-Status: proposed; see ADR-001 and DECISIONS_NEEDED.md. No infrastructure exists yet.
+> Current status (2026-11-12): S06B completed/reviewed merge `5af4c19`; S06C predecessor satisfied, planning acceptance pending. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. [Verified closure](reports/S06B_CLOSURE.md). Earlier dated checkpoints retain the state and decisions recorded at the time.
+
+Status: foundation/S05/S06A/S06B implemented; S06C planning only. PostgreSQL/Prisma and private Google sign-in through Better Auth (ADR-002) exist; no production financial writer is provisioned.
 
 ## Application boundaries
 
-Use a modular monolith: Next.js App Router, strict TypeScript, Tailwind CSS, shadcn/ui, React Hook Form and Zod; PostgreSQL and Prisma; Auth.js subject to a compatibility/security spike; Vitest, Playwright and GitHub Actions. Select supported compatible versions and pin the lockfile during S001; no versions have been verified or dependencies installed in this increment.
+Use a modular monolith: Next.js App Router, strict TypeScript, Tailwind CSS, shadcn/ui, React Hook Form and Zod; PostgreSQL and Prisma; Better Auth as the reviewed supported alternative (ADR-002); Vitest, Playwright and GitHub Actions. Versions and lockfile are pinned in the repository; see package.json and recorded foundation verification.
 
 Modules: identity/workspaces; currencies; ledger; accounts; transaction classification; attachments; imports; budgets; recurring; goals; investments; loans; reporting; privacy/operations. Route handlers and server actions call application services. UI and background jobs may not directly mutate accounting tables. Validation at boundaries is repeated in domain services, with database constraints as the final guard. Server-only modules must not be importable into client bundles.
 
@@ -97,3 +99,7 @@ New work is on `feat/p1-s06a-command-controls`, based on the owner's merged main
 ## S06B implementation checkpoint
 
 S06B commands are separated into strict immutable contract/hash, authenticated HTTP boundary, transaction executor and retry policy under src/lib/ledger/commands. The App Router adapter always passes null capability. Positive construction is guarded to newly generated loopback test databases with non-owner roles and trusted target invariant snapshots; no env/header/URL switch enables production writes. Tests use real sessions plus a test-only Node HTTP adapter to the same handler. Production/private target provisioning and exposure are S06D, not inferred from this test activation.
+
+## S06C planned shared command extension
+
+The [S06C breakdown](stories/P1-S06C_BREAKDOWN.md) generalizes the existing command runner; no parallel authentication/retry/orchestration system is permitted. [ADR-007](ADR/0007-shared-command-lock-order-and-correction-targets.md) proposes the global trigger-aware hierarchy before handlers. Both remain planning-only; the actual Next writer stays disabled.

@@ -1,6 +1,8 @@
 # Current delivery roadmap
 
-The user authorized an expanded Phase 1 on 2026-11-11. It replaces the initial seven-phase schedule for implementation order. Local Git initialization is authorized; the user will configure a remote. No remote issue creation or public release is implied.
+> Current status (2026-11-12): S06B completed/reviewed merge `5af4c19`; S06C predecessor satisfied, planning acceptance pending. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. [Verified closure](reports/S06B_CLOSURE.md). Earlier dated checkpoints retain the state and decisions recorded at the time.
+
+The user authorized an expanded Phase 1 on 2026-11-11. It replaces the initial seven-phase schedule for implementation order. Local Git and the GitHub story workflow are established in `i-am-tj/LedgerOne`; no public deployment is implied.
 
 | Milestone | Epic                        | Ordered stories          | Exit evidence                                                               |
 | --------- | --------------------------- | ------------------------ | --------------------------------------------------------------------------- |
@@ -13,7 +15,7 @@ One story/PR at a time. Required checks and reviewed merge block advancement. Al
 
 Future scope remains tracked in PRD.md and archive/BACKLOG_INITIAL.md: richer capture/splits/tags/merchants/attachments, import/export, budgets/recurring/goals, investments/full FX, analytics, privacy/accessibility and backup/restore. Phase numbers for that work must be replanned after this expanded phase; none is silently removed. Native/functional FX constraints are required now; complete multi-currency execution/revaluation workflows remain future scope. No public deployment, banks or paid services without approval. PWA remains deferred until core stability.
 
-## Current checkpoint
+## Historical checkpoint
 
 The user's instruction to proceed with S02 authorizes advancement from the local P1-S01 increment. P1-S02 is implemented and locally verified, awaiting review; no remote PR/merge is claimed. Next is P1-S03 (Google sign-in and owner allowlist). P1-E1 local integration scenarios are recorded in `docs/stories/P1-S02.md`; formal epic closure awaits review. The expanded Phase 1 gate remains blocked by identity, ownership and ledger implementation.
 
@@ -29,15 +31,15 @@ S03's agent-owned technical review is recorded at `docs/security/S03_REVIEW.md` 
 
 P1-S04A interrupts the S04→S05 transition at the user's request: Supabase production preparation, separate environment profiles and public-entry/private-home navigation. Local checks and review are recorded in PROGRESS; production credentials/domain/roles and release gates remain pending. The user then requested review and separate commits for their OAuth adapter/login-card edits, retaining the card while deferring provider setup. Neither request authorizes Phase 2 or public deployment.
 
-## S05 checkpoint
+## S05 checkpoint (historical checkpoint)
 
 User authorized S05 after the successful remote foundation pipeline and approved staged foreign-currency schema support. The exact owned schema, deferred balancing, concurrency guards, opening/reversal structure and scoped reads are implemented with local evidence recorded in PROGRESS. Accounting/security peer review and merge precede S06. S06–S09 and the phase gate remain pending; no Phase 2 work starts.
 
-## S05 → S06 reviewed delivery
+## S05 → S06 reviewed delivery (historical checkpoint)
 
 Remote tracking is authorized and established under Phase 1 milestone #1. The [handoff](HANDOFF_S05_S06.md) maps P1-E3 sub-epics, findings and four ordered S06 slices. S05 PR #1 awaits the user’s completed accounting/security review and reviewed merge. S06A controls/audit → S06B POST → S06C REVERSE/CORRECT → S06D write gate, each with reviewed merge before the next. No S06 code or financial write enablement has begun.
 
-## Confirmed S05 closure and active S06A slice
+## Confirmed S05 closure and active S06A slice (historical checkpoint)
 
 The owner explicitly confirmed: “It was reviewed by me and merged. So please for anything new use s06 branch or a different handoff branch.” [Human review evidence](https://github.com/i-am-tj/LedgerOne/pull/1#issuecomment-6796866109) records this confirmation without fabricating a native GitHub APPROVED review. PR #1 merged implementation `1243360` at `54efed5e266847ec66c0a54caf15b9c4e5fb358a`; its two original foundation CI checks passed. Tracker #6 is closed as completed. Earlier pending-review statements in historical checkpoints describe the state when written, not the current closure status.
 
@@ -49,6 +51,10 @@ S06A final head 423c6bd passed fresh accounting/security/migration review and bo
 
 The next story is P1-S06B #9, with its [detailed plan](stories/P1-S06B_BREAKDOWN.md) prepared on a separate documentation branch after the merge. No S06B implementation PR/handler exists yet. B-T01–05 and B-AC01–09 cover validated authenticated POST, canonical hashing/replay, atomic audit, real retry/concurrency/security tests and disabled exposure. A05 #13–#17 stay open; S07 explicitly tracks its additive OPENING-audit contract. Complete S06 write gate and Phase 1 remain closed; financial runtime grants stay SELECT-only and posting stays INR-only.
 
-## S06B implementation checkpoint
+## S06B implementation checkpoint (historical checkpoint)
 
 Planning PR #20 merged 75f8795 after targeted clarification review and exact-head green CI. S06B #9 code/test packages B-T01–05 are implemented sequentially in separate PR #21; local full pipeline 129/119/48 PASS. S06B awaits final-head accounting/security review and reviewed merge. S06C is the next implementation story only after that merge, with no work begun. Full S06 write gate and Phase 1 remain closed.
+
+## Next delivery slice
+
+S06C predecessor is satisfied; [detailed planning](stories/P1-S06C_BREAKDOWN.md) awaits acceptance/reviewed documentation merge. Then implement C-T01–05 sequentially on a separate branch/PR. S06D, S07–S09 and the complete Phase 1 gate remain pending.
