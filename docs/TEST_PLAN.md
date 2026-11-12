@@ -2,7 +2,7 @@
 
 # Verification and traceability
 
-> Current status (2026-11-12): S06B completed/reviewed merge `5af4c19`; S06C planning merged `b31ab0b`; guarded implementation, corrected review and actual closure are tracked in [PR #26](https://github.com/i-am-tj/LedgerOne/pull/26). Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. [Verified closure](reports/S06B_CLOSURE.md). Earlier dated checkpoints retain the state and decisions recorded at the time.
+> Current status (2026-11-12): S06C completed/reviewed merge `3502754` at corrected head `c22488b`; #10/#27 closed. [Verified closure](reports/S06C_CLOSURE.md). S06D predecessor satisfied; detailed planning awaits acceptance and reviewed planning merge. A05-01–05 remain open. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. Earlier dated checkpoints retain their original decisions and evidence.
 
 Status: the application, runners and CI exist. Reviewed S06B corrected-head evidence is 144 unit / 132 integration / 48 browser PASS. Initial matrices below preserve planned identifiers; per-story reports and closure evidence identify implemented coverage. S06C and later coverage must not be inferred from S06B.
 
@@ -198,4 +198,8 @@ Corrected adversarial source 977f701 full `npm run verify:pipeline`: PASS 144 un
 
 ## S06C implemented restricted traceability
 
-[Implementation report C-AC01–10 map](reports/P1-S06C.md) links actual unit/real-handler/HTTP/security/concurrency/default-deny browser tests. Final local pipeline 165/194/48 PASS, including distinct effective-date months, original/posted timestamp preservation, implicit FK locks, archive/key races and drift. Earlier planning section is historical; no consumer workflow/exposure approval. Independent adversarial review and reviewed merge pending.
+[Implementation report C-AC01–10 map](reports/P1-S06C.md) links actual unit/real-handler/HTTP/security/concurrency/default-deny browser tests. Final local pipeline 165/194/48 PASS, including distinct effective-date months, original/posted timestamp preservation, implicit FK locks, archive/key races and drift. Earlier planning section is historical; no consumer workflow/exposure approval. This was the pre-review checkpoint; corrected final 166/212/48 and actual reviewed merge 3502754 are recorded in [S06C closure](reports/S06C_CLOSURE.md).
+
+## S06D planned verification coverage
+
+The authoritative [W01–W15 requirements-to-tests matrix](gates/S06D_REQUIREMENTS_TO_TESTS.md) links existing B/C evidence, missing assertions, profiles, packages and acceptance IDs. [D-T01–05](stories/P1-S06D_BREAKDOWN.md) add combined actual-handler/private-schema/restricted-role evidence, authorized hosted target attestation, [capacity campaigns](plans/S06D_PERFORMANCE.md), and final adversarial review. All final S06D results remain NOT RUN; no S06C test count is inherited as a D PASS. Exact new commands will be recorded when implemented; no hosted test is authorized by this plan.

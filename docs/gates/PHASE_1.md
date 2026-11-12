@@ -1,24 +1,24 @@
 # Phase 1 gate — Foundation, accounting engine and security
 
-> Current status (2026-11-12): S06B completed/reviewed merge `5af4c19`; S06C planning merged `b31ab0b`; guarded implementation, corrected review and actual closure are tracked in [PR #26](https://github.com/i-am-tj/LedgerOne/pull/26). Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. [Verified closure](../reports/S06B_CLOSURE.md). Earlier dated checkpoints retain the state and decisions recorded at the time.
+> Current status (2026-11-12): S06C completed/reviewed merge `3502754` at corrected head `c22488b`; #10/#27 closed. [Verified closure](../reports/S06C_CLOSURE.md). S06D predecessor satisfied; detailed planning awaits acceptance and reviewed planning merge. A05-01–05 remain open. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. Earlier dated checkpoints retain their original decisions and evidence.
 
 Date: 2026-11-11 (Asia/Kolkata). Result: **NOT RUN / BLOCKED FOR RELEASE**.
 
 This report uses the user's expanded Phase 1 scope (P1-E1–P1-E4; P1-S01–P1-S09), superseding the earlier three-story foundation phase. No Phase 2 implementation is authorized by a partial Phase 1 result.
 
-| Requirement                          | Evidence required                                  | Current result                                                                                               |
-| ------------------------------------ | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| Clean setup and migration            | P1-S01 fresh DB/setup command evidence             | Local checks PASS; Compose healthy and migration/integration rerun verified                                  |
-| Private auth and isolation           | P1-S03/P1-S04 two-user/session/CSRF negative tests | S03 local/live sign-in + internal review recorded; S04 Workspace isolation PASS; financial isolation pending |
-| Every journal balanced               | P1-S05/P1-S06 commit-time DB invariants            | S05 DB constraints/direct-SQL evidence PASS; S06 service pending                                             |
-| Atomic and idempotent writes         | P1-S06 failure/retry/concurrency evidence          | Not implemented                                                                                              |
-| Opening balances and reversals       | P1-S06/P1-S07 exact expected balances              | Not implemented                                                                                              |
-| Card/transfer/FD/loan classification | P1-S08/P1-S09 independent scenario totals          | Not implemented                                                                                              |
-| Concurrency consistency              | P1-S09 actual PostgreSQL races                     | Not implemented                                                                                              |
-| Required checks green                | Formatting/lint/typecheck/build/unit/integration   | P1-S01–S04 local checks pass; financial isolation/ledger and reviewed merges pending                         |
-| Reviews and merges                   | Per-story PR/commit and accounting/security review | Not recorded                                                                                                 |
+| Requirement                          | Evidence required                                  | Current result                                                                                |
+| ------------------------------------ | -------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Clean setup and migration            | P1-S01 fresh DB/setup command evidence             | Local checks PASS; Compose healthy and migration/integration rerun verified                   |
+| Private auth and isolation           | P1-S03/P1-S04 two-user/session/CSRF negative tests | S03/S04 evidence and guarded B/C financial isolation PASS; D target-profile isolation pending |
+| Every journal balanced               | P1-S05/P1-S06 commit-time DB invariants            | S05 and guarded B/C balance/service evidence PASS; full D gate pending                        |
+| Atomic and idempotent writes         | P1-S06 failure/retry/concurrency evidence          | Guarded B/C evidence PASS; complete D target/gate NOT RUN                                     |
+| Opening balances and reversals       | P1-S06/P1-S07 exact expected balances              | Restricted C reversals PASS; S07 openings/workflows not implemented                           |
+| Card/transfer/FD/loan classification | P1-S08/P1-S09 independent scenario totals          | Not implemented                                                                               |
+| Concurrency consistency              | P1-S09 actual PostgreSQL races                     | B/C real PostgreSQL races PASS; D target and S09 gate pending                                 |
+| Required checks green                | Formatting/lint/typecheck/build/unit/integration   | Corrected C exact-head CI 166/212/48 PASS; D and final Phase 1 pipeline pending               |
+| Reviews and merges                   | Per-story PR/commit and accounting/security review | S05 and S06A/B/C reviewed merges verified; D/S07–S09 pending                                  |
 
-Accounting invariants are release-blocking. Phase 2 cannot start until all rows pass with reproducible evidence. Remote CI is not claimed to have run. No application check is inferred from documentation checks. Story evidence and command summaries are recorded in PROGRESS.md; final gate evidence belongs here when P1-S09 runs.
+Accounting invariants are release-blocking. Phase 2 cannot start until all rows pass with reproducible evidence. Predecessor CI is recorded in the linked S06C closure; the final Phase 1 gate has not run. No application check is inferred from documentation checks. Story evidence and command summaries are recorded in PROGRESS.md; final gate evidence belongs here when P1-S09 runs.
 
 ## P1-S02 local checkpoint
 
@@ -59,3 +59,7 @@ S05 PR #1 remains unmerged pending the user’s actual accounting/security revie
 The owner explicitly confirmed: “It was reviewed by me and merged. So please for anything new use s06 branch or a different handoff branch.” [Human review evidence](https://github.com/i-am-tj/LedgerOne/pull/1#issuecomment-6796866109) records this confirmation without fabricating a native GitHub APPROVED review. PR #1 merged implementation `1243360` at `54efed5e266847ec66c0a54caf15b9c4e5fb358a`; its two original foundation CI checks passed. Tracker #6 is closed as completed. Earlier pending-review statements in historical checkpoints describe the state when written, not the current closure status.
 
 New work is on `feat/p1-s06a-command-controls`, based on the owner's merged main. Post-merge review/handoff documentation was carried onto this separate branch. S06A #8 is the only active implementation slice: migration 007 adds scoped immutable financial audit context and rejects CORRECT's same-operation predecessor; invariant attestation/mutation regressions cover SQL/privilege/migration state. It adds no financial write handler or runtime grant. S06B/C/D remain blocked until the active slice's required checks, human review and reviewed merge. Findings remain open for their full linked acceptance; the complete S06 write gate and Phase 1 gate remain closed.
+
+## S06C closure / S06D planning checkpoint
+
+Reviewed merge 3502754 at corrected c22488b completes only restricted S06C; #10/#27 closed. Final predecessor tests 166/212/48 do not complete S06D, S07–S09 or this gate. [S06D plan](../stories/P1-S06D_BREAKDOWN.md) awaits acceptance and reviewed planning merge. Complete S06 W01–15 remain NOT RUN/FAIL; production writes disabled, grants SELECT-only and raw consumer posting unavailable. This Phase 1 gate remains NOT RUN / BLOCKED FOR RELEASE.

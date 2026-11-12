@@ -1,8 +1,8 @@
 # Architecture and implementation boundaries
 
-> Current status (2026-11-12): S06B completed/reviewed merge `5af4c19`; S06C planning merged `b31ab0b`; guarded implementation, corrected review and actual closure are tracked in [PR #26](https://github.com/i-am-tj/LedgerOne/pull/26). Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. [Verified closure](reports/S06B_CLOSURE.md). Earlier dated checkpoints retain the state and decisions recorded at the time.
+> Current status (2026-11-12): S06C completed/reviewed merge `3502754` at corrected head `c22488b`; #10/#27 closed. [Verified closure](reports/S06C_CLOSURE.md). S06D predecessor satisfied; detailed planning awaits acceptance and reviewed planning merge. A05-01–05 remain open. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. Earlier dated checkpoints retain their original decisions and evidence.
 
-Status: foundation/S05/S06A/S06B implemented; S06C guarded implementation awaits independent review/reviewed merge. PostgreSQL/Prisma and private Google sign-in through Better Auth (ADR-002) exist; no production financial writer is provisioned.
+Status: foundation/S05/S06A/S06B/S06C have reviewed merges; S06D is documentation-only planning pending acceptance and reviewed merge. PostgreSQL/Prisma and private Google sign-in through Better Auth (ADR-002) exist; no production financial writer is provisioned.
 
 ## Application boundaries
 
@@ -102,4 +102,8 @@ S06B commands are separated into strict immutable contract/hash, authenticated H
 
 ## S06C restricted shared command extension
 
-The [S06C breakdown](stories/P1-S06C_BREAKDOWN.md) generalizes the existing command runner; no parallel authentication/retry/orchestration system is permitted. [ADR-007](ADR/0007-shared-command-lock-order-and-correction-targets.md) proposes the global trigger-aware hierarchy before handlers. The accepted plan is implemented/tested in guarded PR #26 pending independent review; the actual Next writer stays disabled.
+The [S06C breakdown](stories/P1-S06C_BREAKDOWN.md) generalizes the existing command runner; no parallel authentication/retry/orchestration system is permitted. [ADR-007](ADR/0007-shared-command-lock-order-and-correction-targets.md) proposes the global trigger-aware hierarchy before handlers. The accepted plan is implemented/tested and reviewed/merged in guarded PR #26 (3502754 / c22488b); the actual Next writer stays disabled.
+
+## S06D verification architecture — planning only
+
+The [target/role plan](plans/S06D_TARGET_AND_ROLES.md) proposes a reviewed offline private-schema verification composition using the same financial engine, authentication and retry contracts. Existing disposable guards and native null writer remain unchanged; no production role configuration or generic enable flag is added by planning. Technical acceptance and [future typed-command activation](plans/S06D_ACTIVATION_AND_ROLLBACK.md) are separate decisions.
