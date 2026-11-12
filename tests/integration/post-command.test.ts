@@ -98,7 +98,7 @@ it("B-T04 statement timeout aborts without partial effects and pooled settings r
         )
       ).rows[0];
       expect(r).toEqual({
-        statement: "0",
+        statement: "2s",
         lock: "0",
         transaction: "0",
         role: h.role,
@@ -805,4 +805,54 @@ it("S06B-R02 retry rejects a server resolver changing actor and retains immutabl
   } finally {
     h.setProbe(undefined);
   }
+});
+
+it("S06B-R03 blocked verifier SQL ends before returning failure and recovers cleanly", async () => {
+  const before = await counts(),
+    locker = await h.admin.connect();
+  try {
+    await locker.query(
+      "BEGIN; LOCK TABLE _prisma_migrations IN ACCESS EXCLUSIVE MODE",
+    );
+    const start = performance.now();
+    expect((await h.api(0, randomUUID(), h.payload())).status).toBe(503);
+    expect(performance.now() - start).toBeLessThan(6500);
+    const blocked = (
+      await h.admin.query(
+        "SELECT count(*)::int AS n FROM pg_stat_activity WHERE datname=current_database() AND pid<>pg_backend_pid() AND wait_event_type='Lock'",
+      )
+    ).rows[0].n;
+    expect(blocked).toBe(0);
+    expect((await locker.query("SELECT 1 AS alive")).rows[0].alive).toBe(1);
+    expect(await counts()).toEqual(before);
+  } finally {
+    await locker.query("ROLLBACK");
+    locker.release();
+  }
+  expect((await h.api(0, randomUUID(), h.payload())).status).toBe(201);
+}, 10000);
+it("S06B-R03 read transaction timeout destroys only its own failed inspector connection", async () => {
+  const { readLedgerInvariants } =
+    await import("../../src/lib/ledger/invariants");
+  const locker = await h.admin.connect();
+  try {
+    await locker.query(
+      "BEGIN; LOCK TABLE _prisma_migrations IN ACCESS EXCLUSIVE MODE",
+    );
+    await expect(
+      readLedgerInvariants(h.admin, { schema: "public" }, 100),
+    ).rejects.toBeInstanceOf(Error);
+    expect((await locker.query("SELECT 1 AS alive")).rows[0].alive).toBe(1);
+    expect(
+      (
+        await h.admin.query(
+          "SELECT count(*)::int AS n FROM pg_stat_activity WHERE datname=current_database() AND pid<>pg_backend_pid() AND wait_event_type='Lock'",
+        )
+      ).rows[0].n,
+    ).toBe(0);
+  } finally {
+    await locker.query("ROLLBACK");
+    locker.release();
+  }
+  expect((await h.admin.query("SELECT 1 AS alive")).rows[0].alive).toBe(1);
 });

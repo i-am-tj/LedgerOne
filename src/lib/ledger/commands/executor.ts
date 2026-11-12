@@ -95,11 +95,15 @@ export class PostExecutor {
       connectionString: options.runtimeURL,
       max: 6,
       connectionTimeoutMillis: 1500,
+      statement_timeout: 2000,
+      query_timeout: 3000,
     });
     const verifier = new pg.Pool({
       connectionString: options.verifierURL,
       max: 2,
       connectionTimeoutMillis: 1500,
+      statement_timeout: 2000,
+      query_timeout: 3000,
     });
     const result = new PostExecutor(
       pool,
