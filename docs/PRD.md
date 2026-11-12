@@ -2,9 +2,11 @@
 
 # LedgerOne product requirements
 
-Status: proposed foundation, awaiting review. Baseline: 2026-11-11 (Asia/Kolkata).
+> Current status (2026-11-12): S06B completed/reviewed merge `5af4c19`; S06C predecessor satisfied, planning acceptance pending. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. [Verified closure](reports/S06B_CLOSURE.md). Earlier dated checkpoints retain the state and decisions recorded at the time.
 
-## Repository inspection
+Status: foundation through reviewed S06B implemented for its production-disabled contract. Remaining product scope is planned. Baseline: 2026-11-11 (Asia/Kolkata).
+
+## Initial repository inspection (historical)
 
 The project directory was empty before this documentation increment. No application, package manifest, database, tests, CI, Git repository, remote, or applicable AGENTS.md was found. No implementation or remote resources have been created. Documentation does not demonstrate working functionality.
 
@@ -69,20 +71,20 @@ R02 gains an implemented resource boundary: allowed identities can access only t
 
 A visitor can view a data-free dashboard preview at `/` and select Sign in. Private workspace/actions require an allowed session at `/home` and independent server API authorization. The user retained the refreshed login card while deferring additional provider integrations. No public registration or personal financial data is exposed by this entry view.
 
-## S05 delivery boundary
+## S05 delivery boundary (historical checkpoint)
 
 Chart/owned financial schema and invariant enforcement are implemented for review. Exact INR postings are supported at the DB foundation only; foreign account/rate records are modeled while foreign posting is explicitly disabled by user approval. User account management, transaction capture, balances/reconciliation and command audit/idempotent replay remain S06–S09. No financial UI or public mutation endpoint is presented as working in S05.
 
-## S05 → S06 delivery contract
+## S05 → S06 delivery contract (historical checkpoint)
 
 The user-authorized [GitHub handoff](HANDOFF_S05_S06.md) makes all five S05 findings traceable to S06/S07 issues and acceptance tests. S06 consists of four reviewed slices; runtime write exposure stays disabled until actual handler, replay/audit, correction, concurrency and invariant-drift gate evidence passes. Account metadata/history/reconciliation remains S07. The foundation’s conditional approval does not establish production readiness, implemented commands or Phase 1 PASS.
 
-## Confirmed S05 closure and active S06A slice
+## Confirmed S05 closure and active S06A slice (historical checkpoint)
 
 The owner explicitly confirmed: “It was reviewed by me and merged. So please for anything new use s06 branch or a different handoff branch.” [Human review evidence](https://github.com/i-am-tj/LedgerOne/pull/1#issuecomment-6796866109) records this confirmation without fabricating a native GitHub APPROVED review. PR #1 merged implementation `1243360` at `54efed5e266847ec66c0a54caf15b9c4e5fb358a`; its two original foundation CI checks passed. Tracker #6 is closed as completed. Earlier pending-review statements in historical checkpoints describe the state when written, not the current closure status.
 
 New work is on `feat/p1-s06a-command-controls`, based on the owner's merged main. Post-merge review/handoff documentation was carried onto this separate branch. S06A #8 is the only active implementation slice: migration 007 adds scoped immutable financial audit context and rejects CORRECT's same-operation predecessor; invariant attestation/mutation regressions cover SQL/privilege/migration state. It adds no financial write handler or runtime grant. S06B/C/D remain blocked until the active slice's required checks, human review and reviewed merge. Findings remain open for their full linked acceptance; the complete S06 write gate and Phase 1 gate remain closed.
 
-## S06B implementation checkpoint
+## S06B implementation checkpoint (historical checkpoint)
 
 S06B now implements the raw authenticated INR POST boundary in guarded disposable tests, with canonical replay/audit/retry and normal Next writes disabled. No transaction UI, merchant/budget/template/correction/FX feature is introduced. See reports/P1-S06B.md; #21 awaits implementation review/merge.

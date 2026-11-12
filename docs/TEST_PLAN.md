@@ -2,17 +2,19 @@
 
 # Verification and traceability
 
-Status: planned tests, not executed application evidence. There is no application or test runner yet. Only documentation structural checks have run; see PROGRESS.md.
+> Current status (2026-11-12): S06B completed/reviewed merge `5af4c19`; S06C predecessor satisfied, planning acceptance pending. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. [Verified closure](reports/S06B_CLOSURE.md). Earlier dated checkpoints retain the state and decisions recorded at the time.
+
+Status: the application, runners and CI exist. Reviewed S06B corrected-head evidence is 144 unit / 132 integration / 48 browser PASS. Initial matrices below preserve planned identifiers; per-story reports and closure evidence identify implemented coverage. S06C and later coverage must not be inferred from S06B.
 
 ## Required check policy
 
-S001 must establish executable formatting, lint, strict typecheck, Vitest, PostgreSQL integration, Playwright and production-build commands in package scripts and CI. Expected command names: `format:check`, `lint`, `typecheck`, `test:unit`, `test:integration`, `test:e2e`, `build`; exact package manager and invocation are selected/pinned in S001. These are proposed names, not commands currently available. Per story run all baseline checks and relevant domain/integration/E2E checks, retaining summaries and failures. A check may be documented as not applicable with a concrete reason, never silently skipped or reported passed. Fix required failures before proceeding.
+S001 must establish executable formatting, lint, strict typecheck, Vitest, PostgreSQL integration, Playwright and production-build commands in package scripts and CI. Expected command names: `format:check`, `lint`, `typecheck`, `test:unit`, `test:integration`, `test:e2e`, `build`; exact package manager and invocation are selected/pinned in S001. These scripts are now available in package.json; the requirement below remains the per-story policy. Per story run all baseline checks and relevant domain/integration/E2E checks, retaining summaries and failures. A check may be documented as not applicable with a concrete reason, never silently skipped or reported passed. Fix required failures before proceeding.
 
 Real PostgreSQL is mandatory for SQL constraints, transaction isolation, tenant foreign keys and race tests. Browser tests must drive the real server write path. Domain tests use exact decimal strings/integers and reproducible generated seeds. Never use production data in fixtures. Future release/restore scenarios use disposable environments and explicitly approved storage. No network services were contacted in this planning increment.
 
 ## Requirements-to-tests matrix
 
-Test IDs below are stable planned identifiers. Test files and CI evidence must be linked as stories implement them. Every row is currently NOT IMPLEMENTED / NOT RUN.
+Test IDs below are stable planned identifiers. Test files and CI evidence must be linked as stories implement them. These are initial planning rows, not a current execution-results table. See per-story evidence for implemented subsets; unfinished product requirements remain unverified.
 
 | Requirement | Stories             | Planned test IDs and behavior                                                                                            |
 | ----------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------ |
@@ -189,3 +191,7 @@ The [B-AC01–09 matrix and exact commands](reports/P1-S06B.md) map R01/R02/R03/
 R01 #22 → stalled/aborted/oversized upload, hostile cancel cleanup, real partial HTTP timeout, closed capability does not read. R02 #23 → cancelled-before/staged/retry/pre-COMMIT HTTP requests roll back, changed actor/immutable ownership guards, late client disposal; existing durable/uncertain COMMIT recovery retained. R03 #24 → blocked verifier SQL leaves no read snapshot after failure and preserves unrelated locker; short inspector transaction timeout safely recovers. Added permanent 500-leg MAX precision, activation guards before connection, and unsupported business-discriminator tests. Baseline 129/119/48 passing tests did not cover these defects; corrected final full pipeline and final-head CI are separately recorded in the adversarial review. No future template business rule is claimed as implemented.
 
 Corrected adversarial source 977f701 full `npm run verify:pipeline`: PASS 144 unit / 132 integration / 48 browser (19.5s), all required stages. See the review for exact evidence and merge conditions. Original S05/S06A tests pass; no applied migration/grant/invariant meaning changed.
+
+## S06C planned traceability
+
+[C-AC01–10](stories/P1-S06C_BREAKDOWN.md) maps five ordered task packages to unit, real-handler PostgreSQL, security, concurrency and default-deny browser regressions. All S06C scenarios remain PLANNED / NOT RUN; S06B passing tests do not establish S06C correctness.
