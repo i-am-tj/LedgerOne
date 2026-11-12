@@ -60,7 +60,8 @@ export async function captureLedgerInvariants(
     FROM pg_class r JOIN pg_namespace n ON n.oid=r.relnamespace WHERE n.nspname=$1 AND r.relkind IN ('r','p','v','m','S')`);
   await collect(`SELECT 'column:'||r.relname||':'||a.attname AS key,
     jsonb_build_object('type',format_type(a.atttypid,a.atttypmod),'notNull',a.attnotnull,'identity',a.attidentity::text,
-    'generated',a.attgenerated::text,'default',pg_get_expr(d.adbin,d.adrelid),'acl',a.attacl::text) AS value
+    'generated',a.attgenerated::text,'default',pg_get_expr(d.adbin,d.adrelid),'acl',
+    (SELECT array_agg(v::text ORDER BY v::text) FROM unnest(a.attacl) v)) AS value
     FROM pg_attribute a JOIN pg_class r ON r.oid=a.attrelid JOIN pg_namespace n ON n.oid=r.relnamespace
     LEFT JOIN pg_attrdef d ON d.adrelid=a.attrelid AND d.adnum=a.attnum
     WHERE n.nspname=$1 AND a.attnum>0 AND NOT a.attisdropped AND r.relkind IN ('r','p','v','m')`);
