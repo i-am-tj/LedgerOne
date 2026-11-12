@@ -24,6 +24,17 @@ export function retryable(error: unknown) {
         "ledger_operation_workspaceId_ownerId_idempotencyKey_key")
   );
 }
+// Different from receipt contention: after rollback only a fresh authorized
+// receipt/target snapshot may classify this exact full-reversal conflict.
+export function reversalConflict(error: unknown) {
+  return (
+    sqlState(error) === "23505" &&
+    typeof error === "object" &&
+    error !== null &&
+    "constraint" in error &&
+    error.constraint === "journal_reversesJournalId_workspaceId_ownerId_key"
+  );
+}
 export function retryDelay(
   attempt: number,
   remaining: number,

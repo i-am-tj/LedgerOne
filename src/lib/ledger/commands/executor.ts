@@ -33,6 +33,7 @@ export type FinancialResult = PostResult | ReverseResult | CorrectResult;
 import {
   remaining,
   retryable,
+  reversalConflict,
   retryDelay,
   sqlState,
   withinDeadline,
@@ -66,6 +67,7 @@ export type Stage =
   | "locked"
   | "discovered"
   | "targetLocked"
+  | "targetConflict"
   | "sealed"
   | "audit"
   | "beforeCommit"
@@ -204,6 +206,7 @@ export class PostExecutor {
       undefined,
       signal,
     );
+    let recoverOriginalConflict = false;
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
         throwIfAborted(signal);
@@ -221,12 +224,17 @@ export class PostExecutor {
           attempt,
           deadline,
           signal,
+          recoverOriginalConflict,
         );
       } catch (error) {
-        const delay = retryable(error)
-          ? retryDelay(attempt, deadline - performance.now())
-          : null;
+        const targetConflict =
+          command.kind !== "POST" && reversalConflict(error);
+        const delay =
+          retryable(error) || targetConflict
+            ? retryDelay(attempt, deadline - performance.now())
+            : null;
         if (delay !== null) {
+          recoverOriginalConflict ||= targetConflict;
           await withinDeadline(
             new Promise((r) => setTimeout(r, delay)),
             deadline,
@@ -249,6 +257,7 @@ export class PostExecutor {
     attempt: number,
     deadline: number,
     signal?: AbortSignal,
+    recoverOriginalConflict = false,
   ): Promise<{ result: FinancialResult; replayed: boolean }> {
     throwIfAborted(signal);
     const actor = await withinDeadline(
@@ -328,6 +337,21 @@ export class PostExecutor {
         await c.query("COMMIT");
         committed = true;
         return { result, replayed: true };
+      }
+      if (recoverOriginalConflict && command.kind !== "POST") {
+        const original = await query(
+          'SELECT id FROM journal WHERE id=$1 AND "workspaceId"=$2 AND "ownerId"=$3',
+          [command.originalJournalId, workspace, actor.ownerId],
+        );
+        if (!original.rowCount) throw new CommandError(404, "not_found");
+        const reversed = await query(
+          'SELECT id FROM journal WHERE "reversesJournalId"=$1 AND "workspaceId"=$2 AND "ownerId"=$3',
+          [command.originalJournalId, workspace, actor.ownerId],
+        );
+        if (reversed.rowCount) throw targetUnavailable();
+        // A conflict without durable evidence is not a successful replay or
+        // permission to invent an outcome (for example a failed test fault).
+        throw unavailable();
       }
       const op = randomUUID(),
         journal = randomUUID();
@@ -445,14 +469,8 @@ export class PostExecutor {
         await this.probe?.("serialization", c, attempt);
       if (sqlState(error) === "40P01")
         await this.probe?.("deadlock", c, attempt);
-      if (
-        sqlState(error) === "23505" &&
-        typeof error === "object" &&
-        error !== null &&
-        "constraint" in error &&
-        error.constraint === "journal_reversesJournalId_workspaceId_ownerId_key"
-      )
-        throw targetUnavailable();
+      if (reversalConflict(error))
+        await this.probe?.("targetConflict", c, attempt);
       throw error;
     } finally {
       c.release(destroy);

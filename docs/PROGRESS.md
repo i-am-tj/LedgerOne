@@ -496,3 +496,7 @@ After C-T01 lock-matrix/refactor review was recorded on draft PR #26, implemente
 ## S06C C-T03 — atomic correction and cross-month tests
 
 Shared runner now commits exact-original reversal plus GENERAL replacement with one receipt/audit. Local 162 unit / 160 integration PASS, typecheck/lint PASS; cross-month/restatement/timezone balances and immutable timestamps, replacement/audit rollback, exact target/repeated correction and core opening provenance boundaries demonstrated. No production writer, grants, schema or exposed S07 workflow. C-T04 and final C gate remain pending.
+
+## S06C C-T04 — bounded concurrency and recovery
+
+Same runner now distinguishes original-reversal uniqueness and performs fresh authorized receipt/target recovery after rollback. Local corrected 163 unit / 179 integration PASS; real 40001/40P01, same-key/different-key races, expiry/owner switch, cancellation and ambiguous COMMIT recovery demonstrated. Initial three fixture failures came from auth deleting an expired session; cleanup now upserts, full suite green. No C-T05 advancement until correction verified. Normal writers/grants/INR unchanged; full gate still closed.
