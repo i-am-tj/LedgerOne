@@ -1,6 +1,6 @@
 # S06D capacity blocker and proposed optimization review
 
-**Status: PROPOSED; no optimization, retry-policy or schema change implemented.** D-T03 capacity qualification is FAIL; D-T04 progression is blocked by its accepted D-T01–03-green dependency. Local work is not blocked by missing hosted authorization; it is blocked by an observed required local capacity failure. Full S06/Phase 1 gates stay closed and native financial capability remains null.
+**Status: bounded local prototype APPROVED by owner; final implementation/merge NOT approved.** D-T03 capacity qualification is FAIL; D-T04 progression is blocked by its accepted D-T01–03-green dependency. Local work is not blocked by missing hosted authorization; it is blocked by an observed required local capacity failure. Full S06/Phase 1 gates stay closed and native financial capability remains null.
 
 ## Confirmed evidence and limits
 
@@ -40,4 +40,4 @@ No migration is assumed for batching. If diagnosis instead requires an index or 
 
 ## Decisions needed
 
-Review the capacity diagnosis and candidate bounded batching contract before changing the financial insertion path. An alternative is an explicitly reviewed narrower operational concurrency envelope, while retaining protocol maximum correctness/stress; do not silently redefine the already proposed four-way budget. Hosted profiling remains separately unauthorized and is not substituted by local results. This proposal approves neither implementation results nor deployment.
+Owner approved the exact bounded batching contract for isolated local prototyping after reviewing PR #30 at 4aed8b3 and this proposal at 1b29221. [Recorded provenance](https://github.com/i-am-tj/LedgerOne/pull/30#issuecomment-6826341877). The [prototype report](../reports/S06D_BATCHING_PROTOTYPE.md) must retain before/after evidence and request a new review decision before merge. This is not final implementation approval. An alternative is an explicitly reviewed narrower operational concurrency envelope, while retaining protocol maximum correctness/stress; do not silently redefine the already proposed four-way budget. Hosted profiling remains separately unauthorized and is not substituted by local results. This proposal approves neither implementation results nor deployment.

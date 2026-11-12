@@ -526,3 +526,7 @@ D-T02 local adapter/three-role/private fresh-upgrade/shadowing/history/cleanup p
 ## 2026-11-12 — S06D exact baseline critical measurements; optimization review pending
 
 At clean 1b29221, critical benchmark 1 passed / 1 failed (265.98s): POST2/c4 1,000 samples, p99 166.68ms, 0.2% failures (empirical cell PASS); CORRECT50/max-union/c1 806 samples, resource cap at 240s, 805 successes/1 budget cancellation/194 unmeasured, p99 NOT PROVEN. Aggregate accounting checks safe. Full artifact and exact-source fingerprint in [implementation report](reports/P1-S06D.md). Prior representative FAIL #32 remains; user is reviewing the concrete batching proposal, no source optimization/retry change authorized or made. D-T04/final D-T05 do not advance; native writes disabled, grants/INR unchanged, hosted unauthorized, story/full S06/Phase 1 incomplete.
+
+## 2026-11-12 — S06D bounded batching local prototype authorized
+
+Owner reviewed #30 at 4aed8b3/proposal 1b29221 and explicitly authorized only the bounded posting insertion prototype, preserving every invariant, existing limits, retry/deadline policies and closed production gate. [Authorization](https://github.com/i-am-tj/LedgerOne/pull/30#issuecomment-6826341877). New approval supersedes the historical pending-proposal status above, without altering its FAIL/NOT PROVEN evidence. [Prototype report](reports/S06D_BATCHING_PROTOTYPE.md) tracks exact row-loop versus batch source and verification. PR #30 stays draft, #32 stays open; D-T04/D-T05 do not advance.

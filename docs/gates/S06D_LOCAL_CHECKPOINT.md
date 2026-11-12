@@ -1,4 +1,4 @@
-# S06D local checkpoint — gate FAIL, optimization review pending
+# S06D local checkpoint — gate FAIL, local batching prototype
 
 **Overall S06D: FAIL / incomplete. Production financial writes disabled.** The owner accepted/amended planning PR #28, merged d048d8b. Local implementation is separate draft [PR #30](https://github.com/i-am-tj/LedgerOne/pull/30). #11 and original A05 #13–#17 remain open. This is a progress/failure report, not final independent approval or reviewed implementation merge.
 
@@ -19,6 +19,6 @@
 
 Finding #29 fixture creation and #31 column-ACL normalization have separate correction commits/regressions but remain unmerged; no issue closure or independent approval is fabricated. #32 is the observed availability/capacity blocker, not a demonstrated unbalanced/unauthorized posting. Original A05 obligations and S07 exclusions remain separately open.
 
-The [bounded batching proposal](../plans/S06D_CAPACITY_PROPOSAL.md) is **not implemented**. The owner's answer is “I'll review the proposal,” not acceptance. No insertion/retry/deadline/grant/migration change is authorized by that answer. Keep the draft and gate closed pending the required review; do not silently reduce the four-way operational target or 500-leg protocol maximum to obtain PASS.
+Owner subsequently explicitly approved the [bounded batching proposal](../plans/S06D_CAPACITY_PROPOSAL.md) for an isolated local prototype only. [Current evidence](../reports/S06D_BATCHING_PROTOTYPE.md) records its implementation and comparison; the table above preserves the original baseline checkpoint. This does not grant final merge/capacity acceptance or authorize retry/deadline/grant/migration changes. Keep PR #30 draft, #32 open and all gates closed pending a new review decision; do not reduce the operational target or protocol maximum.
 
 Migrations 001–007 and published bootstrap/runtime SQL remain unchanged; all financial triggers, exact amounts, ownership, atomic audit and INR restriction retained. No hosted connection/read, provisioning, migration, permission change, synthetic write/benchmark/cleanup, production deployment/grant/rollback or consumer raw financial command occurred. S07–S09 and Phase 1 remain incomplete.

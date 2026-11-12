@@ -1,0 +1,1257 @@
+{
+  "sourceCommit": "95f1efe8e75bcc8dc325a0a2327334b10088eef5",
+  "profile": "local-private",
+  "diagnosticOnly": true,
+  "latencyNotCapacityEvidence": true,
+  "config": [
+    {
+      "name": "cpu_tuple_cost",
+      "setting": "0.01"
+    },
+    {
+      "name": "default_transaction_isolation",
+      "setting": "read committed"
+    },
+    {
+      "name": "enable_indexscan",
+      "setting": "on"
+    },
+    {
+      "name": "enable_seqscan",
+      "setting": "on"
+    },
+    {
+      "name": "max_pred_locks_per_page",
+      "setting": "2"
+    },
+    {
+      "name": "max_pred_locks_per_relation",
+      "setting": "-2"
+    },
+    {
+      "name": "max_pred_locks_per_transaction",
+      "setting": "64"
+    },
+    {
+      "name": "random_page_cost",
+      "setting": "4"
+    }
+  ],
+  "beforePlans": [
+    {
+      "name": "receipt-lookup",
+      "plan": {
+        "node": "Index Scan",
+        "relation": "ledger_operation",
+        "index": "ledger_operation_workspaceId_ownerId_idempotencyKey_key",
+        "rows": 1,
+        "cost": 8.16
+      }
+    },
+    {
+      "name": "operation-journal-validation",
+      "plan": {
+        "node": "Aggregate",
+        "rows": 1,
+        "cost": 8.18,
+        "children": [
+          {
+            "node": "Index Scan",
+            "relation": "journal",
+            "index": "journal_operationId_workspaceId_ownerId_idx",
+            "rows": 1,
+            "cost": 8.16
+          }
+        ]
+      }
+    },
+    {
+      "name": "journal-balance-validation",
+      "plan": {
+        "node": "Aggregate",
+        "rows": 1,
+        "cost": 9.54,
+        "children": [
+          {
+            "node": "Bitmap Heap Scan",
+            "relation": "posting",
+            "rows": 2,
+            "cost": 9.5,
+            "children": [
+              {
+                "node": "Bitmap Index Scan",
+                "index": "posting_journalId_workspaceId_ownerId_idx",
+                "rows": 2,
+                "cost": 4.16
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "posted-result",
+      "plan": {
+        "node": "Nested Loop",
+        "rows": 1,
+        "cost": 16.35,
+        "children": [
+          {
+            "node": "Index Scan",
+            "relation": "journal",
+            "index": "journal_operationId_workspaceId_ownerId_idx",
+            "rows": 1,
+            "cost": 8.17
+          },
+          {
+            "node": "Index Scan",
+            "relation": "audit_event",
+            "index": "audit_event_operationId_workspaceId_ownerId_key",
+            "rows": 1,
+            "cost": 8.17
+          }
+        ]
+      }
+    }
+  ],
+  "afterPlans": [
+    {
+      "name": "receipt-lookup",
+      "plan": {
+        "node": "Index Scan",
+        "relation": "ledger_operation",
+        "index": "ledger_operation_workspaceId_ownerId_idempotencyKey_key",
+        "rows": 1,
+        "cost": 8.16
+      }
+    },
+    {
+      "name": "operation-journal-validation",
+      "plan": {
+        "node": "Aggregate",
+        "rows": 1,
+        "cost": 8.3,
+        "children": [
+          {
+            "node": "Index Scan",
+            "relation": "journal",
+            "index": "journal_operationId_workspaceId_ownerId_idx",
+            "rows": 1,
+            "cost": 8.29
+          }
+        ]
+      }
+    },
+    {
+      "name": "journal-balance-validation",
+      "plan": {
+        "node": "Aggregate",
+        "rows": 1,
+        "cost": 9.67,
+        "children": [
+          {
+            "node": "Bitmap Heap Scan",
+            "relation": "posting",
+            "rows": 2,
+            "cost": 9.63,
+            "children": [
+              {
+                "node": "Bitmap Index Scan",
+                "index": "posting_journalId_workspaceId_ownerId_idx",
+                "rows": 2,
+                "cost": 4.29
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "posted-result",
+      "plan": {
+        "node": "Nested Loop",
+        "rows": 1,
+        "cost": 16.47,
+        "children": [
+          {
+            "node": "Index Scan",
+            "relation": "journal",
+            "index": "journal_operationId_workspaceId_ownerId_idx",
+            "rows": 1,
+            "cost": 8.29
+          },
+          {
+            "node": "Index Scan",
+            "relation": "audit_event",
+            "index": "audit_event_operationId_workspaceId_ownerId_key",
+            "rows": 1,
+            "cost": 8.17
+          }
+        ]
+      }
+    }
+  ],
+  "locks": [
+    [
+      {
+        "locktype": "page",
+        "relation": "audit_event_operationId_workspaceId_ownerId_key",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "auth_user_pkey",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "journal_id_workspaceId_ownerId_functionalCurrencyCode_key",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "journal_operationId_workspaceId_ownerId_idx",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account",
+        "page": 0,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account",
+        "page": 2,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account_ownerId_workspaceId_archivedAt_idx",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account_pkey",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "posting_ownerId_accountId_journalId_idx",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "workspace_id_ownerId_functionalCurrencyCode_key",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "relation",
+        "relation": "ledger_operation_workspaceId_ownerId_idempotencyKey_key",
+        "page": null,
+        "tuple": null
+      },
+      {
+        "locktype": "tuple",
+        "relation": "auth_user",
+        "page": 0,
+        "tuple": 1
+      },
+      {
+        "locktype": "tuple",
+        "relation": "workspace",
+        "page": 0,
+        "tuple": 1
+      }
+    ],
+    [
+      {
+        "locktype": "page",
+        "relation": "audit_event_operationId_workspaceId_ownerId_key",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "auth_user_pkey",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "journal_id_workspaceId_ownerId_functionalCurrencyCode_key",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "journal_operationId_workspaceId_ownerId_idx",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account",
+        "page": 0,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account",
+        "page": 2,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account_ownerId_workspaceId_archivedAt_idx",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account_pkey",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_operation_workspaceId_ownerId_idempotencyKey_key",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "posting_ownerId_accountId_journalId_idx",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "workspace_id_ownerId_functionalCurrencyCode_key",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "tuple",
+        "relation": "auth_user",
+        "page": 0,
+        "tuple": 1
+      },
+      {
+        "locktype": "tuple",
+        "relation": "workspace",
+        "page": 0,
+        "tuple": 1
+      }
+    ],
+    [
+      {
+        "locktype": "page",
+        "relation": "audit_event_operationId_workspaceId_ownerId_key",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "auth_user_pkey",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "journal_id_workspaceId_ownerId_functionalCurrencyCode_key",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "journal_operationId_workspaceId_ownerId_idx",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account",
+        "page": 0,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account",
+        "page": 2,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account_ownerId_workspaceId_archivedAt_idx",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account_pkey",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_operation_workspaceId_ownerId_idempotencyKey_key",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "posting_ownerId_accountId_journalId_idx",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "workspace_id_ownerId_functionalCurrencyCode_key",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "tuple",
+        "relation": "auth_user",
+        "page": 0,
+        "tuple": 1
+      },
+      {
+        "locktype": "tuple",
+        "relation": "workspace",
+        "page": 0,
+        "tuple": 1
+      }
+    ],
+    [
+      {
+        "locktype": "page",
+        "relation": "audit_event_operationId_workspaceId_ownerId_key",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "audit_event_operationId_workspaceId_ownerId_key",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "auth_user_pkey",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "auth_user_pkey",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "journal_id_workspaceId_ownerId_functionalCurrencyCode_key",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "journal_id_workspaceId_ownerId_functionalCurrencyCode_key",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "journal_operationId_workspaceId_ownerId_idx",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "journal_operationId_workspaceId_ownerId_idx",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account",
+        "page": 0,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account",
+        "page": 2,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account_ownerId_workspaceId_archivedAt_idx",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account_ownerId_workspaceId_archivedAt_idx",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account_pkey",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account_pkey",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_operation_id_workspaceId_ownerId_key",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_operation_workspaceId_ownerId_idempotencyKey_key",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "posting_journalId_workspaceId_ownerId_idx",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "posting_ownerId_accountId_journalId_idx",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "posting_ownerId_accountId_journalId_idx",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "workspace_id_ownerId_functionalCurrencyCode_key",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "workspace_id_ownerId_functionalCurrencyCode_key",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "relation",
+        "relation": "ledger_account",
+        "page": null,
+        "tuple": null
+      },
+      {
+        "locktype": "relation",
+        "relation": "ledger_operation_workspaceId_ownerId_idempotencyKey_key",
+        "page": null,
+        "tuple": null
+      },
+      {
+        "locktype": "relation",
+        "relation": "opening_balance_journalId_workspaceId_ownerId_key",
+        "page": null,
+        "tuple": null
+      },
+      {
+        "locktype": "tuple",
+        "relation": "auth_user",
+        "page": 0,
+        "tuple": 1
+      },
+      {
+        "locktype": "tuple",
+        "relation": "auth_user",
+        "page": 0,
+        "tuple": 1
+      },
+      {
+        "locktype": "tuple",
+        "relation": "workspace",
+        "page": 0,
+        "tuple": 1
+      },
+      {
+        "locktype": "tuple",
+        "relation": "workspace",
+        "page": 0,
+        "tuple": 1
+      }
+    ],
+    [
+      {
+        "locktype": "page",
+        "relation": "audit_event_operationId_workspaceId_ownerId_key",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "auth_user_pkey",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "journal_id_workspaceId_ownerId_functionalCurrencyCode_key",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "journal_operationId_workspaceId_ownerId_idx",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account",
+        "page": 0,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account",
+        "page": 2,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account_ownerId_workspaceId_archivedAt_idx",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account_pkey",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_operation_workspaceId_ownerId_idempotencyKey_key",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "posting_ownerId_accountId_journalId_idx",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "workspace_id_ownerId_functionalCurrencyCode_key",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "tuple",
+        "relation": "auth_user",
+        "page": 0,
+        "tuple": 1
+      },
+      {
+        "locktype": "tuple",
+        "relation": "ledger_operation",
+        "page": 0,
+        "tuple": 4
+      },
+      {
+        "locktype": "tuple",
+        "relation": "workspace",
+        "page": 0,
+        "tuple": 1
+      }
+    ],
+    [
+      {
+        "locktype": "page",
+        "relation": "audit_event_operationId_workspaceId_ownerId_key",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "auth_user_pkey",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "journal_id_workspaceId_ownerId_functionalCurrencyCode_key",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "journal_operationId_workspaceId_ownerId_idx",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account",
+        "page": 0,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account",
+        "page": 2,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account_ownerId_workspaceId_archivedAt_idx",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account_pkey",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_operation_workspaceId_ownerId_idempotencyKey_key",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "posting_ownerId_accountId_journalId_idx",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "workspace_id_ownerId_functionalCurrencyCode_key",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "tuple",
+        "relation": "auth_user",
+        "page": 0,
+        "tuple": 1
+      },
+      {
+        "locktype": "tuple",
+        "relation": "ledger_operation",
+        "page": 0,
+        "tuple": 4
+      },
+      {
+        "locktype": "tuple",
+        "relation": "workspace",
+        "page": 0,
+        "tuple": 1
+      }
+    ],
+    [
+      {
+        "locktype": "page",
+        "relation": "audit_event_operationId_workspaceId_ownerId_key",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "auth_user_pkey",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "journal_id_workspaceId_ownerId_functionalCurrencyCode_key",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "journal_operationId_workspaceId_ownerId_idx",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account",
+        "page": 0,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account",
+        "page": 2,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account_ownerId_workspaceId_archivedAt_idx",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account_pkey",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_operation_workspaceId_ownerId_idempotencyKey_key",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "posting_ownerId_accountId_journalId_idx",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "workspace_id_ownerId_functionalCurrencyCode_key",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "tuple",
+        "relation": "auth_user",
+        "page": 0,
+        "tuple": 1
+      },
+      {
+        "locktype": "tuple",
+        "relation": "workspace",
+        "page": 0,
+        "tuple": 1
+      }
+    ],
+    [
+      {
+        "locktype": "page",
+        "relation": "audit_event_operationId_workspaceId_ownerId_key",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "auth_user_pkey",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "journal_id_workspaceId_ownerId_functionalCurrencyCode_key",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "journal_operationId_workspaceId_ownerId_idx",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account",
+        "page": 0,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account",
+        "page": 2,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account_ownerId_workspaceId_archivedAt_idx",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_account_pkey",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "ledger_operation_workspaceId_ownerId_idempotencyKey_key",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "posting_ownerId_accountId_journalId_idx",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "page",
+        "relation": "workspace_id_ownerId_functionalCurrencyCode_key",
+        "page": 1,
+        "tuple": null
+      },
+      {
+        "locktype": "tuple",
+        "relation": "auth_user",
+        "page": 0,
+        "tuple": 1
+      },
+      {
+        "locktype": "tuple",
+        "relation": "ledger_operation",
+        "page": 0,
+        "tuple": 4
+      },
+      {
+        "locktype": "tuple",
+        "relation": "ledger_operation",
+        "page": 0,
+        "tuple": 8
+      },
+      {
+        "locktype": "tuple",
+        "relation": "workspace",
+        "page": 0,
+        "tuple": 1
+      }
+    ]
+  ],
+  "events": [
+    {
+      "code": "40001",
+      "phase": "commit",
+      "routine": "CheckForSerializableConflictOutNeeded",
+      "reason": "unspecified"
+    },
+    {
+      "code": "40001",
+      "phase": "read-or-other",
+      "routine": "CheckForSerializableConflictOutNeeded",
+      "reason": "unspecified"
+    },
+    {
+      "code": "40001",
+      "phase": "journal-finalize",
+      "routine": "OnConflict_CheckForSerializationFailure",
+      "reason": "during read"
+    },
+    {
+      "code": "40001",
+      "phase": "read-or-other",
+      "routine": "CheckForSerializableConflictOutNeeded",
+      "reason": "unspecified"
+    },
+    {
+      "code": "40001",
+      "phase": "commit",
+      "routine": "PreCommit_CheckForSerializationFailure",
+      "reason": "during commit"
+    },
+    {
+      "code": "40001",
+      "phase": "read-or-other",
+      "routine": "CheckForSerializableConflictOutNeeded",
+      "reason": "unspecified"
+    },
+    {
+      "code": "40001",
+      "phase": "commit",
+      "routine": "CheckForSerializableConflictOutNeeded",
+      "reason": "unspecified"
+    },
+    {
+      "code": "40001",
+      "phase": "commit",
+      "routine": "CheckForSerializableConflictOutNeeded",
+      "reason": "unspecified"
+    },
+    {
+      "code": "40001",
+      "phase": "read-or-other",
+      "routine": "CheckForSerializableConflictOutNeeded",
+      "reason": "unspecified"
+    },
+    {
+      "code": "40001",
+      "phase": "read-or-other",
+      "routine": "CheckForSerializableConflictOutNeeded",
+      "reason": "unspecified"
+    },
+    {
+      "code": "40001",
+      "phase": "journal-finalize",
+      "routine": "OnConflict_CheckForSerializationFailure",
+      "reason": "during read"
+    },
+    {
+      "code": "40001",
+      "phase": "commit",
+      "routine": "CheckForSerializableConflictOutNeeded",
+      "reason": "unspecified"
+    },
+    {
+      "code": "40001",
+      "phase": "journal-finalize",
+      "routine": "OnConflict_CheckForSerializationFailure",
+      "reason": "during read"
+    },
+    {
+      "code": "40001",
+      "phase": "journal-finalize",
+      "routine": "OnConflict_CheckForSerializationFailure",
+      "reason": "during read"
+    },
+    {
+      "code": "40001",
+      "phase": "commit",
+      "routine": "CheckForSerializableConflictOutNeeded",
+      "reason": "unspecified"
+    },
+    {
+      "code": "40001",
+      "phase": "commit",
+      "routine": "CheckForSerializableConflictOutNeeded",
+      "reason": "unspecified"
+    },
+    {
+      "code": "40001",
+      "phase": "read-or-other",
+      "routine": "CheckForSerializableConflictOutNeeded",
+      "reason": "unspecified"
+    },
+    {
+      "code": "40001",
+      "phase": "read-or-other",
+      "routine": "CheckForSerializableConflictOutNeeded",
+      "reason": "unspecified"
+    },
+    {
+      "code": "40001",
+      "phase": "journal-finalize",
+      "routine": "OnConflict_CheckForSerializationFailure",
+      "reason": "during read"
+    },
+    {
+      "code": "40001",
+      "phase": "audit-insert",
+      "routine": "CheckForSerializableConflictIn",
+      "reason": "unspecified"
+    },
+    {
+      "code": "40001",
+      "phase": "journal-finalize",
+      "routine": "OnConflict_CheckForSerializationFailure",
+      "reason": "during read"
+    },
+    {
+      "code": "40001",
+      "phase": "read-or-other",
+      "routine": "CheckForSerializableConflictOutNeeded",
+      "reason": "unspecified"
+    },
+    {
+      "code": "40001",
+      "phase": "audit-insert",
+      "routine": "CheckForSerializableConflictIn",
+      "reason": "unspecified"
+    },
+    {
+      "code": "40001",
+      "phase": "commit",
+      "routine": "CheckForSerializableConflictOutNeeded",
+      "reason": "unspecified"
+    },
+    {
+      "code": "40001",
+      "phase": "audit-insert",
+      "routine": "CheckForSerializableConflictIn",
+      "reason": "unspecified"
+    },
+    {
+      "code": "40001",
+      "phase": "commit",
+      "routine": "PreCommit_CheckForSerializationFailure",
+      "reason": "unspecified"
+    },
+    {
+      "code": "40001",
+      "phase": "commit",
+      "routine": "CheckForSerializableConflictOutNeeded",
+      "reason": "unspecified"
+    },
+    {
+      "code": "40001",
+      "phase": "commit",
+      "routine": "CheckForSerializableConflictOutNeeded",
+      "reason": "unspecified"
+    },
+    {
+      "code": "40001",
+      "phase": "audit-insert",
+      "routine": "CheckForSerializableConflictIn",
+      "reason": "unspecified"
+    },
+    {
+      "code": "40001",
+      "phase": "read-or-other",
+      "routine": "CheckForSerializableConflictOutNeeded",
+      "reason": "unspecified"
+    },
+    {
+      "code": "40001",
+      "phase": "audit-insert",
+      "routine": "CheckForSerializableConflictIn",
+      "reason": "unspecified"
+    },
+    {
+      "code": "40001",
+      "phase": "commit",
+      "routine": "CheckForSerializableConflictOutNeeded",
+      "reason": "unspecified"
+    },
+    {
+      "code": "40001",
+      "phase": "journal-finalize",
+      "routine": "OnConflict_CheckForSerializationFailure",
+      "reason": "during read"
+    },
+    {
+      "code": "40001",
+      "phase": "commit",
+      "routine": "CheckForSerializableConflictOutNeeded",
+      "reason": "unspecified"
+    },
+    {
+      "code": "40001",
+      "phase": "commit",
+      "routine": "CheckForSerializableConflictOutNeeded",
+      "reason": "unspecified"
+    },
+    {
+      "code": "40001",
+      "phase": "commit",
+      "routine": "CheckForSerializableConflictOutNeeded",
+      "reason": "unspecified"
+    },
+    {
+      "code": "40001",
+      "phase": "commit",
+      "routine": "PreCommit_CheckForSerializationFailure",
+      "reason": "during commit"
+    },
+    {
+      "code": "40001",
+      "phase": "audit-insert",
+      "routine": "CheckForSerializableConflictIn",
+      "reason": "unspecified"
+    },
+    {
+      "code": "40001",
+      "phase": "audit-insert",
+      "routine": "CheckForSerializableConflictIn",
+      "reason": "unspecified"
+    },
+    {
+      "code": "40001",
+      "phase": "audit-insert",
+      "routine": "CheckForSerializableConflictIn",
+      "reason": "unspecified"
+    },
+    {
+      "code": "40001",
+      "phase": "journal-finalize",
+      "routine": "OnConflict_CheckForSerializationFailure",
+      "reason": "during read"
+    }
+  ],
+  "attempts": 105,
+  "statuses": {
+    "created": 64,
+    "rejected": 0
+  },
+  "safety": {
+    "unbalanced": 0,
+    "drafts": 0,
+    "audit_gaps": 0
+  },
+  "cleanup": "PASS"
+}
