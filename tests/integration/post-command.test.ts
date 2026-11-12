@@ -651,3 +651,56 @@ it("B-T05 archive race is rechecked on a fresh attempt without silently unarchiv
     );
   }
 });
+
+it("B-T05 trace metadata contains no user IDs, account IDs, amounts, payloads, keys or cookies", () => {
+  expect(h.traces.length).toBeGreaterThan(0);
+  const serialized = JSON.stringify(h.traces);
+  for (const user of h.users)
+    for (const privateValue of [
+      user.id,
+      user.workspace,
+      user.bank,
+      user.expense,
+      user.card,
+      user.token,
+      h.cookie(h.users.indexOf(user)),
+    ])
+      expect(serialized).not.toContain(privateValue);
+  for (const privateValue of [
+    "Controlled fixture purchase",
+    "Example",
+    "nativeMinor",
+    "idempotencyKey",
+    "SQL",
+    "legs",
+  ])
+    expect(serialized).not.toContain(privateValue);
+  for (const trace of h.traces) {
+    expect(Object.keys(trace).sort()).toEqual([
+      "command",
+      "durationMs",
+      "requestId",
+      "status",
+    ]);
+    expect(trace.command).toBe("ledger.POST");
+    expect(trace.durationMs).toBeGreaterThanOrEqual(0);
+  }
+});
+it("B-T05 operational trace failure cannot change a committed outcome or duplicate audit", async () => {
+  const key = randomUUID(),
+    before = await counts();
+  h.setLogger(() => {
+    throw new Error("logger unavailable");
+  });
+  try {
+    const first = await h.api(0, key, h.payload());
+    expect(first.status).toBe(201);
+    const result = await first.json();
+    const replay = await h.api(0, key, h.payload());
+    expect(replay.status).toBe(200);
+    expect(await replay.json()).toEqual(result);
+    expect((await counts()).audits - before.audits).toBe(1);
+  } finally {
+    h.setLogger();
+  }
+});

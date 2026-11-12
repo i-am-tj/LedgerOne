@@ -10,7 +10,10 @@ import {
   PostExecutor,
   type Stage,
 } from "../../src/lib/ledger/commands/executor";
-import { postRequest } from "../../src/lib/ledger/commands/http";
+import {
+  postRequest,
+  type PostTrace,
+} from "../../src/lib/ledger/commands/http";
 export async function postHarness() {
   const lease = await createFreshLedgerDatabase(testDatabaseURL());
   const admin = new pg.Pool({ connectionString: lease.url, max: 10 });
@@ -23,6 +26,10 @@ export async function postHarness() {
     | ((stage: Stage, c: pg.PoolClient, attempt: number) => Promise<void>)
     | undefined;
   let executor: PostExecutor | undefined;
+  const traces: PostTrace[] = [];
+  let logger = (trace: PostTrace) => {
+    traces.push(trace);
+  };
   const users = Array.from({ length: 2 }, () => ({
     id: randomUUID(),
     workspace: randomUUID(),
@@ -122,6 +129,15 @@ export async function postHarness() {
       runtime,
       role,
       expected,
+      traces,
+      recordTrace: (trace: PostTrace) => logger(trace),
+      setLogger: (fn?: (trace: PostTrace) => void) => {
+        logger =
+          fn ??
+          ((trace) => {
+            traces.push(trace);
+          });
+      },
       factory: async (mode: "empty" | "version" | "unavailable" | "owner") => {
         let baseline = expected;
         let runtimeURL = url.toString();
@@ -206,6 +222,7 @@ export async function postHarness() {
           workspace,
           runtime,
           enabled ? executor! : null,
+          (trace) => logger(trace),
         ),
       cleanup,
     };

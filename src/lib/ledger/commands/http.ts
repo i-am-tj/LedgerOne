@@ -14,13 +14,23 @@ import {
 } from "./contract";
 import type { PostExecutor } from "./executor";
 
+export type PostTrace = Readonly<{
+  command: "ledger.POST";
+  requestId: string;
+  status: number;
+  durationMs: number;
+}>;
+
 export async function postRequest(
   request: Request,
   workspaceId: string,
   runtime: { auth: LedgerAuth; config: AuthConfig } | null,
   executor: PostExecutor | null,
+  log: (trace: PostTrace) => void = (trace) =>
+    console.info(JSON.stringify(trace)),
 ): Promise<Response> {
   const requestId = randomUUID();
+  const started = performance.now();
   let response: Response;
   try {
     if (request.method !== "POST")
@@ -61,5 +71,15 @@ export async function postRequest(
         : authJSON({ error: "service_unavailable" }, 503);
   }
   response.headers.set("X-Request-ID", requestId);
+  try {
+    log({
+      command: "ledger.POST",
+      requestId,
+      status: response.status,
+      durationMs: Math.round(performance.now() - started),
+    });
+  } catch {
+    /* Operational logging cannot change a committed result; financial audit is transactional. */
+  }
   return response;
 }
