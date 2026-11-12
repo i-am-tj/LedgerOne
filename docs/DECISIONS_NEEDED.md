@@ -2,7 +2,7 @@
 
 # Decisions and authorization
 
-> Current status (2026-11-12): S06C completed/reviewed merge `3502754` at corrected head `c22488b`; #10/#27 closed. [Verified closure](reports/S06C_CLOSURE.md). S06D predecessor satisfied; detailed planning awaits acceptance and reviewed planning merge. A05-01–05 remain open. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. Earlier dated checkpoints retain their original decisions and evidence.
+> Current status (2026-11-12): S06C completed/reviewed merge `3502754` at corrected head `c22488b`; #10/#27 closed. [Verified closure](reports/S06C_CLOSURE.md). S06D planning PR #28 accepted/amended and merged `d048d8b`; isolated local implementation now proceeds in a separate PR. Hosted operations remain unauthorized. A05-01–05 remain open. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. Earlier dated checkpoints retain their original decisions and evidence.
 
 Current approvals: expanded Phase 1, GitHub delivery and reviewed S05/S06A/S06B/S06C merges are confirmed. S06C implementation PR #26 merged as 3502754 at corrected c22488b; S06D planning acceptance and reviewed planning merge are still required before implementation. Google sign-in with an owner allowlist is selected. The table below preserves the initial proposed decisions; outstanding accounting/security reviews still apply before dependent implementation.
 

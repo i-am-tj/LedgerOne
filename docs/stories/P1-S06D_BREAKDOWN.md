@@ -1,6 +1,6 @@
 # P1-S06D — Financial verification and release-gate breakdown
 
-**Status: owner ACCEPTED WITH TWO MINOR DOCUMENTATION AMENDMENTS; both incorporated below; amended-head checks and reviewed planning merge pending.** The owner authorizes isolated local implementation after planning merge, not hosted operations or production activation. The complete S06 gate is NOT RUN / FAIL (closed). Production financial writes remain disabled; published financial grants SELECT-only; consumer raw posting unavailable; INR-only posting unchanged.
+**Status: planning ACCEPTED with amendments and reviewed/merged as `d048d8b` at amended head `2a7ec7c`; isolated local implementation underway in a separate PR.** The owner authorizes isolated local implementation after planning merge, not hosted operations or production activation. The complete S06 gate is NOT RUN / FAIL (closed). Production financial writes remain disabled; published financial grants SELECT-only; consumer raw posting unavailable; INR-only posting unchanged.
 
 **ID:** P1-S06D | **Title:** Complete financial-command verification and separate activation design | **Epic:** [P1-E3C #5](https://github.com/i-am-tj/LedgerOne/issues/5) | **Priority:** P0 | **Dependencies:** reviewed S06A/B/C merges, accepted/merged S06D planning, task-specific owner permissions below
 
@@ -174,13 +174,13 @@ Milestone [Phase 1](https://github.com/i-am-tj/LedgerOne/milestone/1) → epic [
 
 ## Planning, story and phase gates
 
-| Gate   | Requirement                                                                                          | Current status                                                                    |
-| ------ | ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| D-PG01 | Verify S06C actual reviewed merge, #10/#27 closed, preserve initial/final evidence                   | PASS; closure report                                                              |
-| D-PG02 | Five packages, W matrix, A05 matrix, target/role/performance/activation plans and explicit approvals | Owner accepted with two minor amendments, incorporated; final-head checks pending |
-| D-PG03 | Format, foundation, link/traceability consistency and clean documentation-only diff                  | Results recorded in planning report                                               |
-| D-PG04 | Planning PR exact-head required CI                                                                   | Prior 5917115 checks passed; amended-head CI pending                              |
-| D-PG05 | Owner accepts exact plan/amendments; record reviewed planning merge under protections                | Owner acceptance recorded in chat; amended-head checks/reviewed merge pending     |
+| Gate   | Requirement                                                                                          | Current status                                                                                        |
+| ------ | ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| D-PG01 | Verify S06C actual reviewed merge, #10/#27 closed, preserve initial/final evidence                   | PASS; closure report                                                                                  |
+| D-PG02 | Five packages, W matrix, A05 matrix, target/role/performance/activation plans and explicit approvals | Owner accepted with two minor amendments, incorporated; final-head checks pending                     |
+| D-PG03 | Format, foundation, link/traceability consistency and clean documentation-only diff                  | Results recorded in planning report                                                                   |
+| D-PG04 | Planning PR exact-head required CI                                                                   | PASS at amended 2a7ec7c; both exact-head checks SUCCESS, precise totals/provenance on PR #28          |
+| D-PG05 | Owner accepts exact plan/amendments; record reviewed planning merge under protections                | PASS; owner acceptance/amendments, exact-head CI and actual planning merge d048d8b recorded on PR #28 |
 
 **Definition of done:** Planning D-PG01–05 precedes a separate implementation branch/PR. S06D is complete only after ordered D-T01–05, D-AC01–12, final W01–15 PASS for the defined target, approved supported-scope A05 dispositions, full exact-head checks, independent adversarial review and reviewed implementation merge. Technical completion does not activate production. Phase 1 remains incomplete until S07–S09 and its quality gate pass.
 

@@ -1,6 +1,6 @@
 # S05 finding disposition register
 
-> Current status (2026-11-12): S06C completed/reviewed merge `3502754` at corrected head `c22488b`; #10/#27 closed. [Verified closure](../reports/S06C_CLOSURE.md). S06D predecessor satisfied; detailed planning awaits acceptance and reviewed planning merge. A05-01–05 remain open. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. Earlier dated checkpoints retain their original decisions and evidence.
+> Current status (2026-11-12): S06C completed/reviewed merge `3502754` at corrected head `c22488b`; #10/#27 closed. [Verified closure](../reports/S06C_CLOSURE.md). S06D planning PR #28 accepted/amended and merged `d048d8b`; isolated local implementation now proceeds in a separate PR. Hosted operations remain unauthorized. A05-01–05 remain open. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. Earlier dated checkpoints retain their original decisions and evidence.
 
 Verified input: [S05 adversarial review](S05_ADVERSARIAL_REVIEW.md), reviewed source `1243360`. Conditional S05 approval covers only the read-only INR foundation. Every finding remains open; issue creation is not remediation. The user confirmed completed human S05 review and merge; evidence: https://github.com/i-am-tj/LedgerOne/pull/1#issuecomment-6796866109. New control implementation remains subject to its own review. Original finding severity/classification is preserved.
 

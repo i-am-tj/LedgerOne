@@ -1,6 +1,6 @@
 # Progress and evidence
 
-> Current status (2026-11-12): S06C completed/reviewed merge `3502754` at corrected head `c22488b`; #10/#27 closed. [Verified closure](reports/S06C_CLOSURE.md). S06D predecessor satisfied; detailed planning awaits acceptance and reviewed planning merge. A05-01–05 remain open. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. Earlier dated checkpoints retain their original decisions and evidence.
+> Current status (2026-11-12): S06C completed/reviewed merge `3502754` at corrected head `c22488b`; #10/#27 closed. [Verified closure](reports/S06C_CLOSURE.md). S06D planning PR #28 accepted/amended and merged `d048d8b`; isolated local implementation now proceeds in a separate PR. Hosted operations remain unauthorized. A05-01–05 remain open. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. Earlier dated checkpoints retain their original decisions and evidence.
 
 ## 2026-11-11 — P1-S01 Docker Compose and outage verification
 
@@ -514,3 +514,7 @@ At owner's explicit request reviewed exact 2922ce3 with new negative probes befo
 Verified PR #26 merged 3502754 at corrected c22488b; #10/#27 closed and original A05 #13–#17 open. [Closure report](reports/S06C_CLOSURE.md) records exact-head CI, final 166/212/48 evidence and honest native COMMENTED/user-confirmed reviewed-merge provenance. Initial BLOCKED evidence, correction commits and independent probes remain preserved.
 
 Prepared documentation-only [S06D breakdown](stories/P1-S06D_BREAKDOWN.md), [W matrix](gates/S06D_REQUIREMENTS_TO_TESTS.md), target/role permissions, performance campaign, findings disposition and activation/rollback design. No S06D implementation, migration, dependency, source, grant, environment or workflow change. Exact planning checks/PR evidence are recorded in [the planning report](reports/P1-S06D_PLANNING.md). Next action is owner acceptance and reviewed planning merge, followed by a separate implementation branch/PR; hosted actions need additional explicit approval. Normal writes disabled; full S06 and Phase 1 incomplete.
+
+## 2026-11-12 — Accepted S06D planning merge and D-T01 local evidence
+
+Owner accepted planning with staged-performance/local-versus-hosted amendments; PR #28 amended 2a7ec7c merged d048d8b normally after both CI checks SUCCESS. Precise push browser result 47 passed + 1 retry-passed flaky, PR 48 passed; the overstated first summary and failed log-assertion shell continuation are explicitly corrected on PR #28 and in [implementation evidence](reports/P1-S06D.md). #11 remains open. Separate branch feat/p1-s06d-verification fixes fixture race #29 and adds gate policy/regressions; local full pipeline PASS 199 unit / 213 integration / 48 browser (22.9s), no retries. No hosted/production permission or financial writer enabled. D-T02 local work follows; complete S06/Phase 1 remain incomplete.
