@@ -109,7 +109,7 @@ export async function campaign() {
   };
   return { h, results, metadata, start };
 }
-async function accounts(h: Harness, count: number) {
+export async function accounts(h: Harness, count: number) {
   const values = Array.from({ length: count }, (_, n) => ({
     id: randomUUID(),
     type: n < count / 2 ? "EXPENSE" : "ASSET",
