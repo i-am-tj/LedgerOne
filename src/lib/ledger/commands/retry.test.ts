@@ -1,6 +1,7 @@
 import { expect, it } from "vitest";
 import {
   retryable,
+  reversalConflict,
   retryDelay,
   sqlState,
   remaining,
@@ -77,4 +78,29 @@ it("S06B-R02 cancellation disposes a connection acquired after the aborted wait"
   await acquired;
   await Promise.resolve();
   expect(disposed).toBe(true);
+});
+
+it("C-T04 only exact original-reversal constraint enters fresh target recovery", () => {
+  expect(
+    reversalConflict({
+      code: "23505",
+      constraint: "journal_reversesJournalId_workspaceId_ownerId_key",
+    }),
+  ).toBe(true);
+  for (const error of [
+    { code: "23505" },
+    {
+      code: "23505",
+      constraint: "ledger_operation_workspaceId_ownerId_idempotencyKey_key",
+    },
+    {
+      code: "23505",
+      constraint: "audit_event_operationId_workspaceId_ownerId_key",
+    },
+    {
+      code: "40001",
+      constraint: "journal_reversesJournalId_workspaceId_ownerId_key",
+    },
+  ])
+    expect(reversalConflict(error)).toBe(false);
 });

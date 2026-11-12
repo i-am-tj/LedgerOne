@@ -88,6 +88,107 @@ export type PostCommand = Readonly<{
   reason: string;
   legs: readonly Leg[];
 }>;
+export type ReverseCommand = Readonly<{
+  kind: "REVERSE";
+  originalJournalId: string;
+  effectiveAt: string;
+  description: string;
+  reason: string;
+}>;
+export type CorrectCommand = Readonly<{
+  kind: "CORRECT";
+  originalJournalId: string;
+  effectiveAt: string;
+  description: string;
+  reason: string;
+  replacement: Readonly<Omit<PostCommand, "kind" | "reason">>;
+}>;
+export type FinancialCommand = PostCommand | ReverseCommand | CorrectCommand;
+const reversePayload = payload.omit({ legs: true }).extend({
+  kind: z.literal("REVERSE"),
+  originalJournalId: uuid,
+});
+const correctPayload = reversePayload.extend({
+  kind: z.literal("CORRECT"),
+  replacement: payload.omit({ kind: true, reason: true }),
+});
+export function parseCommand(value: unknown): FinancialCommand {
+  if (
+    typeof value === "object" &&
+    value !== null &&
+    "kind" in value &&
+    value.kind === "POST"
+  )
+    return parsePost(value);
+  try {
+    const p =
+      typeof value === "object" &&
+      value !== null &&
+      "kind" in value &&
+      value.kind === "REVERSE"
+        ? reversePayload.parse(value)
+        : correctPayload.parse(value);
+    const base = {
+      originalJournalId: p.originalJournalId,
+      effectiveAt: instant(p.effectiveAt),
+      description: p.description,
+      reason: p.reason,
+    };
+    if (p.kind === "REVERSE")
+      return Object.freeze({ kind: "REVERSE", ...base });
+    const replacement = parsePost({
+      kind: "POST",
+      reason: p.reason,
+      ...p.replacement,
+    });
+    return Object.freeze({
+      kind: "CORRECT",
+      ...base,
+      replacement: Object.freeze({
+        effectiveAt: replacement.effectiveAt,
+        description: replacement.description,
+        legs: replacement.legs,
+      }),
+    });
+  } catch {
+    throw invalid();
+  }
+}
+// Derive a full inverse from immutable database evidence, never from caller legs.
+export function inversePostings(
+  rows: readonly Readonly<{
+    accountId: string;
+    side: string;
+    currency: string;
+    nativeMinor: string;
+    functionalMinor: string;
+    fxRateId: string | null;
+  }>[],
+): readonly Leg[] {
+  if (rows.length < 2 || rows.length > 500) throw unavailable();
+  let balance = 0n;
+  const legs = rows.map((p): Leg => {
+    if (
+      !uuid.safeParse(p.accountId).success ||
+      p.currency !== "INR" ||
+      !["DEBIT", "CREDIT"].includes(p.side) ||
+      p.fxRateId !== null ||
+      !/^[1-9][0-9]{0,17}$/.test(p.nativeMinor) ||
+      p.functionalMinor !== p.nativeMinor
+    )
+      throw unavailable();
+    const minor = positiveMinor(BigInt(p.nativeMinor));
+    balance += (p.side === "DEBIT" ? 1n : -1n) * minor;
+    return Object.freeze({
+      accountId: p.accountId,
+      side: p.side === "DEBIT" ? "CREDIT" : "DEBIT",
+      currency: "INR",
+      minor: minor.toString(),
+    });
+  });
+  if (balance !== 0n) throw unavailable();
+  return Object.freeze(legs.sort(compareLegs));
+}
 export function compareLegs(a: Leg, b: Leg) {
   const x = [a.accountId, a.side, a.currency, a.minor],
     y = [b.accountId, b.side, b.currency, b.minor];
@@ -131,8 +232,34 @@ export function parsePost(value: unknown): PostCommand {
 export function requestHash(
   ownerId: string,
   workspaceId: string,
-  p: PostCommand,
+  p: FinancialCommand,
 ) {
+  if (p.kind !== "POST") {
+    const tuple: unknown[] = [
+      "ledgerone.command.v1",
+      p.kind,
+      ownerId,
+      workspaceId,
+      p.originalJournalId,
+      p.effectiveAt,
+      p.description,
+      p.reason,
+    ];
+    if (p.kind === "CORRECT")
+      tuple.push(
+        p.replacement.effectiveAt,
+        p.replacement.description,
+        p.replacement.legs.map((l) => [
+          l.accountId,
+          l.side,
+          l.currency,
+          l.minor,
+        ]),
+      );
+    return createHash("sha256")
+      .update(JSON.stringify(tuple), "utf8")
+      .digest("hex");
+  }
   return createHash("sha256")
     .update(
       JSON.stringify([

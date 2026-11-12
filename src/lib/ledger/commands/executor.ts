@@ -12,11 +12,29 @@ import {
   requestHash,
   unavailable,
   type PostCommand,
+  type FinancialCommand,
+  type Leg,
 } from "./contract";
+
+import {
+  correctionResult,
+  assertResultSemantics,
+  type ReverseResult,
+  type CorrectResult,
+  type StoredJournal,
+} from "./results";
+import {
+  originalEvidence,
+  lockOriginal,
+  targetUnavailable,
+  type CommandQuery,
+} from "./original";
+export type FinancialResult = PostResult | ReverseResult | CorrectResult;
 
 import {
   remaining,
   retryable,
+  reversalConflict,
   retryDelay,
   sqlState,
   withinDeadline,
@@ -48,6 +66,9 @@ export type Stage =
   | "draft"
   | "postings"
   | "locked"
+  | "discovered"
+  | "targetLocked"
+  | "targetConflict"
   | "sealed"
   | "audit"
   | "beforeCommit"
@@ -153,6 +174,31 @@ export class PostExecutor {
     command: PostCommand,
     signal?: AbortSignal,
   ): Promise<{ result: PostResult; replayed: boolean }> {
+    return this.execute(authorize, workspace, key, command, signal);
+  }
+  // One transaction/authentication/retry lifecycle. C-T02 extends its closed
+  // command union; no consumer writer or alternative orchestration is added.
+  async execute(
+    authorize: () => Promise<Actor>,
+    workspace: string,
+    key: string,
+    command: PostCommand,
+    signal?: AbortSignal,
+  ): Promise<{ result: PostResult; replayed: boolean }>;
+  async execute(
+    authorize: () => Promise<Actor>,
+    workspace: string,
+    key: string,
+    command: FinancialCommand,
+    signal?: AbortSignal,
+  ): Promise<{ result: FinancialResult; replayed: boolean }>;
+  async execute(
+    authorize: () => Promise<Actor>,
+    workspace: string,
+    key: string,
+    command: FinancialCommand,
+    signal?: AbortSignal,
+  ): Promise<{ result: FinancialResult; replayed: boolean }> {
     throwIfAborted(signal);
     const deadline = performance.now() + 10000;
     const first = await withinDeadline(
@@ -161,6 +207,7 @@ export class PostExecutor {
       undefined,
       signal,
     );
+    let recoverOriginalConflict = false;
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
         throwIfAborted(signal);
@@ -178,12 +225,17 @@ export class PostExecutor {
           attempt,
           deadline,
           signal,
+          recoverOriginalConflict,
         );
       } catch (error) {
-        const delay = retryable(error)
-          ? retryDelay(attempt, deadline - performance.now())
-          : null;
+        const targetConflict =
+          command.kind !== "POST" && reversalConflict(error);
+        const delay =
+          retryable(error) || targetConflict
+            ? retryDelay(attempt, deadline - performance.now())
+            : null;
         if (delay !== null) {
+          recoverOriginalConflict ||= targetConflict;
           await withinDeadline(
             new Promise((r) => setTimeout(r, delay)),
             deadline,
@@ -202,11 +254,12 @@ export class PostExecutor {
     authorize: () => Promise<Actor>,
     workspace: string,
     key: string,
-    command: PostCommand,
+    command: FinancialCommand,
     attempt: number,
     deadline: number,
     signal?: AbortSignal,
-  ): Promise<{ result: PostResult; replayed: boolean }> {
+    recoverOriginalConflict = false,
+  ): Promise<{ result: FinancialResult; replayed: boolean }> {
     throwIfAborted(signal);
     const actor = await withinDeadline(
         authorize(),
@@ -268,23 +321,64 @@ export class PostExecutor {
         [workspace, actor.ownerId, key],
       );
       if (old.rowCount) {
-        if (old.rows[0].kind !== "POST" || old.rows[0].requestHash !== hash)
+        if (
+          old.rows[0].kind !== command.kind ||
+          old.rows[0].requestHash !== hash
+        )
           throw new CommandError(409, "idempotency_conflict");
-        const result = await outcome(c, actor, workspace, old.rows[0].id);
+        const result = await commandOutcome(
+          c,
+          actor,
+          workspace,
+          old.rows[0].id,
+          command,
+        );
         active();
         committing = true;
         await c.query("COMMIT");
         committed = true;
         return { result, replayed: true };
       }
+      if (recoverOriginalConflict && command.kind !== "POST") {
+        const original = await query(
+          'SELECT id FROM journal WHERE id=$1 AND "workspaceId"=$2 AND "ownerId"=$3',
+          [command.originalJournalId, workspace, actor.ownerId],
+        );
+        if (!original.rowCount) throw new CommandError(404, "not_found");
+        const reversed = await query(
+          'SELECT id FROM journal WHERE "reversesJournalId"=$1 AND "workspaceId"=$2 AND "ownerId"=$3',
+          [command.originalJournalId, workspace, actor.ownerId],
+        );
+        if (reversed.rowCount) throw targetUnavailable();
+        // A conflict without durable evidence is not a successful replay or
+        // permission to invent an outcome (for example a failed test fault).
+        throw unavailable();
+      }
       const op = randomUUID(),
         journal = randomUUID();
       await query(
-        'INSERT INTO ledger_operation(id,"workspaceId","ownerId","idempotencyKey","requestHash",kind) VALUES($1,$2,$3,$4,$5,\'POST\')',
-        [op, workspace, actor.ownerId, key, hash],
+        'INSERT INTO ledger_operation(id,"workspaceId","ownerId","idempotencyKey","requestHash",kind) VALUES($1,$2,$3,$4,$5,$6)',
+        [op, workspace, actor.ownerId, key, hash, command.kind],
       );
       await this.probe?.("receipt", c, attempt);
-      const ids = [...new Set(command.legs.map((l) => l.accountId))].sort();
+      const legs =
+        command.kind === "POST"
+          ? command.legs
+          : await originalEvidence(
+              query,
+              actor.ownerId,
+              workspace,
+              command.originalJournalId,
+            );
+      if (command.kind !== "POST") await this.probe?.("discovered", c, attempt);
+      const ids = [
+        ...new Set(
+          [
+            ...legs,
+            ...(command.kind === "CORRECT" ? command.replacement.legs : []),
+          ].map((l) => l.accountId),
+        ),
+      ].sort();
       const accounts = await query(
         'SELECT id,"archivedAt","currencyCode" FROM ledger_account WHERE "workspaceId"=$1 AND "ownerId"=$2 AND id=ANY($3::uuid[]) ORDER BY id FOR UPDATE',
         [workspace, actor.ownerId, ids],
@@ -298,50 +392,62 @@ export class PostExecutor {
       )
         throw new CommandError(409, "account_unavailable");
       await this.probe?.("locked", c, attempt);
-      await query(
-        'INSERT INTO journal(id,"workspaceId","ownerId",description,"effectiveAt") VALUES($1,$2,$3,$4,$5)',
-        [
-          journal,
-          workspace,
+      if (command.kind !== "POST") {
+        await lockOriginal(
+          query,
           actor.ownerId,
-          command.description,
-          command.effectiveAt,
-        ],
-      );
-      await this.probe?.("draft", c, attempt);
-      for (const l of command.legs)
-        await query(
-          'INSERT INTO posting(id,"journalId","workspaceId","ownerId","accountId","currencyCode",side,"nativeMinor","functionalMinor") VALUES($1,$2,$3,$4,$5,\'INR\',$6,$7,$7)',
-          [
-            randomUUID(),
-            journal,
-            workspace,
-            actor.ownerId,
-            l.accountId,
-            l.side,
-            l.minor,
-          ],
+          workspace,
+          command.originalJournalId,
+          op,
         );
-      await this.probe?.("postings", c, attempt);
-      await query(
-        'UPDATE journal SET status=\'POSTED\',"postedAt"=clock_timestamp(),"operationId"=$1 WHERE id=$2 AND "workspaceId"=$3 AND "ownerId"=$4',
-        [op, journal, workspace, actor.ownerId],
+        await this.probe?.("targetLocked", c, attempt);
+      }
+      await this.writeJournal(
+        query,
+        c,
+        attempt,
+        actor,
+        workspace,
+        op,
+        journal,
+        command.effectiveAt,
+        command.description,
+        legs,
+        command.kind === "POST" ? null : command.originalJournalId,
       );
-      await this.probe?.("sealed", c, attempt);
+      if (command.kind === "CORRECT")
+        await this.writeJournal(
+          query,
+          c,
+          attempt,
+          actor,
+          workspace,
+          op,
+          randomUUID(),
+          command.replacement.effectiveAt,
+          command.replacement.description,
+          command.replacement.legs,
+          null,
+        );
       await query(
-        'INSERT INTO audit_event(id,"workspaceId","ownerId","actorId","requestId",action,"operationId","targetJournalId",reason) VALUES($1,$2,$3,$3,$4,\'ledger.posted\',$5,$6,$7)',
+        'INSERT INTO audit_event(id,"workspaceId","ownerId","actorId","requestId",action,"operationId","targetJournalId",reason) VALUES($1,$2,$3,$3,$4,$5,$6,$7,$8)',
         [
           randomUUID(),
           workspace,
           actor.ownerId,
           actor.requestId,
+          command.kind === "POST"
+            ? "ledger.posted"
+            : command.kind === "REVERSE"
+              ? "ledger.reversed"
+              : "ledger.corrected",
           op,
-          journal,
+          command.kind === "POST" ? journal : command.originalJournalId,
           command.reason,
         ],
       );
       await this.probe?.("audit", c, attempt);
-      const result = await outcome(c, actor, workspace, op);
+      const result = await commandOutcome(c, actor, workspace, op, command);
       await this.probe?.("beforeCommit", c, attempt);
       active();
       committing = true;
@@ -364,11 +470,59 @@ export class PostExecutor {
         await this.probe?.("serialization", c, attempt);
       if (sqlState(error) === "40P01")
         await this.probe?.("deadlock", c, attempt);
+      if (reversalConflict(error))
+        await this.probe?.("targetConflict", c, attempt);
       throw error;
     } finally {
       c.release(destroy);
       c.removeListener("error", onFault);
     }
+  }
+  private async writeJournal(
+    query: CommandQuery,
+    c: pg.PoolClient,
+    attempt: number,
+    actor: Actor,
+    workspace: string,
+    operation: string,
+    journal: string,
+    effectiveAt: string,
+    description: string,
+    legs: readonly Leg[],
+    original: string | null,
+  ) {
+    await query(
+      'INSERT INTO journal(id,"workspaceId","ownerId",description,"effectiveAt",kind,"reversesJournalId") VALUES($1,$2,$3,$4,$5,$6,$7)',
+      [
+        journal,
+        workspace,
+        actor.ownerId,
+        description,
+        effectiveAt,
+        original === null ? "GENERAL" : "REVERSAL",
+        original,
+      ],
+    );
+    await this.probe?.("draft", c, attempt);
+    for (const l of legs)
+      await query(
+        'INSERT INTO posting(id,"journalId","workspaceId","ownerId","accountId","currencyCode",side,"nativeMinor","functionalMinor") VALUES($1,$2,$3,$4,$5,\'INR\',$6,$7,$7)',
+        [
+          randomUUID(),
+          journal,
+          workspace,
+          actor.ownerId,
+          l.accountId,
+          l.side,
+          l.minor,
+        ],
+      );
+    await this.probe?.("postings", c, attempt);
+    await query(
+      'UPDATE journal SET status=\'POSTED\',"postedAt"=clock_timestamp(),"operationId"=$1 WHERE id=$2 AND "workspaceId"=$3 AND "ownerId"=$4',
+      [operation, journal, workspace, actor.ownerId],
+    );
+    await this.probe?.("sealed", c, attempt);
   }
 }
 async function outcome(
@@ -399,4 +553,66 @@ async function outcome(
     reason: j.reason,
     legs: legs.rows,
   };
+}
+
+async function commandOutcome(
+  c: pg.PoolClient,
+  actor: Actor,
+  workspace: string,
+  operation: string,
+  command: FinancialCommand,
+): Promise<FinancialResult> {
+  if (command.kind === "POST") {
+    const result = await outcome(c, actor, workspace, operation);
+    return assertResultSemantics(
+      { ownerId: actor.ownerId, workspaceId: workspace },
+      command,
+      result,
+    );
+  }
+  const audit = await c.query(
+    'SELECT reason,action,"targetJournalId","actorId" FROM audit_event WHERE "operationId"=$1 AND "workspaceId"=$2 AND "ownerId"=$3',
+    [operation, workspace, actor.ownerId],
+  );
+  const a = audit.rows[0];
+  if (
+    audit.rowCount !== 1 ||
+    a.action !==
+      (command.kind === "REVERSE" ? "ledger.reversed" : "ledger.corrected") ||
+    a.targetJournalId !== command.originalJournalId ||
+    a.actorId !== actor.ownerId ||
+    a.reason !== command.reason
+  )
+    throw unavailable();
+  const journals = await c.query(
+    'SELECT * FROM journal WHERE "operationId"=$1 AND "workspaceId"=$2 AND "ownerId"=$3 ORDER BY id',
+    [operation, workspace, actor.ownerId],
+  );
+  if (journals.rows.length > 2) throw unavailable();
+  const rows: StoredJournal[] = [];
+  for (const j of journals.rows) {
+    const legs = await c.query(
+      'SELECT "accountId",side,"currencyCode" AS currency,"nativeMinor"::text,"functionalMinor"::text,"fxRateId" FROM posting WHERE "journalId"=$1 AND "workspaceId"=$2 AND "ownerId"=$3 ORDER BY "accountId",side::text,"nativeMinor"::text,id',
+      [j.id, workspace, actor.ownerId],
+    );
+    rows.push({
+      ...j,
+      journalId: j.id,
+      effectiveAt: j.effectiveAt.toISOString(),
+      postedAt: j.postedAt?.toISOString() ?? "",
+      legs: legs.rows,
+    });
+  }
+  const result = correctionResult(
+    { ownerId: actor.ownerId, workspaceId: workspace, operationId: operation },
+    command.kind,
+    command.originalJournalId,
+    a.reason,
+    rows,
+  );
+  return assertResultSemantics(
+    { ownerId: actor.ownerId, workspaceId: workspace },
+    command,
+    result,
+  );
 }

@@ -1,6 +1,6 @@
 # Current implementation backlog
 
-> Current status (2026-11-12): S06B completed/reviewed merge `5af4c19`; S06C predecessor satisfied, planning acceptance pending. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. [Verified closure](reports/S06B_CLOSURE.md). Earlier dated checkpoints retain the state and decisions recorded at the time.
+> Current status (2026-11-12): S06B completed/reviewed merge `5af4c19`; S06C planning merged `b31ab0b`; guarded implementation, corrected review and actual closure are tracked in [PR #26](https://github.com/i-am-tj/LedgerOne/pull/26). Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. [Verified closure](reports/S06B_CLOSURE.md). Earlier dated checkpoints retain the state and decisions recorded at the time.
 
 The user’s 2026-11-11 expanded Phase 1 supersedes the initial S001–S024 execution order. Historical scope remains in archive/BACKLOG_INITIAL.md. Current IDs are P1-S01–P1-S09; P1-S05 is owner-reviewed and merged (review evidence and merge SHA in the current handoff); other story statuses are not inferred from it. Phase = milestone; epic = parent issue (fallback labeled parent); story = issue; tasks = checkboxes. Remote repository identity and tracker authorization are now confirmed; current Phase 1 issue links and S06 slice ordering are recorded in HANDOFF_S05_S06.md. Historical implementation/merge claims below remain distinct from current issue tracking.
 
@@ -202,7 +202,7 @@ Status: ownership/audit foundation locally verified; see `docs/stories/P1-S04.md
 
 **Definition of done:** Demonstrated behavior; server validation/authorization; safe migration recovery; applicable accessibility and empty/loading/error/success states; formatting, lint, typecheck, unit/integration and build green with reproducible evidence; docs current; accounting/security review where applicable; reviewed merge.
 
-S06 detailed delivery plan: [P1-S06](https://github.com/i-am-tj/LedgerOne/issues/7) is the umbrella; ordered implementation slices [P1-S06A](https://github.com/i-am-tj/LedgerOne/issues/8), [P1-S06B](https://github.com/i-am-tj/LedgerOne/issues/9), [P1-S06C](https://github.com/i-am-tj/LedgerOne/issues/10), [P1-S06D](https://github.com/i-am-tj/LedgerOne/issues/11). Full contracts are in corresponding `docs/stories/` files. All remain blocked on S05 human review/merge and reviewed predecessors. Findings A05-01..A05-05 are tracked in `docs/security/S05_FINDINGS.md`; no finding is closed by planning.
+S06 detailed delivery plan: [P1-S06](https://github.com/i-am-tj/LedgerOne/issues/7) is the umbrella; ordered implementation slices [P1-S06A](https://github.com/i-am-tj/LedgerOne/issues/8), [P1-S06B](https://github.com/i-am-tj/LedgerOne/issues/9), [P1-S06C](https://github.com/i-am-tj/LedgerOne/issues/10), [P1-S06D](https://github.com/i-am-tj/LedgerOne/issues/11). Full contracts are in corresponding `docs/stories/` files. S06A/B are reviewed/merged; S06C planning merged b31ab0b and implementation PR #26 awaits independent review/reviewed merge. S06D remains blocked on reviewed C and full gate evidence. Findings A05-01..A05-05 are tracked in `docs/security/S05_FINDINGS.md`; no finding is closed by planning.
 
 ## P1-S07 — Account management and reconciliation
 

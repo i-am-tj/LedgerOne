@@ -1,6 +1,6 @@
 # Progress and evidence
 
-> Current status (2026-11-12): S06B completed/reviewed merge `5af4c19`; S06C predecessor satisfied, planning acceptance pending. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. [Verified closure](reports/S06B_CLOSURE.md). Earlier dated checkpoints retain the state and decisions recorded at the time.
+> Current status (2026-11-12): S06B completed/reviewed merge `5af4c19`; S06C planning merged `b31ab0b`; guarded implementation, corrected review and actual closure are tracked in [PR #26](https://github.com/i-am-tj/LedgerOne/pull/26). Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. [Verified closure](reports/S06B_CLOSURE.md). Earlier dated checkpoints retain the state and decisions recorded at the time.
 
 ## 2026-11-11 — P1-S01 Docker Compose and outage verification
 
@@ -484,3 +484,27 @@ Prepared [five-package S06C breakdown](stories/P1-S06C_BREAKDOWN.md) and propose
 ## S06C owner planning acceptance — documentation amendments
 
 Owner accepted `8f014eb` architectural direction/restricted boundaries with two minor amendments before planning merge. Added explicit independent effective-date/cross-period contributions and immutable posting timestamps, cross-month regressions, and a mandatory C-T01 SQL lock-acquisition matrix including implicit trigger/FK/deferred locks and inversion tests before C-T02. Required updated-head checks, review/merge and separate implementation PR remain the advancement path. Acceptance does not approve implementation results, normal-runtime writes or production deployment.
+
+## S06C planning merge and C-T01 implementation checkpoint
+
+Planning PR #25 merged amended head 1611bba as b31ab0b after owner acceptance and both exact-head full CI runs (144/132/48 each). Separate branch feat/p1-s06c-corrections implements strict correction contracts/exact inverse/result-shape checks and a single runner entry point, plus the required [SQL lock matrix](reports/P1-S06C_LOCK_MATRIX.md). Local full checkpoint pipeline 160/135/48 PASS; subsequent result-shape unit additions 162 PASS plus typecheck/lint. [Implementation evidence](reports/P1-S06C.md) distinguishes those snapshots. Matrix/refactor source review and real PostgreSQL implicit FK/account/archive/inversion regressions clear C-T01's prerequisite before C-T02. No R/C handlers yet, issue #10 remains open; normal writes, published grants and INR restriction unchanged.
+
+## S06C C-T02 — exact REVERSE vertical slice
+
+After C-T01 lock-matrix/refactor review was recorded on draft PR #26, implemented REVERSE through the same guarded dispatcher/runner, account-first target locks, bounded immutable provenance, exact opposite multiset, transactional audit and immutable replay. CORRECT remains disabled pending C-T03. Local 162 unit / 148 integration PASS, typecheck/lint PASS. Cross-command recovery gate and final adversarial review remain pending; normal Next writes/published grants unchanged.
+
+## S06C C-T03 — atomic correction and cross-month tests
+
+Shared runner now commits exact-original reversal plus GENERAL replacement with one receipt/audit. Local 162 unit / 160 integration PASS, typecheck/lint PASS; cross-month/restatement/timezone balances and immutable timestamps, replacement/audit rollback, exact target/repeated correction and core opening provenance boundaries demonstrated. No production writer, grants, schema or exposed S07 workflow. C-T04 and final C gate remain pending.
+
+## S06C C-T04 — bounded concurrency and recovery
+
+Same runner now distinguishes original-reversal uniqueness and performs fresh authorized receipt/target recovery after rollback. Local corrected 163 unit / 179 integration PASS; real 40001/40P01, same-key/different-key races, expiry/owner switch, cancellation and ambiguous COMMIT recovery demonstrated. Initial three fixture failures came from auth deleting an expired session; cleanup now upserts, full suite green. No C-T05 advancement until correction verified. Normal writers/grants/INR unchanged; full gate still closed.
+
+## S06C C-T05 — complete local evidence; review pending
+
+Full final `npm run verify:pipeline` PASS: 165 unit / 194 integration / 48 browser (32.3s), all required stages. Actual R/C HTTP private isolation/atomic audit/balances/replay, pre/post-COMMIT disconnect, two-user/session/field/origin negatives and command-specific trigger/function/CHECK/grant/checksum drift demonstrate C-AC01–10 locally; full-capacity 500+500 MAX leg correction passes. Source/schema/grant/activation boundaries preserved. [Report](reports/P1-S06C.md) records exact commands, earlier checkpoints, fixture correction and evidence map. Author fresh source/evidence review is not independent approval; independent adversarial review and reviewed merge remain mandatory on PR #26. #10 remains open; S06D/full write gate/Phase 1 incomplete.
+
+## S06C independent adversarial review — initial BLOCKED and corrected approval
+
+At owner's explicit request reviewed exact 2922ce3 with new negative probes before implementation changes. Found Medium R01/#27: valid legacy receipt can misbind date/description/replacement to canonical hash and return 200. Initial BLOCKED evidence committed 697d2f1; source fixes ac2a8cd and 0124a5a apply one pure semantic reconstruction/hash check across shared POST/R/C without changing v1 hashes/DTO/grants/schema. New 18 probes cover genuine 40001/40P01, TCP COMMIT ACK loss, real ancestry boundaries, actual HTTP two-user/calendar/metadata replay and max distinct account capacity. Final local full pipeline 166/212/48 PASS (1.0m browser). [Review](security/S06C_INDEPENDENT_REVIEW.md) preserves all decisions and provenance; corrected source approved only for production-disabled C. Final-head push/PR CI and actual merge/closure belong on PR #26/#10/#27 before further advancement. S06D hosted validation/full write gate/Phase 1 closed; S07 not started.

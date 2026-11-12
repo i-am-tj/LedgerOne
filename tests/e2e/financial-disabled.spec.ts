@@ -25,25 +25,44 @@ test("P1-S06B actual Next POST route stays disabled and anonymous requests remai
   const before = await database.ledgerOperation.count();
   const anonymous = await playwright.request.newContext({ baseURL: origin });
   try {
-    const response = await page.request.post(path, {
-      headers: {
-        origin,
-        "idempotency-key": randomUUID(),
-        "x-financial-writes-enabled": "true",
-      },
-      data: payload,
-    });
-    expect(response.status()).toBe(503);
-    expect(await response.json()).toEqual({ error: "service_unavailable" });
-    expect(
-      (
-        await anonymous.post(path, {
-          headers: { origin, "idempotency-key": randomUUID() },
-          data: payload,
-        })
-      ).status(),
-    ).toBe(401);
-    expect(await database.ledgerOperation.count()).toBe(before);
+    for (const kind of ["POST", "REVERSE", "CORRECT"]) {
+      const data =
+        kind === "POST"
+          ? payload
+          : {
+              kind,
+              originalJournalId: randomUUID(),
+              effectiveAt: payload.effectiveAt,
+              reason: "fixture",
+              ...(kind === "CORRECT"
+                ? {
+                    replacement: {
+                      effectiveAt: payload.effectiveAt,
+                      legs: payload.legs,
+                    },
+                  }
+                : {}),
+            };
+      const response = await page.request.post(path, {
+        headers: {
+          origin,
+          "idempotency-key": randomUUID(),
+          "x-financial-writes-enabled": "true",
+        },
+        data,
+      });
+      expect(response.status()).toBe(503);
+      expect(await response.json()).toEqual({ error: "service_unavailable" });
+      expect(
+        (
+          await anonymous.post(path, {
+            headers: { origin, "idempotency-key": randomUUID() },
+            data,
+          })
+        ).status(),
+      ).toBe(401);
+      expect(await database.ledgerOperation.count()).toBe(before);
+    }
   } finally {
     await anonymous.dispose();
     await database.$disconnect();

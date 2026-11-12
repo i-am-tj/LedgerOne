@@ -1,6 +1,6 @@
 # ADR-006 — Authenticated POST, immutable replay and closed production exposure
 
-> Current status (2026-11-12): S06B completed/reviewed merge `5af4c19`; S06C predecessor satisfied, planning acceptance pending. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. [Verified closure](../reports/S06B_CLOSURE.md).
+> Current status (2026-11-12): S06B completed/reviewed merge `5af4c19`; S06C planning merged `b31ab0b`; guarded implementation, corrected review and actual closure are tracked in [PR #26](https://github.com/i-am-tj/LedgerOne/pull/26). Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. [Verified closure](../reports/S06B_CLOSURE.md).
 
 Date: 2026-11-11. Story P1-S06B / PR #21. Status: implemented/tested locally; final-head accounting/security review and reviewed merge pending. Planning PR #20 was reviewed/merged before implementation; that approval is not implementation acceptance.
 
