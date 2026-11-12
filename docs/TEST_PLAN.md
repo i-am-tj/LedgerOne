@@ -2,7 +2,7 @@
 
 # Verification and traceability
 
-> Current status (2026-11-12): S06B completed/reviewed merge `5af4c19`; S06C planning merged `b31ab0b`; guarded implementation is under review in [PR #26](https://github.com/i-am-tj/LedgerOne/pull/26). Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. [Verified closure](reports/S06B_CLOSURE.md). Earlier dated checkpoints retain the state and decisions recorded at the time.
+> Current status (2026-11-12): S06B completed/reviewed merge `5af4c19`; S06C planning merged `b31ab0b`; guarded implementation, corrected review and actual closure are tracked in [PR #26](https://github.com/i-am-tj/LedgerOne/pull/26). Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. [Verified closure](reports/S06B_CLOSURE.md). Earlier dated checkpoints retain the state and decisions recorded at the time.
 
 Status: the application, runners and CI exist. Reviewed S06B corrected-head evidence is 144 unit / 132 integration / 48 browser PASS. Initial matrices below preserve planned identifiers; per-story reports and closure evidence identify implemented coverage. S06C and later coverage must not be inferred from S06B.
 

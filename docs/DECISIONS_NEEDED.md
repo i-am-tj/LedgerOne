@@ -2,7 +2,7 @@
 
 # Decisions and authorization
 
-> Current status (2026-11-12): S06B completed/reviewed merge `5af4c19`; S06C planning merged `b31ab0b`; guarded implementation is under review in [PR #26](https://github.com/i-am-tj/LedgerOne/pull/26). Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. [Verified closure](reports/S06B_CLOSURE.md). Earlier dated checkpoints retain the state and decisions recorded at the time.
+> Current status (2026-11-12): S06B completed/reviewed merge `5af4c19`; S06C planning merged `b31ab0b`; guarded implementation, corrected review and actual closure are tracked in [PR #26](https://github.com/i-am-tj/LedgerOne/pull/26). Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. [Verified closure](reports/S06B_CLOSURE.md). Earlier dated checkpoints retain the state and decisions recorded at the time.
 
 Current approvals: expanded Phase 1, GitHub delivery and reviewed S05/S06A/S06B merges are confirmed. S06C planning accepted with minor amendments and merged b31ab0b; implementation PR #26 awaits independent accounting/security review and reviewed merge. Google sign-in with an owner allowlist is selected. The table below preserves the initial proposed decisions; outstanding accounting/security reviews still apply before dependent implementation.
 

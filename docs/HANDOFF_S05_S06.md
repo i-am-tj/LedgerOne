@@ -1,6 +1,6 @@
 # S05 → S06 engineering handoff
 
-> Current status (2026-11-12): S06B completed/reviewed merge `5af4c19`; S06C planning merged `b31ab0b`; guarded implementation is under review in [PR #26](https://github.com/i-am-tj/LedgerOne/pull/26). Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. [Verified closure](reports/S06B_CLOSURE.md). Earlier dated checkpoints retain the state and decisions recorded at the time.
+> Current status (2026-11-12): S06B completed/reviewed merge `5af4c19`; S06C planning merged `b31ab0b`; guarded implementation, corrected review and actual closure are tracked in [PR #26](https://github.com/i-am-tj/LedgerOne/pull/26). Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. [Verified closure](reports/S06B_CLOSURE.md). Earlier dated checkpoints retain the state and decisions recorded at the time.
 
 S06A review artifact: [PR #18](https://github.com/i-am-tj/LedgerOne/pull/18), implementation commit `cf37cda`; required local pipeline **89 unit / 70 integration / 46 browser tests PASS**, plus schema/attestation/build. Remote checks and human review are reported on the PR.
 

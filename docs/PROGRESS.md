@@ -1,6 +1,6 @@
 # Progress and evidence
 
-> Current status (2026-11-12): S06B completed/reviewed merge `5af4c19`; S06C planning merged `b31ab0b`; guarded implementation is under review in [PR #26](https://github.com/i-am-tj/LedgerOne/pull/26). Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. [Verified closure](reports/S06B_CLOSURE.md). Earlier dated checkpoints retain the state and decisions recorded at the time.
+> Current status (2026-11-12): S06B completed/reviewed merge `5af4c19`; S06C planning merged `b31ab0b`; guarded implementation, corrected review and actual closure are tracked in [PR #26](https://github.com/i-am-tj/LedgerOne/pull/26). Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. [Verified closure](reports/S06B_CLOSURE.md). Earlier dated checkpoints retain the state and decisions recorded at the time.
 
 ## 2026-11-11 — P1-S01 Docker Compose and outage verification
 
@@ -504,3 +504,7 @@ Same runner now distinguishes original-reversal uniqueness and performs fresh au
 ## S06C C-T05 — complete local evidence; review pending
 
 Full final `npm run verify:pipeline` PASS: 165 unit / 194 integration / 48 browser (32.3s), all required stages. Actual R/C HTTP private isolation/atomic audit/balances/replay, pre/post-COMMIT disconnect, two-user/session/field/origin negatives and command-specific trigger/function/CHECK/grant/checksum drift demonstrate C-AC01–10 locally; full-capacity 500+500 MAX leg correction passes. Source/schema/grant/activation boundaries preserved. [Report](reports/P1-S06C.md) records exact commands, earlier checkpoints, fixture correction and evidence map. Author fresh source/evidence review is not independent approval; independent adversarial review and reviewed merge remain mandatory on PR #26. #10 remains open; S06D/full write gate/Phase 1 incomplete.
+
+## S06C independent adversarial review — initial BLOCKED and corrected approval
+
+At owner's explicit request reviewed exact 2922ce3 with new negative probes before implementation changes. Found Medium R01/#27: valid legacy receipt can misbind date/description/replacement to canonical hash and return 200. Initial BLOCKED evidence committed 697d2f1; source fixes ac2a8cd and 0124a5a apply one pure semantic reconstruction/hash check across shared POST/R/C without changing v1 hashes/DTO/grants/schema. New 18 probes cover genuine 40001/40P01, TCP COMMIT ACK loss, real ancestry boundaries, actual HTTP two-user/calendar/metadata replay and max distinct account capacity. Final local full pipeline 166/212/48 PASS (1.0m browser). [Review](security/S06C_INDEPENDENT_REVIEW.md) preserves all decisions and provenance; corrected source approved only for production-disabled C. Final-head push/PR CI and actual merge/closure belong on PR #26/#10/#27 before further advancement. S06D hosted validation/full write gate/Phase 1 closed; S07 not started.

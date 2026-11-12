@@ -50,3 +50,7 @@ S06B initial fd889e4 was BLOCKED by R01–R03 (#22–#24) despite passing tests;
 ## S06C local evidence — no write enablement
 
 Separate [PR #26](https://github.com/i-am-tj/LedgerOne/pull/26) has C-T01–04 and C-T05 code/test evidence: [165 unit / 194 integration / 48 browser PASS](../reports/P1-S06C.md), exact original/multiset/correction/audit, private HTTP isolation, actual retries/races/uncertain commit and default-deny controls. Independent review and reviewed C merge remain pending. These are restricted disposable-test subsets; all complete W01–W15 exposure acceptance rows remain unaccepted. Published financial grants SELECT-only and native Next capability null; INR restriction intact. S06D/Phase 1 not complete.
+
+## Corrected S06C review boundary
+
+Fresh user-invoked adversarial review initially BLOCKED 2922ce3 for R01/#27; corrected semantic reconstruction and new probes pass full local 166/212/48. [Initial/final evidence](../security/S06C_INDEPENDENT_REVIEW.md) approves only restricted C; exact publication-head CI and actual C merge/closure are recorded on PR #26/#10/#27. Hosted capacity/profile/exposure requirements remain [unperformed S06D prerequisites](S06C_PERFORMANCE_HANDOFF.md). No W01–W15 full exposure acceptance, published financial grant change, native writer enablement, Phase 1 PASS or S07 implementation.
