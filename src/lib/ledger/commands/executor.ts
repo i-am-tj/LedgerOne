@@ -20,6 +20,7 @@ import {
   retryDelay,
   sqlState,
   withinDeadline,
+  throwIfAborted,
 } from "./retry";
 
 type Actor = Readonly<{ ownerId: string; requestId: string }>;
@@ -146,12 +147,20 @@ export class PostExecutor {
     workspace: string,
     key: string,
     command: PostCommand,
+    signal?: AbortSignal,
   ): Promise<{ result: PostResult; replayed: boolean }> {
+    throwIfAborted(signal);
     const deadline = performance.now() + 10000;
-    const first = await withinDeadline(authorize(), deadline);
+    const first = await withinDeadline(
+      authorize(),
+      deadline,
+      undefined,
+      signal,
+    );
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
-        await withinDeadline(this.attest(), deadline);
+        throwIfAborted(signal);
+        await withinDeadline(this.attest(), deadline, undefined, signal);
         return await this.attempt(
           async () => {
             const actor = await authorize();
@@ -164,13 +173,19 @@ export class PostExecutor {
           command,
           attempt,
           deadline,
+          signal,
         );
       } catch (error) {
         const delay = retryable(error)
           ? retryDelay(attempt, deadline - performance.now())
           : null;
         if (delay !== null) {
-          await new Promise((r) => setTimeout(r, delay));
+          await withinDeadline(
+            new Promise((r) => setTimeout(r, delay)),
+            deadline,
+            undefined,
+            signal,
+          );
           continue;
         }
         if (error instanceof CommandError) throw error;
@@ -186,11 +201,21 @@ export class PostExecutor {
     command: PostCommand,
     attempt: number,
     deadline: number,
+    signal?: AbortSignal,
   ): Promise<{ result: PostResult; replayed: boolean }> {
-    const actor = await withinDeadline(authorize(), deadline),
+    throwIfAborted(signal);
+    const actor = await withinDeadline(
+        authorize(),
+        deadline,
+        undefined,
+        signal,
+      ),
       hash = requestHash(actor.ownerId, workspace, command);
-    const c = await withinDeadline(this.pool.connect(), deadline, (late) =>
-      late.release(true),
+    const c = await withinDeadline(
+      this.pool.connect(),
+      deadline,
+      (late) => late.release(true),
+      signal,
     );
     let committing = false,
       committed = false,
@@ -199,13 +224,24 @@ export class PostExecutor {
       destroy = true;
     };
     c.on("error", onFault);
+    const active = () => {
+      throwIfAborted(signal);
+      remaining(deadline);
+    };
+    const query = (sql: string, values?: unknown[]) => {
+      active();
+      return c.query(sql, values).then((result) => {
+        active();
+        return result;
+      });
+    };
     try {
       await this.probe?.("connected", c, attempt);
       remaining(deadline);
-      await c.query("BEGIN ISOLATION LEVEL SERIALIZABLE");
-      await c.query("SET LOCAL search_path=pg_catalog,public,pg_temp");
+      await query("BEGIN ISOLATION LEVEL SERIALIZABLE");
+      await query("SET LOCAL search_path=pg_catalog,public,pg_temp");
       const budget = remaining(deadline);
-      await c.query(
+      await query(
         "SELECT set_config('statement_timeout',$1,true),set_config('lock_timeout',$2,true),set_config('transaction_timeout',$3,true)",
         [
           String(Math.min(2000, budget)),
@@ -216,14 +252,14 @@ export class PostExecutor {
       await this.probe?.("begin", c, attempt);
       if (
         !(
-          await c.query(
+          await query(
             'SELECT id FROM workspace WHERE id=$1 AND "ownerId"=$2 FOR KEY SHARE',
             [workspace, actor.ownerId],
           )
         ).rowCount
       )
         throw new CommandError(404, "not_found");
-      const old = await c.query(
+      const old = await query(
         'SELECT id,kind,"requestHash" FROM ledger_operation WHERE "workspaceId"=$1 AND "ownerId"=$2 AND "idempotencyKey"=$3',
         [workspace, actor.ownerId, key],
       );
@@ -231,6 +267,7 @@ export class PostExecutor {
         if (old.rows[0].kind !== "POST" || old.rows[0].requestHash !== hash)
           throw new CommandError(409, "idempotency_conflict");
         const result = await outcome(c, actor, workspace, old.rows[0].id);
+        active();
         committing = true;
         await c.query("COMMIT");
         committed = true;
@@ -238,13 +275,13 @@ export class PostExecutor {
       }
       const op = randomUUID(),
         journal = randomUUID();
-      await c.query(
+      await query(
         'INSERT INTO ledger_operation(id,"workspaceId","ownerId","idempotencyKey","requestHash",kind) VALUES($1,$2,$3,$4,$5,\'POST\')',
         [op, workspace, actor.ownerId, key, hash],
       );
       await this.probe?.("receipt", c, attempt);
       const ids = [...new Set(command.legs.map((l) => l.accountId))].sort();
-      const accounts = await c.query(
+      const accounts = await query(
         'SELECT id,"archivedAt","currencyCode" FROM ledger_account WHERE "workspaceId"=$1 AND "ownerId"=$2 AND id=ANY($3::uuid[]) ORDER BY id FOR UPDATE',
         [workspace, actor.ownerId, ids],
       );
@@ -257,7 +294,7 @@ export class PostExecutor {
       )
         throw new CommandError(409, "account_unavailable");
       await this.probe?.("locked", c, attempt);
-      await c.query(
+      await query(
         'INSERT INTO journal(id,"workspaceId","ownerId",description,"effectiveAt") VALUES($1,$2,$3,$4,$5)',
         [
           journal,
@@ -269,7 +306,7 @@ export class PostExecutor {
       );
       await this.probe?.("draft", c, attempt);
       for (const l of command.legs)
-        await c.query(
+        await query(
           'INSERT INTO posting(id,"journalId","workspaceId","ownerId","accountId","currencyCode",side,"nativeMinor","functionalMinor") VALUES($1,$2,$3,$4,$5,\'INR\',$6,$7,$7)',
           [
             randomUUID(),
@@ -282,12 +319,12 @@ export class PostExecutor {
           ],
         );
       await this.probe?.("postings", c, attempt);
-      await c.query(
+      await query(
         'UPDATE journal SET status=\'POSTED\',"postedAt"=clock_timestamp(),"operationId"=$1 WHERE id=$2 AND "workspaceId"=$3 AND "ownerId"=$4',
         [op, journal, workspace, actor.ownerId],
       );
       await this.probe?.("sealed", c, attempt);
-      await c.query(
+      await query(
         'INSERT INTO audit_event(id,"workspaceId","ownerId","actorId","requestId",action,"operationId","targetJournalId",reason) VALUES($1,$2,$3,$3,$4,\'ledger.posted\',$5,$6,$7)',
         [
           randomUUID(),
@@ -302,8 +339,8 @@ export class PostExecutor {
       await this.probe?.("audit", c, attempt);
       const result = await outcome(c, actor, workspace, op);
       await this.probe?.("beforeCommit", c, attempt);
+      active();
       committing = true;
-      remaining(deadline);
       await c.query("COMMIT");
       committed = true;
       await this.probe?.("committed", c, attempt);

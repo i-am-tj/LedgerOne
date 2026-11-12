@@ -55,3 +55,26 @@ it("B-T04 deadline stops before write progression and disposes a late acquired c
     await withinDeadline(Promise.resolve(1), performance.now() + 100),
   ).toBe(1);
 });
+
+it("S06B-R02 cancellation disposes a connection acquired after the aborted wait", async () => {
+  const controller = new AbortController();
+  let release!: () => void,
+    disposed = false;
+  const acquired = new Promise<string>((resolve) => {
+    release = () => resolve("client");
+  });
+  const pending = withinDeadline(
+    acquired,
+    performance.now() + 1000,
+    () => {
+      disposed = true;
+    },
+    controller.signal,
+  );
+  controller.abort();
+  await expect(pending).rejects.toThrow("service_unavailable");
+  release();
+  await acquired;
+  await Promise.resolve();
+  expect(disposed).toBe(true);
+});

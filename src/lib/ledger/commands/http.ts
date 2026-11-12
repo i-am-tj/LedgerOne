@@ -12,6 +12,7 @@ import {
   unavailable,
   uuid,
 } from "./contract";
+import { throwIfAborted, withinDeadline } from "./retry";
 import type { PostExecutor } from "./executor";
 
 export type PostTrace = Readonly<{
@@ -33,6 +34,7 @@ export async function postRequest(
   const started = performance.now();
   let response: Response;
   try {
+    throwIfAborted(request.signal);
     if (request.method !== "POST")
       throw new CommandError(405, "method_not_allowed");
     if (!runtime) throw unavailable();
@@ -45,7 +47,12 @@ export async function postRequest(
       if (!session) throw new CommandError(401, "unauthorized");
       return { ownerId: session.user.id, requestId };
     };
-    await authorize();
+    await withinDeadline(
+      authorize(),
+      performance.now() + 5000,
+      undefined,
+      request.signal,
+    );
     if (
       request.headers.get("origin") !== runtime.config.baseURL ||
       request.headers.get("sec-fetch-site") === "cross-site"
@@ -63,6 +70,7 @@ export async function postRequest(
       workspace.data,
       key,
       command,
+      request.signal,
     );
     response = authJSON(outcome.result, outcome.replayed ? 200 : 201);
   } catch (error) {

@@ -1,4 +1,7 @@
 import { unavailable } from "./contract";
+export function throwIfAborted(signal?: AbortSignal) {
+  if (signal?.aborted) throw unavailable();
+}
 export function sqlState(error: unknown): string | undefined {
   return typeof error === "object" &&
     error !== null &&
@@ -41,27 +44,38 @@ export function withinDeadline<T>(
   work: Promise<T>,
   deadline: number,
   onLate?: (value: T) => void,
+  signal?: AbortSignal,
 ): Promise<T> {
   return new Promise((resolve, reject) => {
     let expired = false;
-    let timer: ReturnType<typeof setTimeout>;
-    try {
-      timer = setTimeout(() => {
-        expired = true;
-        reject(unavailable());
-      }, remaining(deadline));
-    } catch (error) {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const clean = () => {
+      clearTimeout(timer);
+      signal?.removeEventListener("abort", expire);
+    };
+    const expire = () => {
+      if (expired) return;
       expired = true;
-      reject(error);
+      clean();
+      reject(unavailable());
+    };
+    signal?.addEventListener("abort", expire, { once: true });
+    if (signal?.aborted) expire();
+    else {
+      try {
+        timer = setTimeout(expire, remaining(deadline));
+      } catch {
+        expire();
+      }
     }
     work.then(
       (value) => {
-        clearTimeout(timer);
+        clean();
         if (expired) onLate?.(value);
         else resolve(value);
       },
       (error) => {
-        clearTimeout(timer);
+        clean();
         if (!expired) reject(error);
       },
     );

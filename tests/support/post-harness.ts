@@ -199,12 +199,14 @@ export async function postHarness() {
         extra: Record<string, string> = {},
         workspace = users[0]!.workspace,
         enabled = true,
+        signal?: AbortSignal,
       ) =>
         postRequest(
           new Request(
             config.baseURL + `/api/workspaces/${workspace}/ledger/commands`,
             {
               method: "POST",
+              signal,
               headers: {
                 origin: config.baseURL,
                 "content-type": "application/json",

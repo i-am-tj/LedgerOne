@@ -732,3 +732,77 @@ it("S06B-R01 closed capability refuses an unread body without waiting", async ()
   expect(await counts()).toEqual(before);
   await stream.cancel();
 });
+
+it.each(["before", "postings", "retry"])(
+  "S06B-R02 cancellation at %s leaves no new financial operation",
+  async (mode) => {
+    const before = await counts(),
+      controller = new AbortController();
+    let attempts = 0;
+    if (mode === "before") controller.abort();
+    h.setProbe(async (stage, _c, attempt) => {
+      if (stage === "begin") attempts++;
+      if (mode === "postings" && stage === "postings") controller.abort();
+      if (mode === "retry" && stage === "receipt" && attempt === 1)
+        await h.admin.query(
+          "UPDATE ledger_account SET name=name||'c' WHERE id=$1",
+          [h.users[0]!.bank],
+        );
+      if (mode === "retry" && stage === "serialization") controller.abort();
+    });
+    try {
+      const response = await h.api(
+        0,
+        randomUUID(),
+        h.payload(),
+        {},
+        h.users[0]!.workspace,
+        true,
+        controller.signal,
+      );
+      expect(response.status).toBe(503);
+      expect(await counts()).toEqual(before);
+      expect(attempts).toBe(mode === "before" ? 0 : 1);
+    } finally {
+      h.setProbe(undefined);
+    }
+  },
+);
+it("S06B-R02 retry rejects a server resolver changing actor and retains immutable workspace ownership", async () => {
+  const before = await counts();
+  let owner = h.users[0]!.id,
+    seen = false;
+  h.setProbe(async (stage) => {
+    if (stage === "receipt")
+      await h.admin.query(
+        "UPDATE ledger_account SET name=name||'i' WHERE id=$1",
+        [h.users[0]!.bank],
+      );
+    if (stage === "serialization") {
+      await expect(
+        h.admin.query('UPDATE workspace SET "ownerId"=$1 WHERE id=$2', [
+          h.users[1]!.id,
+          h.users[0]!.workspace,
+        ]),
+      ).rejects.toMatchObject({ code: "23514" });
+      owner = h.users[1]!.id;
+      seen = true;
+    }
+  });
+  try {
+    const { parsePost } =
+      await import("../../src/lib/ledger/commands/contract");
+    await expect(
+      h.executor.post(
+        async () => ({ ownerId: owner, requestId: randomUUID() }),
+        h.users[0]!.workspace,
+        randomUUID(),
+        parsePost(h.payload()),
+      ),
+    ).rejects.toMatchObject({ status: 401 });
+    expect(seen).toBe(true);
+    expect(await counts()).toEqual(before);
+  } finally {
+    h.setProbe(undefined);
+  }
+});

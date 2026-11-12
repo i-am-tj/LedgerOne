@@ -297,3 +297,51 @@ it("S06B-R01 real partial HTTP upload receives timeout without financial work", 
     request?.destroy();
   }
 }, 10000);
+
+it("S06B-R02 real HTTP disconnect observed before COMMIT rolls everything back", async () => {
+  const before = await snapshot();
+  let reached!: () => void, release!: () => void, status: number | undefined;
+  const paused = new Promise<void>((r) => {
+      reached = r;
+    }),
+    gate = new Promise<void>((r) => {
+      release = r;
+    });
+  h.setProbe(async (stage) => {
+    if (stage === "beforeCommit") {
+      reached();
+      await gate;
+    }
+  });
+  h.setLogger((trace) => {
+    h.traces.push(trace);
+    status = trace.status;
+  });
+  const controller = new AbortController();
+  const pending = fetch(url(), {
+    method: "POST",
+    headers: headers(randomUUID()),
+    body: JSON.stringify(h.payload()),
+    signal: controller.signal,
+  }).catch((error: Error) => ({ error: error.name }));
+  try {
+    await paused;
+    const signal = http.signals[http.signals.length - 1]!;
+    controller.abort();
+    expect(await pending).toEqual({ error: "AbortError" });
+    for (let i = 0; i < 100 && !signal.aborted; i++)
+      await new Promise((r) => setTimeout(r, 10));
+    expect(signal.aborted).toBe(true);
+    release();
+    for (let i = 0; i < 100 && status === undefined; i++)
+      await new Promise((r) => setTimeout(r, 10));
+    expect(status).toBe(503);
+    expect(await snapshot()).toEqual(before);
+  } finally {
+    release();
+    h.setProbe(undefined);
+    h.setLogger();
+    controller.abort();
+    await pending;
+  }
+});

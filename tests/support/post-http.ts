@@ -5,6 +5,7 @@ import type { AddressInfo } from "node:net";
 import { postRequest } from "../../src/lib/ledger/commands/http";
 import type { postHarness } from "./post-harness";
 export async function postHTTP(h: Awaited<ReturnType<typeof postHarness>>) {
+  const signals: AbortSignal[] = [];
   const server = createServer(async (req, res) => {
     try {
       const url = new URL(req.url!, h.runtime.config.baseURL);
@@ -17,6 +18,7 @@ export async function postHTTP(h: Awaited<ReturnType<typeof postHarness>>) {
         if (value !== undefined)
           headers.set(name, Array.isArray(value) ? value.join(", ") : value);
       const controller = new AbortController();
+      signals.push(controller.signal);
       req.on("aborted", () => controller.abort());
       res.on("close", () => {
         if (!res.writableEnded) controller.abort();
@@ -71,6 +73,7 @@ export async function postHTTP(h: Awaited<ReturnType<typeof postHarness>>) {
   h.runtime.config.baseURL = origin;
   return {
     origin,
+    signals,
     close: async () => {
       server.closeAllConnections();
       await new Promise<void>((resolve, reject) =>
