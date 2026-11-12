@@ -1,6 +1,6 @@
 # Progress and evidence
 
-> Current status (2026-11-12): S06B completed/reviewed merge `5af4c19`; S06C predecessor satisfied, planning acceptance pending. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. [Verified closure](reports/S06B_CLOSURE.md). Earlier dated checkpoints retain the state and decisions recorded at the time.
+> Current status (2026-11-12): S06B completed/reviewed merge `5af4c19`; S06C planning merged `b31ab0b`; guarded implementation is under review in [PR #26](https://github.com/i-am-tj/LedgerOne/pull/26). Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. [Verified closure](reports/S06B_CLOSURE.md). Earlier dated checkpoints retain the state and decisions recorded at the time.
 
 ## 2026-11-11 — P1-S01 Docker Compose and outage verification
 
@@ -500,3 +500,7 @@ Shared runner now commits exact-original reversal plus GENERAL replacement with 
 ## S06C C-T04 — bounded concurrency and recovery
 
 Same runner now distinguishes original-reversal uniqueness and performs fresh authorized receipt/target recovery after rollback. Local corrected 163 unit / 179 integration PASS; real 40001/40P01, same-key/different-key races, expiry/owner switch, cancellation and ambiguous COMMIT recovery demonstrated. Initial three fixture failures came from auth deleting an expired session; cleanup now upserts, full suite green. No C-T05 advancement until correction verified. Normal writers/grants/INR unchanged; full gate still closed.
+
+## S06C C-T05 — complete local evidence; review pending
+
+Full final `npm run verify:pipeline` PASS: 165 unit / 194 integration / 48 browser (32.3s), all required stages. Actual R/C HTTP private isolation/atomic audit/balances/replay, pre/post-COMMIT disconnect, two-user/session/field/origin negatives and command-specific trigger/function/CHECK/grant/checksum drift demonstrate C-AC01–10 locally; full-capacity 500+500 MAX leg correction passes. Source/schema/grant/activation boundaries preserved. [Report](reports/P1-S06C.md) records exact commands, earlier checkpoints, fixture correction and evidence map. Author fresh source/evidence review is not independent approval; independent adversarial review and reviewed merge remain mandatory on PR #26. #10 remains open; S06D/full write gate/Phase 1 incomplete.

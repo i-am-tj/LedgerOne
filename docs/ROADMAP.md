@@ -1,6 +1,6 @@
 # Current delivery roadmap
 
-> Current status (2026-11-12): S06B completed/reviewed merge `5af4c19`; S06C predecessor satisfied, planning acceptance pending. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. [Verified closure](reports/S06B_CLOSURE.md). Earlier dated checkpoints retain the state and decisions recorded at the time.
+> Current status (2026-11-12): S06B completed/reviewed merge `5af4c19`; S06C planning merged `b31ab0b`; guarded implementation is under review in [PR #26](https://github.com/i-am-tj/LedgerOne/pull/26). Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. [Verified closure](reports/S06B_CLOSURE.md). Earlier dated checkpoints retain the state and decisions recorded at the time.
 
 The user authorized an expanded Phase 1 on 2026-11-11. It replaces the initial seven-phase schedule for implementation order. Local Git and the GitHub story workflow are established in `i-am-tj/LedgerOne`; no public deployment is implied.
 
@@ -57,4 +57,4 @@ Planning PR #20 merged 75f8795 after targeted clarification review and exact-hea
 
 ## Next delivery slice
 
-S06C predecessor is satisfied; [detailed planning](stories/P1-S06C_BREAKDOWN.md) awaits acceptance/reviewed documentation merge. Then implement C-T01–05 sequentially on a separate branch/PR. S06D, S07–S09 and the complete Phase 1 gate remain pending.
+S06C [planning](stories/P1-S06C_BREAKDOWN.md) accepted/amended/merged as b31ab0b. Separate implementation PR #26 now has guarded code/test evidence and awaits independent review/reviewed merge; [report](reports/P1-S06C.md). S06D, S07–S09 and the complete Phase 1 gate remain pending.

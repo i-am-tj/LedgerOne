@@ -2,7 +2,7 @@
 
 # Verification and traceability
 
-> Current status (2026-11-12): S06B completed/reviewed merge `5af4c19`; S06C predecessor satisfied, planning acceptance pending. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. [Verified closure](reports/S06B_CLOSURE.md). Earlier dated checkpoints retain the state and decisions recorded at the time.
+> Current status (2026-11-12): S06B completed/reviewed merge `5af4c19`; S06C planning merged `b31ab0b`; guarded implementation is under review in [PR #26](https://github.com/i-am-tj/LedgerOne/pull/26). Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. [Verified closure](reports/S06B_CLOSURE.md). Earlier dated checkpoints retain the state and decisions recorded at the time.
 
 Status: the application, runners and CI exist. Reviewed S06B corrected-head evidence is 144 unit / 132 integration / 48 browser PASS. Initial matrices below preserve planned identifiers; per-story reports and closure evidence identify implemented coverage. S06C and later coverage must not be inferred from S06B.
 
@@ -195,3 +195,7 @@ Corrected adversarial source 977f701 full `npm run verify:pipeline`: PASS 144 un
 ## S06C planned traceability
 
 [C-AC01–10](stories/P1-S06C_BREAKDOWN.md) maps five ordered task packages to unit, real-handler PostgreSQL, security, concurrency and default-deny browser regressions. All S06C scenarios remain PLANNED / NOT RUN; S06B passing tests do not establish S06C correctness.
+
+## S06C implemented restricted traceability
+
+[Implementation report C-AC01–10 map](reports/P1-S06C.md) links actual unit/real-handler/HTTP/security/concurrency/default-deny browser tests. Final local pipeline 165/194/48 PASS, including distinct effective-date months, original/posted timestamp preservation, implicit FK locks, archive/key races and drift. Earlier planning section is historical; no consumer workflow/exposure approval. Independent adversarial review and reviewed merge pending.

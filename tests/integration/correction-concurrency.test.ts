@@ -391,3 +391,49 @@ it("C-T04 named reversal conflict recovers on fresh authorized snapshot after a 
     h.setProbe(undefined);
   }
 });
+
+it.each(["REVERSE", "CORRECT"] as const)(
+  "C-T05 %s archive race retries and rechecks with zero financial effects",
+  async (kind) => {
+    const o = await original(),
+      before = await counts();
+    let archived = false;
+    h.setProbe(async (stage) => {
+      if (stage === "discovered" && !archived) {
+        archived = true;
+        await h.admin.query(
+          'UPDATE ledger_account SET "archivedAt"=NOW() WHERE id=$1',
+          [h.users[0]!.bank],
+        );
+      }
+    });
+    try {
+      expect(
+        (await h.api(0, randomUUID(), command(kind, o.journalId))).status,
+      ).toBe(409);
+      expect(archived).toBe(true);
+      expect(await counts()).toEqual(before);
+    } finally {
+      h.setProbe(undefined);
+      await h.admin.query(
+        'UPDATE ledger_account SET "archivedAt"=NULL WHERE id=$1',
+        [h.users[0]!.bank],
+      );
+    }
+  },
+);
+it("C-T05 simultaneous POST/REVERSE/CORRECT share compatible account-first locking", async () => {
+  const a = await original(),
+    b = await original(),
+    before = await counts();
+  const responses = await Promise.all([
+    h.api(0, randomUUID(), h.payload()),
+    h.api(0, randomUUID(), command("REVERSE", a.journalId)),
+    h.api(0, randomUUID(), command("CORRECT", b.journalId)),
+  ]);
+  expect(responses.map((r) => r.status)).toEqual([201, 201, 201]);
+  const after = await counts();
+  expect(after.receipts - before.receipts).toBe(3);
+  expect(after.audits - before.audits).toBe(3);
+  expect(after.journals - before.journals).toBe(4);
+});

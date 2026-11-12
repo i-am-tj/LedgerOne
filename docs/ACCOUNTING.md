@@ -1,6 +1,6 @@
 # Accounting contract
 
-> Current status (2026-11-12): S06B completed/reviewed merge `5af4c19`; S06C predecessor satisfied, planning acceptance pending. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. [Verified closure](reports/S06B_CLOSURE.md). Earlier dated checkpoints retain the state and decisions recorded at the time.
+> Current status (2026-11-12): S06B completed/reviewed merge `5af4c19`; S06C planning merged `b31ab0b`; guarded implementation is under review in [PR #26](https://github.com/i-am-tj/LedgerOne/pull/26). Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. [Verified closure](reports/S06B_CLOSURE.md). Earlier dated checkpoints retain the state and decisions recorded at the time.
 
 Status: core INR/sign/reversal policy and staged FX support approved. S05, S06A and S06B have reviewed merges; S06C/D and S07–S09 workflows remain pending. Worked business examples below are still illustrative templates, not claims of implemented transaction commands.
 
@@ -89,3 +89,7 @@ Raw POST commits one GENERAL journal, exact positive INR legs, one immutable rec
 ## S06C proposed correction contract
 
 The [S06C plan](stories/P1-S06C_BREAKDOWN.md) and proposed [ADR-007](ADR/0007-shared-command-lock-order-and-correction-targets.md) define exact opposite multisets, explicit originals, one-operation CORRECT, account-first locking and immutable replay. These are planning contracts pending acceptance and implementation. Original history is unchanged; S07 retains exposed OPENING/account correction/reconciliation.
+
+## Implemented guarded S06C boundary
+
+Accepted plan/ADR-007 is implemented in restricted disposable tests in [PR #26](https://github.com/i-am-tj/LedgerOne/pull/26), pending independent review/reviewed merge. POST/REVERSE/CORRECT share authentication, retry/transaction lifecycle and journal persistence. Period arithmetic uses each journal's effectiveAt; postedAt is immutable database finalization provenance. Cross-month/restatement/boundary queries include original and correction children separately. No consumer reporting UI, closed-period or as-known-at feature is claimed. Archive/opening-derived fresh commands remain excluded pending S07; replay remains immutable after archive. No production exposure/grant/FX change.

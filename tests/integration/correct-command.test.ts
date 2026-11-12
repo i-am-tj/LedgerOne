@@ -378,3 +378,62 @@ it("C-T03 ledger-only repeated opening correction retains one original marker; h
   }
   expect(await counts()).toEqual(before);
 });
+
+it("C-T05 CORRECT locks complete original/replacement account union before exact target", async () => {
+  const o = await original(),
+    body = correct(o.journalId);
+  body.replacement.legs[1]!.accountId = h.users[0]!.card;
+  let checked = false;
+  h.setProbe(async (stage) => {
+    if (stage !== "targetLocked") return;
+    for (const id of [
+      h.users[0]!.bank,
+      h.users[0]!.expense,
+      h.users[0]!.card,
+    ]) {
+      const c = await h.admin.connect();
+      try {
+        await c.query("BEGIN");
+        await expect(
+          c.query(
+            "SELECT id FROM ledger_account WHERE id=$1 FOR UPDATE NOWAIT",
+            [id],
+          ),
+        ).rejects.toMatchObject({ code: "55P03" });
+      } finally {
+        await c.query("ROLLBACK");
+        c.release();
+      }
+    }
+    checked = true;
+  });
+  try {
+    expect((await h.api(0, randomUUID(), body)).status).toBe(201);
+    expect(checked).toBe(true);
+  } finally {
+    h.setProbe(undefined);
+  }
+});
+
+it("C-T05 full-capacity CORRECT preserves 500 original and 500 replacement MAX-sized legs exactly", async () => {
+  const payload = h.payload(),
+    pair = payload.legs.map((l) => ({ ...l, amount: "9999999999999999.99" }));
+  payload.legs = Array.from({ length: 250 }, () => pair).flat();
+  const posted = await h.api(0, randomUUID(), payload);
+  expect(posted.status).toBe(201);
+  const o = await posted.json(),
+    body = correct(o.journalId);
+  body.replacement.legs = payload.legs;
+  const r = await h.api(0, randomUUID(), body);
+  expect(r.status).toBe(201);
+  const result = await r.json();
+  expect(result.reversal.legs).toHaveLength(500);
+  expect(result.replacement.legs).toHaveLength(500);
+  const debit = result.replacement.legs
+    .filter((l: { side: string }) => l.side === "DEBIT")
+    .reduce(
+      (n: bigint, l: { nativeMinor: string }) => n + BigInt(l.nativeMinor),
+      0n,
+    );
+  expect(debit).toBe(250n * 999999999999999999n);
+}, 20000);

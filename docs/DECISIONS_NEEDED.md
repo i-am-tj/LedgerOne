@@ -2,9 +2,9 @@
 
 # Decisions and authorization
 
-> Current status (2026-11-12): S06B completed/reviewed merge `5af4c19`; S06C predecessor satisfied, planning acceptance pending. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. [Verified closure](reports/S06B_CLOSURE.md). Earlier dated checkpoints retain the state and decisions recorded at the time.
+> Current status (2026-11-12): S06B completed/reviewed merge `5af4c19`; S06C planning merged `b31ab0b`; guarded implementation is under review in [PR #26](https://github.com/i-am-tj/LedgerOne/pull/26). Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. [Verified closure](reports/S06B_CLOSURE.md). Earlier dated checkpoints retain the state and decisions recorded at the time.
 
-Current approvals: expanded Phase 1, GitHub delivery and reviewed S05/S06A/S06B merges are confirmed. S06C planning is authorized; implementation awaits planning acceptance/reviewed merge. Google sign-in with an owner allowlist is selected. The table below preserves the initial proposed decisions; outstanding accounting/security reviews still apply before dependent implementation.
+Current approvals: expanded Phase 1, GitHub delivery and reviewed S05/S06A/S06B merges are confirmed. S06C planning accepted with minor amendments and merged b31ab0b; implementation PR #26 awaits independent accounting/security review and reviewed merge. Google sign-in with an owner allowlist is selected. The table below preserves the initial proposed decisions; outstanding accounting/security reviews still apply before dependent implementation.
 
 | ID  | Decision / proposed default                                                                                                                                           | When required                                                                                             |
 | --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
@@ -65,6 +65,6 @@ The next story is P1-S06B #9, with its [detailed plan](stories/P1-S06B_BREAKDOWN
 
 The owner authorized clarified planning review/merge and sequential S06B implementation. PR #20 review/merge is recorded in comment 6802164820 / merge 75f8795; no human/native approval is invented. Raw mandatory audit reasons and future controlled consumer defaults are documented. PR #21 implementation accounting/security review and reviewed merge remain required; planning acceptance does not supply that review. No financial production write/grant/deployment authorization was inferred.
 
-## S06C planning acceptance required
+## S06C planning acceptance (now recorded; original request below)
 
 S06B reviewed merge is confirmed. Accept or amend the [S06C breakdown](stories/P1-S06C_BREAKDOWN.md) and proposed [ADR-007](ADR/0007-shared-command-lock-order-and-correction-targets.md) before implementation: shared runner/lock order, explicit separate reversal/replacement effective instants, fresh-operation archive denial with historical replay, and conservative opening-derived exclusion with bounded 128-journal provenance. S07 retains exposed OPENING/account correction/reconciliation. No production write authorization is requested or inferred. Record acceptance/reviewed planning merge on its documentation-only PR; only then open a separate implementation branch/PR.

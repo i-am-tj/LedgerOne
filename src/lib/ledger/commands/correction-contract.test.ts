@@ -32,6 +32,12 @@ it("C-T01 independent dates and canonical target/kind/replacement semantics", ()
   const r = parseCommand(reverse);
   const a = parseCommand({ ...reverse, kind: "CORRECT", replacement });
   expect(r.effectiveAt).toBe("2026-02-01T00:00:00.000Z");
+  expect(requestHash("owner", "workspace", r)).toBe(
+    "dfd46d87890abb60a49153dba43095809001246d66ac45b83d72825c943da71a",
+  );
+  expect(requestHash("owner", "workspace", a)).toBe(
+    "9a8fd1cd6def670887a5d068ea58eed5285af9d20f9543bd0c2a55e22b66a81d",
+  );
   expect(a.kind).toBe("CORRECT");
   if (a.kind !== "CORRECT") throw Error();
   expect(a.replacement.effectiveAt).toBe("2026-03-01T00:00:00.000Z");
