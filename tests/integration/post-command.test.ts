@@ -856,3 +856,43 @@ it("S06B-R03 read transaction timeout destroys only its own failed inspector con
   }
   expect((await h.admin.query("SELECT 1 AS alive")).rows[0].alive).toBe(1);
 });
+
+it("review MAX quantities are stored, summed and returned exactly beyond JS and bigint aggregate limits", async () => {
+  const p = h.payload();
+  p.legs = Array.from({ length: 500 }, (_, i) => ({
+    ...p.legs[i % 2]!,
+    amount: "9999999999999999.99",
+  }));
+  const response = await h.api(0, randomUUID(), p);
+  expect(response.status).toBe(201);
+  const result = await response.json();
+  expect(result.legs).toHaveLength(500);
+  expect(
+    result.legs.every(
+      (l: { nativeMinor: string; functionalMinor: string }) =>
+        l.nativeMinor === "999999999999999999" &&
+        l.functionalMinor === l.nativeMinor,
+    ),
+  ).toBe(true);
+  expect(
+    (
+      await h.admin.query(
+        'SELECT sum("nativeMinor")::text AS total FROM posting WHERE "journalId"=$1 AND side=\'DEBIT\'',
+        [result.journalId],
+      )
+    ).rows[0].total,
+  ).toBe("249999999999999999750");
+});
+it.each(["EXPENSE", "INCOME", "TRANSFER"])(
+  "review future %s discriminator cannot masquerade as a supported business command",
+  async (kind) => {
+    const before = await counts();
+    expect(
+      (await h.api(0, randomUUID(), { ...h.payload(), kind })).status,
+    ).toBe(400);
+    expect(
+      (await h.api(0, randomUUID(), { ...h.payload(), template: kind })).status,
+    ).toBe(400);
+    expect(await counts()).toEqual(before);
+  },
+);
