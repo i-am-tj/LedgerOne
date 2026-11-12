@@ -562,7 +562,14 @@ async function commandOutcome(
   operation: string,
   command: FinancialCommand,
 ): Promise<FinancialResult> {
-  if (command.kind === "POST") return outcome(c, actor, workspace, operation);
+  if (command.kind === "POST") {
+    const result = await outcome(c, actor, workspace, operation);
+    return assertResultSemantics(
+      { ownerId: actor.ownerId, workspaceId: workspace },
+      command,
+      result,
+    );
+  }
   const audit = await c.query(
     'SELECT reason,action,"targetJournalId","actorId" FROM audit_event WHERE "operationId"=$1 AND "workspaceId"=$2 AND "ownerId"=$3',
     [operation, workspace, actor.ownerId],

@@ -376,6 +376,55 @@ it.each([
     expect(data).toEqual({ error: "service_unavailable" });
   },
 );
+it("I05b shared POST replay rejects the same legacy receipt/date inconsistency", async () => {
+  const o = await posted(),
+    key = randomUUID(),
+    body = h.payload(),
+    u = h.users[0]!,
+    op = randomUUID(),
+    journal = randomUUID(),
+    c = await h.admin.connect();
+  try {
+    await c.query("BEGIN");
+    await c.query(
+      'INSERT INTO ledger_operation(id,"workspaceId","ownerId","idempotencyKey","requestHash",kind) VALUES($1,$2,$3,$4,$5,\'POST\')',
+      [
+        op,
+        u.workspace,
+        u.id,
+        key,
+        requestHash(u.id, u.workspace, parseCommand(body)),
+      ],
+    );
+    await c.query(
+      'INSERT INTO journal(id,"workspaceId","ownerId","effectiveAt",description) VALUES($1,$2,$3,\'2026-04-01T00:00:00Z\',\'Different legacy semantics\')',
+      [journal, u.workspace, u.id],
+    );
+    await c.query(
+      'INSERT INTO posting(id,"journalId","workspaceId","ownerId","accountId","currencyCode",side,"nativeMinor","functionalMinor") SELECT gen_random_uuid(),$1,"workspaceId","ownerId","accountId","currencyCode",side,"nativeMinor","functionalMinor" FROM posting WHERE "journalId"=$2',
+      [journal, o.journalId],
+    );
+    await c.query(
+      'UPDATE journal SET status=\'POSTED\',"postedAt"=clock_timestamp(),"operationId"=$1 WHERE id=$2',
+      [op, journal],
+    );
+    await c.query(
+      'INSERT INTO audit_event(id,"workspaceId","ownerId","actorId","requestId",action,"operationId","targetJournalId",reason) VALUES($1,$2,$3,$3,$4,\'ledger.posted\',$5,$6,$7)',
+      [randomUUID(), u.workspace, u.id, randomUUID(), op, journal, body.reason],
+    );
+    await c.query("COMMIT");
+  } catch (e) {
+    await c.query("ROLLBACK");
+    throw e;
+  } finally {
+    c.release();
+  }
+  const before = await counts(),
+    r = await h.api(0, key, body);
+  evidence.push({ probe: "I05b", kind: "POST", status: r.status });
+  expect(await counts()).toEqual(before);
+  expect(r.status).toBe(503);
+});
 // This proxy parses PostgreSQL frontend frames. Only the generated runtime role's
 // armed COMMIT response is withheld. The server executes it normally; after an
 // independent connection observes the receipt we destroy only these own sockets.

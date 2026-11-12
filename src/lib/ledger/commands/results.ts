@@ -121,34 +121,56 @@ export function correctionResult(
 // S06C-R01: a valid receipt/child graph is necessary but does not prove that
 // its financial dates/descriptions/replacement match the canonical request.
 // Reconstruct from immutable result fields only; never recheck mutable accounts.
-export function assertResultSemantics(
+type ReplayResult =
+  | (JournalResult & Readonly<{ operationId: string; reason: string }>)
+  | ReverseResult
+  | CorrectResult;
+export function assertResultSemantics<T extends ReplayResult>(
   scope: Readonly<{ ownerId: string; workspaceId: string }>,
-  expected: Exclude<FinancialCommand, { kind: "POST" }>,
-  result: ReverseResult | CorrectResult,
-): ReverseResult | CorrectResult {
+  expected: FinancialCommand,
+  result: T,
+): T {
   try {
-    if (result.kind !== expected.kind) throw unavailable();
-    const actual = parseCommand({
-      kind: result.kind,
-      originalJournalId: result.originalJournalId,
-      effectiveAt: result.reversal.effectiveAt,
-      description: result.reversal.description,
-      reason: result.reason,
-      ...(result.kind === "CORRECT"
-        ? {
-            replacement: {
-              effectiveAt: result.replacement.effectiveAt,
-              description: result.replacement.description,
-              legs: result.replacement.legs.map((l) => ({
-                accountId: l.accountId,
-                side: l.side,
-                currency: l.currency,
-                amount: formatAmount(BigInt(l.nativeMinor), l.currency),
-              })),
-            },
-          }
-        : {}),
-    });
+    const value: ReplayResult = result;
+    const legs = (items: JournalResult["legs"]) =>
+      items.map((l) => ({
+        accountId: l.accountId,
+        side: l.side,
+        currency: l.currency,
+        amount: formatAmount(BigInt(l.nativeMinor), l.currency),
+      }));
+    let body: unknown;
+    if (expected.kind === "POST") {
+      if ("kind" in value) throw unavailable();
+      inversePostings(value.legs.map((l) => ({ ...l, fxRateId: null })));
+      body = {
+        kind: "POST",
+        effectiveAt: value.effectiveAt,
+        description: value.description,
+        reason: value.reason,
+        legs: legs(value.legs),
+      };
+    } else {
+      if (!("kind" in value) || value.kind !== expected.kind)
+        throw unavailable();
+      body = {
+        kind: value.kind,
+        originalJournalId: value.originalJournalId,
+        effectiveAt: value.reversal.effectiveAt,
+        description: value.reversal.description,
+        reason: value.reason,
+        ...(value.kind === "CORRECT"
+          ? {
+              replacement: {
+                effectiveAt: value.replacement.effectiveAt,
+                description: value.replacement.description,
+                legs: legs(value.replacement.legs),
+              },
+            }
+          : {}),
+      };
+    }
+    const actual = parseCommand(body);
     if (
       requestHash(scope.ownerId, scope.workspaceId, actual) !==
       requestHash(scope.ownerId, scope.workspaceId, expected)
