@@ -183,3 +183,9 @@ S06A final publication head 423c6bd passed both remote runs 43060355412/43060363
 ## S06B requirement-to-test implementation evidence
 
 The [B-AC01–09 matrix and exact commands](reports/P1-S06B.md) map R01/R02/R03/R14 and A05-01/A05-03/A05-05 to actual strict/canonical unit tests, real-session restricted-role SQL/HTTP integration, archive replay, private draft/atomic audit/balance checks, real 40001/40P01/timeout/uncertain outcomes and disabled-Next-route browser tests. Final local `npm run verify:pipeline` PASS: **129 unit / 119 integration / 48 browser (19.5s)**. All S05/S06A regressions retained; no migration/grant changes. Publication-head CI and implementation review/merge remain separate requirements, recorded on PR #21. Complete gate W01–W15 remains unaccepted; S06C/D/hosted commands are not tested or claimed.
+
+## S06B adversarial regressions
+
+R01 #22 → stalled/aborted/oversized upload, hostile cancel cleanup, real partial HTTP timeout, closed capability does not read. R02 #23 → cancelled-before/staged/retry/pre-COMMIT HTTP requests roll back, changed actor/immutable ownership guards, late client disposal; existing durable/uncertain COMMIT recovery retained. R03 #24 → blocked verifier SQL leaves no read snapshot after failure and preserves unrelated locker; short inspector transaction timeout safely recovers. Added permanent 500-leg MAX precision, activation guards before connection, and unsupported business-discriminator tests. Baseline 129/119/48 passing tests did not cover these defects; corrected final full pipeline and final-head CI are separately recorded in the adversarial review. No future template business rule is claimed as implemented.
+
+Corrected adversarial source 977f701 full `npm run verify:pipeline`: PASS 144 unit / 132 integration / 48 browser (19.5s), all required stages. See the review for exact evidence and merge conditions. Original S05/S06A tests pass; no applied migration/grant/invariant meaning changed.
