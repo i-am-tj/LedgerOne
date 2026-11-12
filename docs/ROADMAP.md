@@ -48,3 +48,7 @@ New work is on `feat/p1-s06a-command-controls`, based on the owner's merged main
 S06A final head 423c6bd passed fresh accounting/security/migration review and both exact-head CI runs (89 unit / 76 integration / 46 browser). PR #18 merged as df56d46; #8/#3/#19 done. [Review provenance, owner conditional authorization and merge evidence](https://github.com/i-am-tj/LedgerOne/pull/18#issuecomment-6801618802) are recorded without fabricating new human/peer/native approval. Earlier pending-review notes are historical.
 
 The next story is P1-S06B #9, with its [detailed plan](stories/P1-S06B_BREAKDOWN.md) prepared on a separate documentation branch after the merge. No S06B implementation PR/handler exists yet. B-T01–05 and B-AC01–09 cover validated authenticated POST, canonical hashing/replay, atomic audit, real retry/concurrency/security tests and disabled exposure. A05 #13–#17 stay open; S07 explicitly tracks its additive OPENING-audit contract. Complete S06 write gate and Phase 1 remain closed; financial runtime grants stay SELECT-only and posting stays INR-only.
+
+## S06B implementation checkpoint
+
+Planning PR #20 merged 75f8795 after targeted clarification review and exact-head green CI. S06B #9 code/test packages B-T01–05 are implemented sequentially in separate PR #21; local full pipeline 129/119/48 PASS. S06B awaits final-head accounting/security review and reviewed merge. S06C is the next implementation story only after that merge, with no work begun. Full S06 write gate and Phase 1 remain closed.

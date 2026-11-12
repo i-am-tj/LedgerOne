@@ -192,10 +192,26 @@ export function assertLedgerInvariants(
     if (actual.objects[key] !== expected.objects[key]) differences.push(key);
   if (differences.length) throw new InvariantDriftError(differences.sort());
 }
-export async function readLedgerInvariants(pool: Pool, scope: InvariantScope) {
+// S06B-R03: a caller's promise deadline must not leave a blocked read snapshot.
+export async function readLedgerInvariants(
+  pool: Pool,
+  scope: InvariantScope,
+  timeoutMs = 2500,
+) {
+  if (!Number.isInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 10000)
+    throw new Error("Invalid invariant read timeout");
   const client = await pool.connect();
+  let destroy = false;
+  const onError = () => {
+    destroy = true;
+  };
+  client.on("error", onError);
   try {
     await client.query("BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY");
+    await client.query(
+      "SELECT set_config('statement_timeout',$1,true),set_config('transaction_timeout',$2,true)",
+      [String(Math.min(2000, timeoutMs)), String(timeoutMs)],
+    );
     await client.query(
       `SET LOCAL search_path = pg_catalog, ${identifier(scope.schema)}, pg_temp`,
     );
@@ -203,9 +219,22 @@ export async function readLedgerInvariants(pool: Pool, scope: InvariantScope) {
     await client.query("COMMIT");
     return manifest;
   } catch (error) {
-    await client.query("ROLLBACK");
+    const details = error as { code?: unknown; severity?: unknown } | null;
+    const databaseError =
+      typeof details?.code === "string" && /^[0-9A-Z]{5}$/.test(details.code);
+    destroy ||=
+      details?.severity === "FATAL" ||
+      (!databaseError && !(error instanceof InvariantDriftError));
+    if (!destroy) {
+      try {
+        await client.query("ROLLBACK");
+      } catch {
+        destroy = true;
+      }
+    }
     throw error;
   } finally {
-    client.release();
+    client.release(destroy);
+    client.removeListener("error", onError);
   }
 }
