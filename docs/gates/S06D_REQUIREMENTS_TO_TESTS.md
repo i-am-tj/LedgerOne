@@ -33,3 +33,7 @@ The final report repeats all 15 rows with PASS or FAIL, linking the exact artifa
 ## Separate checkpoint record
 
 For each W row record L/P local result and H hosted result separately, with exact profile/evidence. The local checkpoint may PASS on completed local assertions while the final W status remains NOT RUN/FAIL for absent H evidence. Do not promote local results to final PASS or defer local development merely because O-H* permissions are absent. Private-schema identifier/search_path/trigger/function resolution, effective role inheritance and public-shadowing tests are mandatory W10/W11/W13 local and hosted criteria. Performance evidence follows P0–P3 stages: broad correctness/smoke, representative load, statistically qualified designated critical p99, and maximum-size stress; insufficient p99 samples are NOT PROVEN and never a tail PASS.
+
+## Current implementation checkpoint
+
+[Local checkpoint report](S06D_LOCAL_CHECKPOINT.md): D-T01/D-T02 local components verified; D-T03 capacity FAIL #32, correction critical p99 NOT PROVEN. D-T04 and final review/merge outstanding. W14 cannot pass on ordinary green CI while its required capacity evidence fails; all H-dependent criteria remain NOT RUN. No final W or complete S06D PASS and no production authorization.
