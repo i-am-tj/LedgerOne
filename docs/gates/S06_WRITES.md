@@ -1,6 +1,6 @@
 # S06 financial write-enablement gate
 
-**Status: NOT RUN. Write-enablement recommendation: FAIL (closed).** S05 owner review/merge is confirmed; S06A controls passed final review and merged in PR #18 as `df56d46`; S06B/C/D commands and exposure are not implemented. The S05 conditional approval is not production readiness. No actual financial POST/REVERSE/CORRECT handler or retry orchestrator is implemented. Migration 007/audit contracts and catalog-attestation primitives exist, with control tests; they do not satisfy the complete command/exposure gate.
+**Status: NOT RUN. Write-enablement recommendation: FAIL (closed).** S05 owner review/merge is confirmed; S06A controls passed final review and merged in PR #18 as `df56d46`; S06B POST is implemented/tested only in guarded disposable activation and awaits its reviewed merge; S06C/D and production exposure remain unimplemented. The S05 conditional approval is not production readiness. The actual shared POST boundary and retry orchestrator now have local evidence, while the normal Next adapter has no write capability. REVERSE/CORRECT are unimplemented. Migration 007/audit contracts and catalog-attestation primitives exist, with control tests; they do not satisfy the complete command/exposure gate.
 
 Owner story: [P1-S06D](https://github.com/i-am-tj/LedgerOne/issues/11). Parent: [P1-S06](https://github.com/i-am-tj/LedgerOne/issues/7). Required predecessor sequence: S05 reviewed merge → S06A reviewed merge → S06B reviewed merge → S06C reviewed merge → S06D evidence/review. Published financial grants remain SELECT-only and INR-only posting remains enforced.
 
@@ -31,10 +31,14 @@ Owner story: [P1-S06D](https://github.com/i-am-tj/LedgerOne/issues/11). Parent: 
 5. Apply hosted grants or deploy only after the user's separate deployment approval. Re-attest after authorized schema/role changes and before exposure. Define failure response and pool invalidation; migrations never bypass live guard checks.
 6. Record actual enablement and rollback evidence. If any prerequisite fails, keep exposure disabled and the gate FAIL. Production-ready/Phase 1 PASS is not implied by S06 PASS; S07–S09 and operational gates remain.
 
-S06A control tests run; real financial command/handler/retry gate scenarios remain NOT RUN. Existing S05/foundation regressions are reported separately in PROGRESS and the handoff; they do not change any NOT RUN row.
+S06A controls and S06B POST handler/retry subsets have local test evidence; complete financial command/exposure gate scenarios remain unaccepted. Existing S05/foundation regressions are reported separately in PROGRESS and the handoff; they do not change any NOT RUN row.
 
 ## S06A evidence boundary
 
 Migration 007, scoped audit/correction tests, catalog mutation tests, local target/reference attestation and private-schema restricted-role audit rehearsal are implemented. W07/W10/W11 have partial control evidence only: mandatory actual command audit, hosted target/provisioning and the complete write-enablement integration remain unproved. W01–W15 remain NOT RUN for final gate acceptance. No feature flag or financial runtime DML grant was enabled.
 
-S06A closure evidence: [final-head decision](https://github.com/i-am-tj/LedgerOne/pull/18#issuecomment-6801618802), 423c6bd CI 89/76/46 in both remote runs, actual merge df56d46. This closes only the control story, not any complete W01–W15 gate row. S06B [detailed plan](../stories/P1-S06B_BREAKDOWN.md) is prepared after merge; all implementation tasks remain unchecked.
+S06A closure evidence: [final-head decision](https://github.com/i-am-tj/LedgerOne/pull/18#issuecomment-6801618802), 423c6bd CI 89/76/46 in both remote runs, actual merge df56d46. This closes only the control story, not any complete W01–W15 gate row. S06B [detailed plan](../stories/P1-S06B_BREAKDOWN.md) was prepared after that merge. That checkpoint was planning-only; current POST implementation evidence is below.
+
+## S06B evidence boundary (not write enablement)
+
+[PR #21](https://github.com/i-am-tj/LedgerOne/pull/21) implements B-T01–05 with [local evidence](../reports/P1-S06B.md): 129 unit / 119 integration / 48 browser PASS; actual verified-session shared HTTP boundary, immutable archived-account replay, mandatory audit, real 40001/40P01 retries/exhaustion, pre-COMMIT draft isolation and real post-COMMIT HTTP disconnect recovery. Normal Next writes remain disabled with no enable flag; no production grant/migration change. W01–W04/W07–W10/W13 have POST-only disposable-test evidence, not accepted complete-contract gate results. Status cells above refer to complete gate acceptance, not to whether a subset of tests ran. All rows remain unaccepted pending final reviewed B/C/D completion and target/profile evidence. S06B implementation review/merge is still required; planning approval is not implementation approval.

@@ -179,3 +179,7 @@ S06A current evidence after CI repair: 89 unit / 70 integration / 46 browser PAS
 Corrected-source `npm run verify:pipeline`: 89 unit / 76 integration / 46 browser PASS (20.5s), all required pipeline stages PASS. [Final review](security/S06A_FINAL_REVIEW.md) records scope and exact commands. Final publication-head CI/merge evidence is recorded on PR #18. W01–W15 remain unaccepted for complete write enablement.
 
 S06A final publication head 423c6bd passed both remote runs 43060355412/43060363193 (89/76/46); PR #18 merged df56d46. Next story's planned acceptance matrix is [P1-S06B B-AC01–09](stories/P1-S06B_BREAKDOWN.md), mapped to actual handler, SQL role, canonical replay and real retry tests. These future tests have NOT RUN; documentation publication does not change the complete write-gate status.
+
+## S06B requirement-to-test implementation evidence
+
+The [B-AC01–09 matrix and exact commands](reports/P1-S06B.md) map R01/R02/R03/R14 and A05-01/A05-03/A05-05 to actual strict/canonical unit tests, real-session restricted-role SQL/HTTP integration, archive replay, private draft/atomic audit/balance checks, real 40001/40P01/timeout/uncertain outcomes and disabled-Next-route browser tests. Final local `npm run verify:pipeline` PASS: **129 unit / 119 integration / 48 browser (19.5s)**. All S05/S06A regressions retained; no migration/grant changes. Publication-head CI and implementation review/merge remain separate requirements, recorded on PR #21. Complete gate W01–W15 remains unaccepted; S06C/D/hosted commands are not tested or claimed.
