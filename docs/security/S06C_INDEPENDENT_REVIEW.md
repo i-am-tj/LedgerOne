@@ -30,3 +30,9 @@ Environment: Node 22.22.0/npm 10.9.4; existing local Docker PostgreSQL 17.6; gen
 - TCP proxy identifies the generated runtime role's frontend COMMIT frame, forwards COMMIT, withholds its reply, waits until an independent connection sees the durable receipt, then destroys only its own proxy sockets. Actual request returns 503 and authorized same-key recovery returns one immutable operation/receipt/audit. Verifier commits/unrelated connections are not terminated.
 
 The initial blocker is recorded before source correction. Further independent scope/provenance/capacity probes and the full corrected pipeline/current-head CI remain required before any final approval/merge. No approval is inferred from this partial initial evidence. S06D/full write gate/Phase 1 remain closed, normal financial writes disabled, published financial SELECT-only grants and INR restriction unchanged, and S07 is outside this review.
+
+## S06C-R01 correction checkpoint
+
+The correction reconstructs REVERSE/CORRECT semantic payloads from immutable returned dates/descriptions/replacement legs and reuses `parseCommand`, exact money formatting and `requestHash` before fresh or replayed success. It does not consult current account eligibility, add SQL locks/queries, change POST v1 or repair old history. Structural identity/INR/audit checks remain in place. Invalid legacy evidence returns sanitized 503 with unchanged rows.
+
+Initial failing I05 now passes. Expanded permanent I05 matrix: REVERSE date/description; CORRECT reversal date, replacement date/description/amount and duplicate-multiset mismatch, all committed under existing DB constraints and rejected on replay. Targeted 13-probe run PASS (5.84s); unit 166 PASS, typecheck/lint PASS. Initial BLOCKED evidence above is retained, not rewritten into approval. Further boundary tests and the full corrected pipeline/current-head CI/fresh review still gate merge.

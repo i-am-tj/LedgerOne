@@ -135,10 +135,12 @@ it.each([
           )
         ).rows[0].n,
       ).toBe(0);
-      console.info(
-        "I01 observed genuine PostgreSQL states",
-        JSON.stringify(seen),
-      );
+      evidence.push({
+        probe: "I01",
+        commands: [a, b],
+        states: seen,
+        distinctSnapshots: new Set(snapshots).size,
+      });
     } finally {
       release();
       await loser;
@@ -243,65 +245,137 @@ it("I03 real 40P01 through an original-journal/advisory inversion retries the wh
     await cleanup;
   }
 }, 15000);
-it("I05 valid legacy reversal with misbound receipt dates must fail closed on replay", async () => {
-  const o = await posted(),
-    key = randomUUID(),
-    body = command("REVERSE", o.journalId),
-    u = h.users[0]!,
-    op = randomUUID(),
-    journal = randomUUID();
-  const hash = requestHash(u.id, u.workspace, parseCommand(body));
-  const c = await h.admin.connect();
-  try {
-    await c.query("BEGIN");
-    await c.query(
-      'INSERT INTO ledger_operation(id,"workspaceId","ownerId","idempotencyKey","requestHash",kind) VALUES($1,$2,$3,$4,$5,\'REVERSE\')',
-      [op, u.workspace, u.id, key, hash],
-    );
-    await c.query(
-      'INSERT INTO journal(id,"workspaceId","ownerId",kind,"reversesJournalId","effectiveAt",description) VALUES($1,$2,$3,\'REVERSAL\',$4,\'2026-04-01T00:00:00Z\',\'Different legacy semantics\')',
-      [journal, u.workspace, u.id, o.journalId],
-    );
-    await c.query(
-      'INSERT INTO posting(id,"journalId","workspaceId","ownerId","accountId","currencyCode",side,"nativeMinor","functionalMinor") SELECT gen_random_uuid(),$1,"workspaceId","ownerId","accountId","currencyCode",CASE side WHEN \'DEBIT\' THEN \'CREDIT\'::"PostingSide" ELSE \'DEBIT\'::"PostingSide" END,"nativeMinor","functionalMinor" FROM posting WHERE "journalId"=$2',
-      [journal, o.journalId],
-    );
-    await c.query(
-      'UPDATE journal SET status=\'POSTED\',"postedAt"=clock_timestamp(),"operationId"=$1 WHERE id=$2',
-      [op, journal],
-    );
-    await c.query(
-      'INSERT INTO audit_event(id,"workspaceId","ownerId","actorId","requestId",action,"operationId","targetJournalId",reason) VALUES($1,$2,$3,$3,$4,\'ledger.reversed\',$5,$6,$7)',
-      [
-        randomUUID(),
-        u.workspace,
-        u.id,
-        randomUUID(),
-        op,
-        o.journalId,
-        body.reason,
-      ],
-    );
-    await c.query("COMMIT");
-  } catch (e) {
-    await c.query("ROLLBACK");
-    throw e;
-  } finally {
-    c.release();
-  }
-  const before = await counts(),
-    r = await h.api(0, key, body),
-    data = await r.json();
-  evidence.push({
-    probe: "I05",
-    legacySqlCommittedUnderAllConstraints: true,
-    requestedEffectiveAt: body.effectiveAt,
-    status: r.status,
-    returnedEffectiveAt: data.reversal?.effectiveAt,
-  });
-  expect(await counts()).toEqual(before);
-  expect(r.status).toBe(503);
-});
+it.each([
+  ["REVERSE", "reversal-date"],
+  ["REVERSE", "reversal-description"],
+  ["CORRECT", "reversal-date"],
+  ["CORRECT", "replacement-date"],
+  ["CORRECT", "replacement-description"],
+  ["CORRECT", "replacement-amount"],
+  ["CORRECT", "replacement-multiset"],
+] as const)(
+  "I05 legacy %s receipt with %s mismatch fails closed",
+  async (kind, fault) => {
+    const o = await posted(),
+      key = randomUUID(),
+      body = command(kind, o.journalId),
+      u = h.users[0]!,
+      op = randomUUID(),
+      journal = randomUUID();
+    const hash = requestHash(u.id, u.workspace, parseCommand(body));
+    const c = await h.admin.connect();
+    try {
+      await c.query("BEGIN");
+      await c.query(
+        'INSERT INTO ledger_operation(id,"workspaceId","ownerId","idempotencyKey","requestHash",kind) VALUES($1,$2,$3,$4,$5,$6)',
+        [op, u.workspace, u.id, key, hash, kind],
+      );
+      await c.query(
+        'INSERT INTO journal(id,"workspaceId","ownerId",kind,"reversesJournalId","effectiveAt",description) VALUES($1,$2,$3,\'REVERSAL\',$4,$5,$6)',
+        [
+          journal,
+          u.workspace,
+          u.id,
+          o.journalId,
+          fault === "reversal-date" ? "2026-04-01T00:00:00Z" : body.effectiveAt,
+          fault === "reversal-description" ? "Different legacy semantics" : "",
+        ],
+      );
+      await c.query(
+        'INSERT INTO posting(id,"journalId","workspaceId","ownerId","accountId","currencyCode",side,"nativeMinor","functionalMinor") SELECT gen_random_uuid(),$1,"workspaceId","ownerId","accountId","currencyCode",CASE side WHEN \'DEBIT\' THEN \'CREDIT\'::"PostingSide" ELSE \'DEBIT\'::"PostingSide" END,"nativeMinor","functionalMinor" FROM posting WHERE "journalId"=$2',
+        [journal, o.journalId],
+      );
+      await c.query(
+        'UPDATE journal SET status=\'POSTED\',"postedAt"=clock_timestamp(),"operationId"=$1 WHERE id=$2',
+        [op, journal],
+      );
+      if (kind === "CORRECT") {
+        const replacement = randomUUID();
+        await c.query(
+          'INSERT INTO journal(id,"workspaceId","ownerId","effectiveAt",description) VALUES($1,$2,$3,$4,$5)',
+          [
+            replacement,
+            u.workspace,
+            u.id,
+            fault === "replacement-date"
+              ? "2026-05-01T00:00:00Z"
+              : "2026-03-01T00:00:00Z",
+            fault === "replacement-description" ? "Other purchase" : "",
+          ],
+        );
+        const legs =
+          fault === "replacement-multiset"
+            ? [
+                [u.expense, "DEBIT", "500"],
+                [u.expense, "DEBIT", "500"],
+                [u.bank, "CREDIT", "1000"],
+              ]
+            : [
+                [
+                  u.expense,
+                  "DEBIT",
+                  fault === "replacement-amount" ? "2000" : "1000",
+                ],
+                [
+                  u.bank,
+                  "CREDIT",
+                  fault === "replacement-amount" ? "2000" : "1000",
+                ],
+              ];
+        for (const [account, side, amount] of legs)
+          await c.query(
+            'INSERT INTO posting(id,"journalId","workspaceId","ownerId","accountId","currencyCode",side,"nativeMinor","functionalMinor") VALUES($1,$2,$3,$4,$5,\'INR\',$6,$7,$7)',
+            [
+              randomUUID(),
+              replacement,
+              u.workspace,
+              u.id,
+              account,
+              side,
+              amount,
+            ],
+          );
+        await c.query(
+          'UPDATE journal SET status=\'POSTED\',"postedAt"=clock_timestamp(),"operationId"=$1 WHERE id=$2',
+          [op, replacement],
+        );
+      }
+      await c.query(
+        'INSERT INTO audit_event(id,"workspaceId","ownerId","actorId","requestId",action,"operationId","targetJournalId",reason) VALUES($1,$2,$3,$3,$4,$5,$6,$7,$8)',
+        [
+          randomUUID(),
+          u.workspace,
+          u.id,
+          randomUUID(),
+          kind === "REVERSE" ? "ledger.reversed" : "ledger.corrected",
+          op,
+          o.journalId,
+          body.reason,
+        ],
+      );
+      await c.query("COMMIT");
+    } catch (e) {
+      await c.query("ROLLBACK");
+      throw e;
+    } finally {
+      c.release();
+    }
+    const before = await counts(),
+      r = await h.api(0, key, body),
+      data = await r.json();
+    evidence.push({
+      probe: "I05",
+      kind,
+      fault,
+      legacySqlCommittedUnderAllConstraints: true,
+      status: r.status,
+      error: data.error,
+    });
+    expect(await counts()).toEqual(before);
+    expect(r.status).toBe(503);
+    expect(data).toEqual({ error: "service_unavailable" });
+  },
+);
 // This proxy parses PostgreSQL frontend frames. Only the generated runtime role's
 // armed COMMIT response is withheld. The server executes it normally; after an
 // independent connection observes the receipt we destroy only these own sockets.

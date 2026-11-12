@@ -1,4 +1,12 @@
-import { inversePostings, instant, unavailable } from "./contract";
+import {
+  inversePostings,
+  instant,
+  unavailable,
+  parseCommand,
+  requestHash,
+  type FinancialCommand,
+} from "./contract";
+import { formatAmount } from "../money";
 // R/C recover only immutable financial evidence; POST's existing DTO is unchanged.
 export type JournalResult = Readonly<{
   journalId: string;
@@ -108,4 +116,46 @@ export function correctionResult(
   return kind === "REVERSE"
     ? { kind, ...base }
     : { kind, ...base, replacement: financial(replacements[0]!) };
+}
+
+// S06C-R01: a valid receipt/child graph is necessary but does not prove that
+// its financial dates/descriptions/replacement match the canonical request.
+// Reconstruct from immutable result fields only; never recheck mutable accounts.
+export function assertResultSemantics(
+  scope: Readonly<{ ownerId: string; workspaceId: string }>,
+  expected: Exclude<FinancialCommand, { kind: "POST" }>,
+  result: ReverseResult | CorrectResult,
+): ReverseResult | CorrectResult {
+  try {
+    if (result.kind !== expected.kind) throw unavailable();
+    const actual = parseCommand({
+      kind: result.kind,
+      originalJournalId: result.originalJournalId,
+      effectiveAt: result.reversal.effectiveAt,
+      description: result.reversal.description,
+      reason: result.reason,
+      ...(result.kind === "CORRECT"
+        ? {
+            replacement: {
+              effectiveAt: result.replacement.effectiveAt,
+              description: result.replacement.description,
+              legs: result.replacement.legs.map((l) => ({
+                accountId: l.accountId,
+                side: l.side,
+                currency: l.currency,
+                amount: formatAmount(BigInt(l.nativeMinor), l.currency),
+              })),
+            },
+          }
+        : {}),
+    });
+    if (
+      requestHash(scope.ownerId, scope.workspaceId, actual) !==
+      requestHash(scope.ownerId, scope.workspaceId, expected)
+    )
+      throw unavailable();
+    return result;
+  } catch {
+    throw unavailable();
+  }
 }

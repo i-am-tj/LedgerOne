@@ -18,6 +18,7 @@ import {
 
 import {
   correctionResult,
+  assertResultSemantics,
   type ReverseResult,
   type CorrectResult,
   type StoredJournal,
@@ -595,11 +596,16 @@ async function commandOutcome(
       legs: legs.rows,
     });
   }
-  return correctionResult(
+  const result = correctionResult(
     { ownerId: actor.ownerId, workspaceId: workspace, operationId: operation },
     command.kind,
     command.originalJournalId,
     a.reason,
     rows,
+  );
+  return assertResultSemantics(
+    { ownerId: actor.ownerId, workspaceId: workspace },
+    command,
+    result,
   );
 }
