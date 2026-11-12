@@ -641,19 +641,26 @@ export class PostExecutor {
           ],
         );
         await this.probe?.("draft", c, attempt);
-        for (const l of legs)
-          await query(
-            'INSERT INTO posting(id,"journalId","workspaceId","ownerId","accountId","currencyCode",side,"nativeMinor","functionalMinor") VALUES($1,$2,$3,$4,$5,\'INR\',$6,$7,$7)',
-            [
-              randomUUID(),
-              journal,
-              workspace,
-              actor.ownerId,
-              l.accountId,
-              l.side,
-              l.minor,
-            ],
-          );
+        await measured(
+          this.metrics,
+          "sql.postings",
+          async () => {
+            for (const l of legs)
+              await query(
+                'INSERT INTO posting(id,"journalId","workspaceId","ownerId","accountId","currencyCode",side,"nativeMinor","functionalMinor") VALUES($1,$2,$3,$4,$5,\'INR\',$6,$7,$7)',
+                [
+                  randomUUID(),
+                  journal,
+                  workspace,
+                  actor.ownerId,
+                  l.accountId,
+                  l.side,
+                  l.minor,
+                ],
+              );
+          },
+          attempt,
+        );
         await this.probe?.("postings", c, attempt);
         await query(
           'UPDATE journal SET status=\'POSTED\',"postedAt"=clock_timestamp(),"operationId"=$1 WHERE id=$2 AND "workspaceId"=$3 AND "ownerId"=$4',

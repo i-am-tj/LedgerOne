@@ -12,6 +12,7 @@ export const metricStages = [
   "locks.original",
   "sql.receipt",
   "sql.insertion",
+  "sql.postings",
   "sql.audit",
   "sql.commit",
   "sql.rollback",
