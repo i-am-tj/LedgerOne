@@ -1,0 +1,650 @@
+[
+  {
+    "campaign": "initial-shared-interleaved",
+    "metadata": {
+      "sourceCommit": "0a0523fb31a3887628b053ae1f210f9b6c880e06",
+      "dirty": true,
+      "codeDigest": "4250a28685fa77d3909481076039ce492ab3b32b4b6d4620f6be6145fafda557",
+      "node": "v22.22.0",
+      "profile": "local-private",
+      "schema": "ledgerone",
+      "connectionMode": "direct-loopback",
+      "writerPool": 6,
+      "verifierPool": 2,
+      "postgres": "17.6",
+      "catalogDigest": "8bce7905c92637cc89c31c876f47cefae1e38f52075ee77566e88328207b9547",
+      "hosted": "NOT_RUN / NOT_AUTHORIZED",
+      "productionWritesEnabled": false
+    },
+    "elapsedMs": 55645.48075,
+    "cases": 24,
+    "allAggregateChecksSafe": true,
+    "failedCapacityCells": [
+      {
+        "workload": {
+          "kind": "POST",
+          "legs": 2,
+          "union": "small",
+          "concurrency": 4,
+          "samples": 32
+        },
+        "setupFailures": 0,
+        "positiveResult": "FAIL",
+        "capacityResult": "FAIL",
+        "safe": true,
+        "counts": {
+          "success": 31,
+          "conflict": 0,
+          "failed": 1,
+          "cancelled": 0,
+          "uncertain": 0,
+          "recovered": 0
+        },
+        "commandP95Ms": 234.77500000000146,
+        "accountContention": "shared-interleaved",
+        "retries": null,
+        "failedAttempts": null
+      },
+      {
+        "workload": {
+          "kind": "CORRECT",
+          "legs": 50,
+          "union": "small",
+          "concurrency": 4,
+          "samples": 32
+        },
+        "setupFailures": 6,
+        "positiveResult": "FAIL",
+        "capacityResult": "FAIL",
+        "safe": true,
+        "counts": {
+          "success": 22,
+          "conflict": 0,
+          "failed": 4,
+          "cancelled": 0,
+          "uncertain": 0,
+          "recovered": 0
+        },
+        "commandP95Ms": 504.44174999999814,
+        "accountContention": "shared-interleaved",
+        "retries": null,
+        "failedAttempts": null
+      }
+    ]
+  },
+  {
+    "campaign": "expanded-shared-interleaved",
+    "metadata": {
+      "sourceCommit": "0a0523fb31a3887628b053ae1f210f9b6c880e06",
+      "dirty": true,
+      "codeDigest": "9544420c81006e6a0173e600ba159ac0dd8af7b402e91d09087d93eabe797a13",
+      "node": "v22.22.0",
+      "profile": "local-private",
+      "schema": "ledgerone",
+      "connectionMode": "direct-loopback",
+      "writerPool": 6,
+      "verifierPool": 2,
+      "postgres": "17.6",
+      "catalogDigest": "8bce7905c92637cc89c31c876f47cefae1e38f52075ee77566e88328207b9547",
+      "hosted": "NOT_RUN / NOT_AUTHORIZED",
+      "productionWritesEnabled": false
+    },
+    "elapsedMs": 141322.63545799998,
+    "cases": 45,
+    "allAggregateChecksSafe": true,
+    "failedCapacityCells": [
+      {
+        "workload": {
+          "kind": "POST",
+          "legs": 2,
+          "union": "small",
+          "concurrency": 4,
+          "samples": 32
+        },
+        "setupFailures": 0,
+        "positiveResult": "FAIL",
+        "capacityResult": "FAIL",
+        "safe": true,
+        "counts": {
+          "success": 30,
+          "conflict": 0,
+          "failed": 2,
+          "cancelled": 0,
+          "uncertain": 0,
+          "recovered": 0
+        },
+        "commandP95Ms": 181.56299999999464,
+        "accountContention": "shared-interleaved",
+        "retries": {
+          "attempts": 66,
+          "serialization": 36,
+          "deadlock": 0
+        },
+        "failedAttempts": {
+          "3": 2
+        }
+      },
+      {
+        "workload": {
+          "kind": "POST",
+          "legs": 50,
+          "union": "small",
+          "concurrency": 4,
+          "samples": 32
+        },
+        "setupFailures": 0,
+        "positiveResult": "FAIL",
+        "capacityResult": "FAIL",
+        "safe": true,
+        "counts": {
+          "success": 27,
+          "conflict": 0,
+          "failed": 5,
+          "cancelled": 0,
+          "uncertain": 0,
+          "recovered": 0
+        },
+        "commandP95Ms": 506.1321250000037,
+        "accountContention": "shared-interleaved",
+        "retries": {
+          "attempts": 59,
+          "serialization": 32,
+          "deadlock": 0
+        },
+        "failedAttempts": {
+          "3": 5
+        }
+      },
+      {
+        "workload": {
+          "kind": "POST",
+          "legs": 50,
+          "union": "maximum",
+          "concurrency": 4,
+          "samples": 32
+        },
+        "setupFailures": 0,
+        "positiveResult": "FAIL",
+        "capacityResult": "FAIL",
+        "safe": true,
+        "counts": {
+          "success": 29,
+          "conflict": 0,
+          "failed": 3,
+          "cancelled": 0,
+          "uncertain": 0,
+          "recovered": 0
+        },
+        "commandP95Ms": 421.84045799999876,
+        "accountContention": "shared-interleaved",
+        "retries": {
+          "attempts": 60,
+          "serialization": 31,
+          "deadlock": 0
+        },
+        "failedAttempts": {
+          "3": 3
+        }
+      },
+      {
+        "workload": {
+          "kind": "REVERSE",
+          "legs": 2,
+          "union": "small",
+          "concurrency": 4,
+          "samples": 32
+        },
+        "setupFailures": 2,
+        "positiveResult": "FAIL",
+        "capacityResult": "FAIL",
+        "safe": true,
+        "counts": {
+          "success": 29,
+          "conflict": 0,
+          "failed": 1,
+          "cancelled": 0,
+          "uncertain": 0,
+          "recovered": 0
+        },
+        "commandP95Ms": 144.55825000000186,
+        "accountContention": "shared-interleaved",
+        "retries": {
+          "attempts": 46,
+          "serialization": 17,
+          "deadlock": 0
+        },
+        "failedAttempts": {
+          "3": 1
+        }
+      },
+      {
+        "workload": {
+          "kind": "REVERSE",
+          "legs": 2,
+          "union": "maximum",
+          "concurrency": 4,
+          "samples": 32
+        },
+        "setupFailures": 3,
+        "positiveResult": "FAIL",
+        "capacityResult": "FAIL",
+        "safe": true,
+        "counts": {
+          "success": 29,
+          "conflict": 0,
+          "failed": 0,
+          "cancelled": 0,
+          "uncertain": 0,
+          "recovered": 0
+        },
+        "commandP95Ms": 149.95325000000594,
+        "accountContention": "shared-interleaved",
+        "retries": {
+          "attempts": 43,
+          "serialization": 14,
+          "deadlock": 0
+        },
+        "failedAttempts": {}
+      },
+      {
+        "workload": {
+          "kind": "REVERSE",
+          "legs": 50,
+          "union": "small",
+          "concurrency": 4,
+          "samples": 32
+        },
+        "setupFailures": 7,
+        "positiveResult": "FAIL",
+        "capacityResult": "FAIL",
+        "safe": true,
+        "counts": {
+          "success": 23,
+          "conflict": 0,
+          "failed": 2,
+          "cancelled": 0,
+          "uncertain": 0,
+          "recovered": 0
+        },
+        "commandP95Ms": 348.99229199999536,
+        "accountContention": "shared-interleaved",
+        "retries": {
+          "attempts": 43,
+          "serialization": 20,
+          "deadlock": 0
+        },
+        "failedAttempts": {
+          "3": 2
+        }
+      },
+      {
+        "workload": {
+          "kind": "REVERSE",
+          "legs": 50,
+          "union": "maximum",
+          "concurrency": 4,
+          "samples": 32
+        },
+        "setupFailures": 5,
+        "positiveResult": "FAIL",
+        "capacityResult": "FAIL",
+        "safe": true,
+        "counts": {
+          "success": 23,
+          "conflict": 0,
+          "failed": 4,
+          "cancelled": 0,
+          "uncertain": 0,
+          "recovered": 0
+        },
+        "commandP95Ms": 666.1790409999958,
+        "accountContention": "shared-interleaved",
+        "retries": {
+          "attempts": 47,
+          "serialization": 24,
+          "deadlock": 0
+        },
+        "failedAttempts": {
+          "3": 4
+        }
+      },
+      {
+        "workload": {
+          "kind": "CORRECT",
+          "legs": 500,
+          "union": "maximum",
+          "concurrency": 4,
+          "samples": 4,
+          "maxAmount": true
+        },
+        "setupFailures": 2,
+        "positiveResult": "FAIL",
+        "capacityResult": "FAIL",
+        "safe": true,
+        "counts": {
+          "success": 1,
+          "conflict": 0,
+          "failed": 1,
+          "cancelled": 0,
+          "uncertain": 0,
+          "recovered": 0
+        },
+        "commandP95Ms": 4474.961709000025,
+        "accountContention": "shared-interleaved",
+        "retries": {
+          "attempts": 2,
+          "serialization": 0,
+          "deadlock": 0
+        },
+        "failedAttempts": {
+          "1": 1
+        }
+      },
+      {
+        "workload": {
+          "kind": "CORRECT",
+          "legs": 500,
+          "union": "maximum",
+          "concurrency": 6,
+          "samples": 6,
+          "maxAmount": true
+        },
+        "setupFailures": 5,
+        "positiveResult": "FAIL",
+        "capacityResult": "FAIL",
+        "safe": true,
+        "counts": {
+          "success": 1,
+          "conflict": 0,
+          "failed": 0,
+          "cancelled": 0,
+          "uncertain": 0,
+          "recovered": 0
+        },
+        "commandP95Ms": 3349.7287910000014,
+        "accountContention": "shared-interleaved",
+        "retries": {
+          "attempts": 1,
+          "serialization": 0,
+          "deadlock": 0
+        },
+        "failedAttempts": {}
+      }
+    ]
+  },
+  {
+    "campaign": "separate-setup-disjoint",
+    "metadata": {
+      "sourceCommit": "0a0523fb31a3887628b053ae1f210f9b6c880e06",
+      "dirty": true,
+      "codeDigest": "67935acb9b5fefddf962a4d027eeed5c22fbd204be0fdad55539aa0bfcb56593",
+      "node": "v22.22.0",
+      "profile": "local-private",
+      "schema": "ledgerone",
+      "connectionMode": "direct-loopback",
+      "writerPool": 6,
+      "verifierPool": 2,
+      "postgres": "17.6",
+      "catalogDigest": "8bce7905c92637cc89c31c876f47cefae1e38f52075ee77566e88328207b9547",
+      "hosted": "NOT_RUN / NOT_AUTHORIZED",
+      "productionWritesEnabled": false
+    },
+    "elapsedMs": 160457.87741699998,
+    "cases": 48,
+    "allAggregateChecksSafe": true,
+    "failedCapacityCells": [
+      {
+        "workload": {
+          "kind": "POST",
+          "legs": 2,
+          "union": "maximum",
+          "concurrency": 4,
+          "samples": 32
+        },
+        "setupFailures": 0,
+        "positiveResult": "FAIL",
+        "capacityResult": "FAIL",
+        "safe": true,
+        "counts": {
+          "success": 31,
+          "conflict": 0,
+          "failed": 1,
+          "cancelled": 0,
+          "uncertain": 0,
+          "recovered": 0
+        },
+        "commandP95Ms": 204.70787500000006,
+        "accountContention": "disjoint",
+        "retries": {
+          "attempts": 62,
+          "serialization": 31,
+          "deadlock": 0
+        },
+        "failedAttempts": {
+          "3": 1
+        }
+      },
+      {
+        "workload": {
+          "kind": "POST",
+          "legs": 50,
+          "union": "small",
+          "concurrency": 4,
+          "samples": 32
+        },
+        "setupFailures": 0,
+        "positiveResult": "FAIL",
+        "capacityResult": "FAIL",
+        "safe": true,
+        "counts": {
+          "success": 31,
+          "conflict": 0,
+          "failed": 1,
+          "cancelled": 0,
+          "uncertain": 0,
+          "recovered": 0
+        },
+        "commandP95Ms": 346.7640410000022,
+        "accountContention": "disjoint",
+        "retries": {
+          "attempts": 55,
+          "serialization": 24,
+          "deadlock": 0
+        },
+        "failedAttempts": {
+          "3": 1
+        }
+      },
+      {
+        "workload": {
+          "kind": "POST",
+          "legs": 50,
+          "union": "maximum",
+          "concurrency": 4,
+          "samples": 32
+        },
+        "setupFailures": 0,
+        "positiveResult": "FAIL",
+        "capacityResult": "FAIL",
+        "safe": true,
+        "counts": {
+          "success": 31,
+          "conflict": 0,
+          "failed": 1,
+          "cancelled": 0,
+          "uncertain": 0,
+          "recovered": 0
+        },
+        "commandP95Ms": 332.36479099999997,
+        "accountContention": "disjoint",
+        "retries": {
+          "attempts": 57,
+          "serialization": 26,
+          "deadlock": 0
+        },
+        "failedAttempts": {
+          "3": 1
+        }
+      },
+      {
+        "workload": {
+          "kind": "REVERSE",
+          "legs": 2,
+          "union": "small",
+          "concurrency": 4,
+          "samples": 32
+        },
+        "setupFailures": 0,
+        "positiveResult": "FAIL",
+        "capacityResult": "FAIL",
+        "safe": true,
+        "counts": {
+          "success": 29,
+          "conflict": 0,
+          "failed": 3,
+          "cancelled": 0,
+          "uncertain": 0,
+          "recovered": 0
+        },
+        "commandP95Ms": 208.10862499999348,
+        "accountContention": "disjoint",
+        "retries": {
+          "attempts": 67,
+          "serialization": 38,
+          "deadlock": 0
+        },
+        "failedAttempts": {
+          "3": 3
+        }
+      },
+      {
+        "workload": {
+          "kind": "REVERSE",
+          "legs": 2,
+          "union": "maximum",
+          "concurrency": 4,
+          "samples": 32
+        },
+        "setupFailures": 0,
+        "positiveResult": "FAIL",
+        "capacityResult": "FAIL",
+        "safe": true,
+        "counts": {
+          "success": 31,
+          "conflict": 0,
+          "failed": 1,
+          "cancelled": 0,
+          "uncertain": 0,
+          "recovered": 0
+        },
+        "commandP95Ms": 179.37833400000818,
+        "accountContention": "disjoint",
+        "retries": {
+          "attempts": 65,
+          "serialization": 34,
+          "deadlock": 0
+        },
+        "failedAttempts": {
+          "3": 1
+        }
+      },
+      {
+        "workload": {
+          "kind": "REVERSE",
+          "legs": 50,
+          "union": "small",
+          "concurrency": 4,
+          "samples": 32
+        },
+        "setupFailures": 0,
+        "positiveResult": "FAIL",
+        "capacityResult": "FAIL",
+        "safe": true,
+        "counts": {
+          "success": 28,
+          "conflict": 0,
+          "failed": 4,
+          "cancelled": 0,
+          "uncertain": 0,
+          "recovered": 0
+        },
+        "commandP95Ms": 386.17925000000105,
+        "accountContention": "disjoint",
+        "retries": {
+          "attempts": 65,
+          "serialization": 37,
+          "deadlock": 0
+        },
+        "failedAttempts": {
+          "3": 4
+        }
+      },
+      {
+        "workload": {
+          "kind": "CORRECT",
+          "legs": 500,
+          "union": "maximum",
+          "concurrency": 4,
+          "samples": 4,
+          "maxAmount": true,
+          "contention": "shared"
+        },
+        "setupFailures": 0,
+        "positiveResult": "FAIL",
+        "capacityResult": "FAIL",
+        "safe": true,
+        "counts": {
+          "success": 0,
+          "conflict": 0,
+          "failed": 4,
+          "cancelled": 0,
+          "uncertain": 0,
+          "recovered": 0
+        },
+        "commandP95Ms": 3862.422333000024,
+        "accountContention": "shared",
+        "retries": {
+          "attempts": 4,
+          "serialization": 0,
+          "deadlock": 0
+        },
+        "failedAttempts": {
+          "1": 4
+        }
+      },
+      {
+        "workload": {
+          "kind": "CORRECT",
+          "legs": 500,
+          "union": "maximum",
+          "concurrency": 6,
+          "samples": 6,
+          "maxAmount": true,
+          "contention": "shared"
+        },
+        "setupFailures": 0,
+        "positiveResult": "FAIL",
+        "capacityResult": "FAIL",
+        "safe": true,
+        "counts": {
+          "success": 1,
+          "conflict": 0,
+          "failed": 5,
+          "cancelled": 0,
+          "uncertain": 0,
+          "recovered": 0
+        },
+        "commandP95Ms": 3415.3985410000023,
+        "accountContention": "shared",
+        "retries": {
+          "attempts": 6,
+          "serialization": 0,
+          "deadlock": 0
+        },
+        "failedAttempts": {
+          "1": 5
+        }
+      }
+    ]
+  }
+]

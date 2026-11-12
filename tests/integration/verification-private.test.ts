@@ -243,3 +243,29 @@ it("D-T02 private cleanup refuses an active connection and never terminates it",
     await lease.cleanup();
   }
 }, 15000);
+
+it("D-T03 diagnostic observer failure cannot change a real committed outcome or replay", async () => {
+  const key = randomUUID(),
+    payload = h.payload();
+  h.setMetrics(() => {
+    throw new Error("broken diagnostic sink");
+  });
+  try {
+    const response = await h.api(0, key, payload);
+    expect(response.status).toBe(201);
+    const result = await response.json();
+    const replay = await h.api(0, key, payload);
+    expect(replay.status).toBe(200);
+    expect(await replay.json()).toEqual(result);
+    expect(
+      (
+        await h.admin.query(
+          'SELECT count(*)::int AS count FROM ledgerone.audit_event WHERE "operationId"=$1',
+          [result.operationId],
+        )
+      ).rows[0].count,
+    ).toBe(1);
+  } finally {
+    h.setMetrics(undefined);
+  }
+});

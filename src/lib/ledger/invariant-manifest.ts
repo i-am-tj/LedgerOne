@@ -198,10 +198,18 @@ export async function readLedgerInvariants(
   pool: Pool,
   scope: InvariantScope,
   timeoutMs = 2500,
+  onConnectionWait?: (durationMs: number) => void,
 ) {
   if (!Number.isInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 10000)
     throw new Error("Invalid invariant read timeout");
-  const client = await pool.connect();
+  const started = performance.now();
+  const client = await pool.connect().finally(() => {
+    try {
+      onConnectionWait?.(performance.now() - started);
+    } catch {
+      /* Optional diagnostic only. */
+    }
+  });
   let destroy = false;
   const onError = () => {
     destroy = true;

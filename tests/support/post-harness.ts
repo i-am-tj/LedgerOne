@@ -1,3 +1,4 @@
+import type { MetricObserver } from "../../src/lib/ledger/verification/metrics";
 import { readFileSync } from "node:fs";
 import { createHmac, randomBytes, randomUUID } from "node:crypto";
 import pg from "pg";
@@ -60,6 +61,8 @@ export async function postHarness(
     | ((stage: Stage, c: pg.PoolClient, attempt: number) => Promise<void>)
     | undefined;
   let executor: PostExecutor | undefined;
+  let metrics: MetricObserver | undefined;
+  const observeMetric: MetricObserver = (event) => metrics?.(event);
   const traces: PostTrace[] = [];
   let logger = (trace: PostTrace) => {
     traces.push(trace);
@@ -152,6 +155,7 @@ export async function postHarness(
         runtimeURL: url.toString(),
         verifierURL: verifierURL.toString(),
         expected: baseline,
+        metrics: observeMetric,
         probe: async (...args: [Stage, pg.PoolClient, number]) =>
           probe?.(...args),
       };
@@ -242,6 +246,10 @@ export async function postHarness(
           expected: baseline,
         });
       },
+      setMetrics: (fn?: MetricObserver) => {
+        metrics = fn;
+      },
+      observeMetric,
       setProbe: (fn: typeof probe) => {
         probe = fn;
       },
@@ -302,6 +310,7 @@ export async function postHarness(
           runtime,
           enabled ? executor! : null,
           (trace) => logger(trace),
+          observeMetric,
         ),
       cleanup,
     };

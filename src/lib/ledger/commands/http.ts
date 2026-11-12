@@ -13,6 +13,11 @@ import {
   uuid,
 } from "./contract";
 import { throwIfAborted, withinDeadline } from "./retry";
+import {
+  measured,
+  emitMetric,
+  type MetricObserver,
+} from "../verification/metrics";
 import type { PostExecutor } from "./executor";
 
 export type PostTrace = Readonly<{
@@ -29,6 +34,7 @@ export async function postRequest(
   executor: PostExecutor | null,
   log: (trace: PostTrace) => void = (trace) =>
     console.info(JSON.stringify(trace)),
+  metrics?: MetricObserver,
 ): Promise<Response> {
   const requestId = randomUUID();
   const started = performance.now();
@@ -48,11 +54,13 @@ export async function postRequest(
       if (!session) throw new CommandError(401, "unauthorized");
       return { ownerId: session.user.id, requestId };
     };
-    await withinDeadline(
-      authorize(),
-      performance.now() + 5000,
-      undefined,
-      request.signal,
+    await measured(metrics, "http.authentication", () =>
+      withinDeadline(
+        authorize(),
+        performance.now() + 5000,
+        undefined,
+        request.signal,
+      ),
     );
     if (
       request.headers.get("origin") !== runtime.config.baseURL ||
@@ -65,7 +73,9 @@ export async function postRequest(
     const key = idempotencyKey(request.headers.get("idempotency-key"));
     // Closed production exposure must not wait for an untrusted upload.
     if (!executor) throw unavailable();
-    const command = parseCommand(await readCommandBody(request));
+    const command = parseCommand(
+      await measured(metrics, "http.body", () => readCommandBody(request)),
+    );
     commandName = `ledger.${command.kind}`;
     const outcome = await executor.execute(
       authorize,
@@ -92,5 +102,6 @@ export async function postRequest(
   } catch {
     /* Operational logging cannot change a committed result; financial audit is transactional. */
   }
+  emitMetric(metrics, "http.response", performance.now() - started);
   return response;
 }

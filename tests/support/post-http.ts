@@ -55,6 +55,7 @@ export async function postHTTP(h: Awaited<ReturnType<typeof postHarness>>) {
         h.runtime,
         h.executor,
         h.recordTrace,
+        h.observeMetric,
       );
       if (res.destroyed) return;
       if (!req.complete) {

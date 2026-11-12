@@ -10,6 +10,15 @@ const resolve = {
 export default defineConfig({
   test: {
     projects: [
+      {
+        resolve,
+        test: {
+          name: "verification",
+          setupFiles: ["tests/integration/setup-env.ts"],
+          include: ["tests/verification/*.benchmark.ts"],
+          fileParallelism: false,
+        },
+      },
       { resolve, test: { name: "unit", include: ["src/**/*.test.ts"] } },
       {
         resolve,
