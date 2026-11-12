@@ -6,19 +6,19 @@ Date: 2026-11-11 (Asia/Kolkata). Result: **NOT RUN / BLOCKED FOR RELEASE**.
 
 This report uses the user's expanded Phase 1 scope (P1-E1–P1-E4; P1-S01–P1-S09), superseding the earlier three-story foundation phase. No Phase 2 implementation is authorized by a partial Phase 1 result.
 
-| Requirement                          | Evidence required                                  | Current result                                                                                               |
-| ------------------------------------ | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| Clean setup and migration            | P1-S01 fresh DB/setup command evidence             | Local checks PASS; Compose healthy and migration/integration rerun verified                                  |
-| Private auth and isolation           | P1-S03/P1-S04 two-user/session/CSRF negative tests | S03 local/live sign-in + internal review recorded; S04 Workspace isolation PASS; financial isolation pending |
-| Every journal balanced               | P1-S05/P1-S06 commit-time DB invariants            | S05 DB constraints/direct-SQL evidence PASS; S06 service pending                                             |
-| Atomic and idempotent writes         | P1-S06 failure/retry/concurrency evidence          | Not implemented                                                                                              |
-| Opening balances and reversals       | P1-S06/P1-S07 exact expected balances              | Not implemented                                                                                              |
-| Card/transfer/FD/loan classification | P1-S08/P1-S09 independent scenario totals          | Not implemented                                                                                              |
-| Concurrency consistency              | P1-S09 actual PostgreSQL races                     | Not implemented                                                                                              |
-| Required checks green                | Formatting/lint/typecheck/build/unit/integration   | P1-S01–S04 local checks pass; financial isolation/ledger and reviewed merges pending                         |
-| Reviews and merges                   | Per-story PR/commit and accounting/security review | Not recorded                                                                                                 |
+| Requirement                          | Evidence required                                  | Current result                                                                                |
+| ------------------------------------ | -------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Clean setup and migration            | P1-S01 fresh DB/setup command evidence             | Local checks PASS; Compose healthy and migration/integration rerun verified                   |
+| Private auth and isolation           | P1-S03/P1-S04 two-user/session/CSRF negative tests | S03/S04 evidence and guarded B/C financial isolation PASS; D target-profile isolation pending |
+| Every journal balanced               | P1-S05/P1-S06 commit-time DB invariants            | S05 and guarded B/C balance/service evidence PASS; full D gate pending                        |
+| Atomic and idempotent writes         | P1-S06 failure/retry/concurrency evidence          | Guarded B/C evidence PASS; complete D target/gate NOT RUN                                     |
+| Opening balances and reversals       | P1-S06/P1-S07 exact expected balances              | Restricted C reversals PASS; S07 openings/workflows not implemented                           |
+| Card/transfer/FD/loan classification | P1-S08/P1-S09 independent scenario totals          | Not implemented                                                                               |
+| Concurrency consistency              | P1-S09 actual PostgreSQL races                     | B/C real PostgreSQL races PASS; D target and S09 gate pending                                 |
+| Required checks green                | Formatting/lint/typecheck/build/unit/integration   | Corrected C exact-head CI 166/212/48 PASS; D and final Phase 1 pipeline pending               |
+| Reviews and merges                   | Per-story PR/commit and accounting/security review | S05 and S06A/B/C reviewed merges verified; D/S07–S09 pending                                  |
 
-Accounting invariants are release-blocking. Phase 2 cannot start until all rows pass with reproducible evidence. Remote CI is not claimed to have run. No application check is inferred from documentation checks. Story evidence and command summaries are recorded in PROGRESS.md; final gate evidence belongs here when P1-S09 runs.
+Accounting invariants are release-blocking. Phase 2 cannot start until all rows pass with reproducible evidence. Predecessor CI is recorded in the linked S06C closure; the final Phase 1 gate has not run. No application check is inferred from documentation checks. Story evidence and command summaries are recorded in PROGRESS.md; final gate evidence belongs here when P1-S09 runs.
 
 ## P1-S02 local checkpoint
 

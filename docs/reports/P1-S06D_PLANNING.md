@@ -78,3 +78,9 @@ for path in protected:
 print('PASS: documentation links/coverage and protected bytes')
 PY
 ```
+
+## Planning publication
+
+[PR #28](https://github.com/i-am-tj/LedgerOne/pull/28), branch `docs/p1-s06d-plan`, publishes separate closure and planning commits. Exact final head/current-head CI evidence is recorded on that PR after completion. Issue #11 and epic #5 are OPEN / planned, C predecessor satisfied; #7 and parent #2 remain open, S07 #12 blocked. Original #13–#17 remain open with disposition links; #10/#27 and sub-epics #3/#4 remain closed. No implementation or production activation acceptance is claimed.
+
+Secret screening: `node /private/tmp/ledgerone-scan-stage.mjs` PASS (configured private auth/allowlist values withheld); Gitleaks 8.30.1 exact staged export PASS and branch-history scan PASS (56 commits, no leaks). Only the named planning branch was pushed, with no private environment/log/generated files. GitHub connector mutation returned 403, so authenticated `gh` performed the authorized issue/PR publication; no repository protection was bypassed.

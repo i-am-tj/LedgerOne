@@ -2,9 +2,9 @@
 
 > Current status (2026-11-12): S06C completed/reviewed merge `3502754` at corrected head `c22488b`; #10/#27 closed. [Verified closure](reports/S06C_CLOSURE.md). S06D predecessor satisfied; detailed planning awaits acceptance and reviewed planning merge. A05-01–05 remain open. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. Earlier dated checkpoints retain their original decisions and evidence.
 
-S06A review artifact: [PR #18](https://github.com/i-am-tj/LedgerOne/pull/18), implementation commit `cf37cda`; required local pipeline **89 unit / 70 integration / 46 browser tests PASS**, plus schema/attestation/build. Remote checks and human review are reported on the PR.
+Historical S06A review-readiness checkpoint: [PR #18](https://github.com/i-am-tj/LedgerOne/pull/18), implementation commit `cf37cda`; required local pipeline **89 unit / 70 integration / 46 browser tests PASS**, plus schema/attestation/build. Remote checks and human review are reported on the PR.
 
-**Recommendation: CONDITIONAL PASS for S06A review readiness; full S06 financial write gate: FAIL (closed).** No financial API write, production readiness or Phase 1 completion is claimed.
+**Historical recommendation at that checkpoint: CONDITIONAL PASS for S06A review readiness; full S06 financial write gate: FAIL (closed).** No financial API write, production readiness or Phase 1 completion is claimed.
 
 ## S05 closure — confirmed
 
@@ -16,14 +16,14 @@ The merge occurred while the handoff was being prepared and before the two new d
 
 Phase = [Phase 1 milestone](https://github.com/i-am-tj/LedgerOne/milestone/1); parent epic [P1-E3 #2](https://github.com/i-am-tj/LedgerOne/issues/2); sub-epics [controls #3](https://github.com/i-am-tj/LedgerOne/issues/3), [command workflows #4](https://github.com/i-am-tj/LedgerOne/issues/4), [write gate #5](https://github.com/i-am-tj/LedgerOne/issues/5). Issue bodies/labels record parentage; tasks are checkboxes. Sixteen epic/story/finding issues and the required workflow labels were created; no native sub-issue configuration is claimed.
 
-| Order  | Story                                                         | Scope                                                                             | Status                                                  |
-| ------ | ------------------------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| Parent | [P1-S06 #7](https://github.com/i-am-tj/LedgerOne/issues/7)    | Authenticated audited idempotent command aggregate                                | In progress in S06A only                                |
-| 1      | [P1-S06A #8](https://github.com/i-am-tj/LedgerOne/issues/8)   | Additive audit/correction controls and invariant attestation                      | Implemented locally; final checks/review/merge required |
-| 2      | [P1-S06B #9](https://github.com/i-am-tj/LedgerOne/issues/9)   | Real-handler POST, trusted actor, canonical replay, atomic audit and full retries | Blocked on reviewed S06A merge                          |
-| 3      | [P1-S06C #10](https://github.com/i-am-tj/LedgerOne/issues/10) | Exact authorized REVERSE/CORRECT and concurrent correction semantics              | Blocked on reviewed S06B merge                          |
-| 4      | [P1-S06D #11](https://github.com/i-am-tj/LedgerOne/issues/11) | Actual-role/handler/drift/concurrency write-enablement gate                       | Blocked on reviewed S06C merge                          |
-| Next   | [P1-S07 #12](https://github.com/i-am-tj/LedgerOne/issues/12)  | Account metadata/opening history/native reconciliation                            | Deferred until reviewed S06 completion                  |
+| Order  | Story                                                         | Scope                                                                             | Status                                                         |
+| ------ | ------------------------------------------------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| Parent | [P1-S06 #7](https://github.com/i-am-tj/LedgerOne/issues/7)    | Authenticated audited idempotent command aggregate                                | In progress; A/B/C complete, D planning pending acceptance     |
+| 1      | [P1-S06A #8](https://github.com/i-am-tj/LedgerOne/issues/8)   | Additive audit/correction controls and invariant attestation                      | Reviewed/merged PR #18 / df56d46                               |
+| 2      | [P1-S06B #9](https://github.com/i-am-tj/LedgerOne/issues/9)   | Real-handler POST, trusted actor, canonical replay, atomic audit and full retries | Reviewed/merged PR #21 / 5af4c19                               |
+| 3      | [P1-S06C #10](https://github.com/i-am-tj/LedgerOne/issues/10) | Exact authorized REVERSE/CORRECT and concurrent correction semantics              | Reviewed/merged PR #26 / 3502754                               |
+| 4      | [P1-S06D #11](https://github.com/i-am-tj/LedgerOne/issues/11) | Actual-role/handler/drift/concurrency write-enablement gate                       | Predecessor satisfied; planning PR #28 awaits acceptance/merge |
+| Next   | [P1-S07 #12](https://github.com/i-am-tj/LedgerOne/issues/12)  | Account metadata/opening history/native reconciliation                            | Deferred until reviewed S06 completion                         |
 
 Full mandatory contracts and acceptance/unit/integration/security/concurrency/recovery requirements are in corresponding `docs/stories/P1-S06{,A,B,C,D}.md` and `P1-S07.md`, mirrored into their issues. One implementation slice/PR at a time; no next slice until required checks and reviewed merge pass.
 
