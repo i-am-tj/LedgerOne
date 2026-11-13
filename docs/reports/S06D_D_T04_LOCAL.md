@@ -1,0 +1,28 @@
+# D-T04 local accounting and security verification
+
+Parent #11, draft PR #30. D-T03 predecessor is [LOCAL ACCEPTED](S06D_D_T03_ACCEPTANCE.md) at 417374d. This package reuses existing financial handlers and accounting regressions. The implementation adds one missing combined private-schema, actual-role test in `tests/integration/verification-private.test.ts`.
+
+## Coverage reconciliation
+
+| Requirements | Existing regression evidence                                                                           | D-T04 addition or limit                                                                                                                                |
+| ------------ | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| W01/W13      | auth, ownership, post-http, correction-http, private-role and native financial-disabled browser suites | Combined private POST/REVERSE/CORRECT denies second user before creating operations and on historical replay                                           |
+| W02          | contract/money unit suites; post-command; exact MAX/duplicate reversal and maximum corrections         | Existing precision, bounds and stream regressions reused                                                                                               |
+| W03          | post-command, correction-concurrency, independent probes and commit-wait                               | Combined private replay of all three operations after account archive is identical and adds no audit/receipt                                           |
+| W04/W07/W08  | post-command, command-controls, commit-wait and HTTP failure injection                                 | Combined private exact durable counts, zero remaining drafts and successful immutable replay; existing private draft visibility/failure tests retained |
+| W05/W06      | reverse-command, correct-command, correction-locks, independent probes and cross-period reports        | Private reversal-of-reversal correction targets explicit original and exact account sum uses BigInt                                                    |
+| W09          | correction-concurrency, correction-locks, independent probes and commit-wait                           | Existing genuine PostgreSQL 40001/40P01, cancellation, deadline and ambiguous-COMMIT tests reused                                                      |
+| W10/W11      | command-controls, verification-private, schema rehearsal and catalog attestation                       | Existing private fresh/upgrade, shadowing, role inheritance, CHECK/function/ACL/history drift tests reused                                             |
+| W12          | Individual A05 disposition register and source/route exclusions                                        | Original findings remain open pending individual review; metadata/account/OPENING exclusions belong to S07                                             |
+| W14          | Complete local pipeline, accepted D-T03 campaign and both reviewed-source CI runs                      | No redundant capacity campaign required for this test-only change                                                                                      |
+| W15          | Recorded owner D-T03 decision and non-author correction review                                         | Final release/adversarial review, final CI and reviewed merge remain D-T05 obligations                                                                 |
+
+Public-schema regression cases use real restricted writers. The added private test uses separate writer, authentication and verifier roles and actual authenticated shared HTTP handlers. It calls no consumer financial endpoint. The archive/restore in the fixture is privileged test setup, not an exposed lifecycle command.
+
+The successful combined test proves one POST, one REVERSE and one CORRECT have three receipts, four posted journals, three audits, zero drafts and the expected exact signed account sum. Foreign requests and historical replay leave those counts unchanged. It does not establish receipt-side mandatory audit enforcement for arbitrary direct SQL. That independent experiment remains unaccepted and excluded. Existing 007 audit-side constraints and application transactional audit remain the supported contract.
+
+## Evidence and remaining gates
+
+Targeted command `vitest run --project integration tests/integration/verification-private.test.ts` passed 14/14 using a generated disposable native PostgreSQL 17.6 private fixture. Full local pipeline passed with 220 unit, 253 integration and 48 browser tests. Formatting, lint, typecheck, migration, schema rehearsal, catalog attestation, production build and foundation checks all passed. The wrapper ran the standard npm commands listed in the D-T03 handoff on a generated fresh database, with TEST_DATABASE_URL targeting dummy credentials at loopback port 55454. Full private local log is /private/tmp/ledgerone-d04-pipeline.log. These results cover the D-T04 local test changes; final published-source CI remains a D-T05 release obligation.
+
+Hosted profile is NOT RUN / NOT AUTHORIZED for every applicable W assertion. No local result satisfies hosted-dependent rows or overall S06D PASS. Shared-Docker failures remain open in #34. Any deterministic financial/security defect reopens the affected gate. Original migrations, financial privileges, retry/deadline/isolation and native disabled capability are unchanged.

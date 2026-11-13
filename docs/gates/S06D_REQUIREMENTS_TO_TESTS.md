@@ -41,3 +41,7 @@ For each W row record L/P local result and H hosted result separately, with exac
 ## D-T03 local prototype evidence (does not change final W results)
 
 [Exact local prototype report](../reports/S06D_BATCHING_PROTOTYPE.md) adds fourteen real private-role accounting/security/fault cases relevant to W01–W04/W06–W10/W13/W14, with full 220/242/48 regression PASS. This is D-T03 verification only, not execution or acceptance of D-T04's complete W matrix. Required W14 capacity remains FAIL #32; W15 review/merge remains NOT RUN: four required matrix failures, concurrent max stress failure and CORRECT critical p99 NOT PROVEN. Independent review, target-specific hosted W assertions, final evidence/reviewed merge remain outstanding. Original A05 issues stay open; final W results and gate remain closed.
+
+## D-T04 local coverage update
+
+D-T03 is LOCAL ACCEPTED at 417374d by explicit owner decision. [D-T04 coverage reconciliation](../reports/S06D_D_T04_LOCAL.md) maps reused regressions and the added combined private-role test to W01–W15. The table above retains final target-gate status, including outstanding hosted and reviewed-merge evidence. Local execution is not final W approval. Shared-Docker limitation remains open in #34.

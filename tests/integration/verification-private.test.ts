@@ -269,3 +269,101 @@ it("D-T03 diagnostic observer failure cannot change a real committed outcome or 
     h.setMetrics(undefined);
   }
 });
+
+it("D-T04 private roles combine POST, REVERSE and CORRECT with immutable authorized replay", async () => {
+  const originalKey = randomUUID();
+  const first = await h.api(0, originalKey, h.payload());
+  expect(first.status).toBe(201);
+  const original = await first.json();
+  const reverse = {
+    kind: "REVERSE",
+    originalJournalId: original.journalId,
+    effectiveAt: "2026-02-01T00:00:00Z",
+    description: "Undo private-schema original",
+    reason: "D-T04 verification",
+  };
+  const key = randomUUID();
+  expect((await h.api(1, key, reverse)).status).toBe(404);
+  const response = await h.api(0, key, reverse);
+  expect(response.status).toBe(201);
+  const inverse = await response.json();
+  const correction = {
+    kind: "CORRECT",
+    originalJournalId: inverse.reversal.journalId,
+    effectiveAt: "2026-03-01T00:00:00Z",
+    description: "Reverse the explicit reversal",
+    reason: "D-T04 verification correction",
+    replacement: {
+      effectiveAt: "2026-03-02T00:00:00Z",
+      description: "Private replacement",
+      legs: h.payload().legs,
+    },
+  };
+  const correctionKey = randomUUID();
+  expect((await h.api(1, correctionKey, correction)).status).toBe(404);
+  const corrected = await h.api(0, correctionKey, correction);
+  expect(corrected.status).toBe(201);
+  const result = await corrected.json();
+  expect(result.originalJournalId).toBe(inverse.reversal.journalId);
+  const operations = [
+    original.operationId,
+    inverse.operationId,
+    result.operationId,
+  ];
+  const snapshot = async () =>
+    (
+      await h.admin.query(
+        `SELECT
+      (SELECT count(*)::int FROM ledger_operation WHERE id=ANY($1::uuid[])) receipts,
+      (SELECT count(*)::int FROM journal WHERE "operationId"=ANY($1::uuid[]) AND status='POSTED') journals,
+      (SELECT count(*)::int FROM audit_event WHERE "operationId"=ANY($1::uuid[])) audits,
+      (SELECT count(*)::int FROM journal WHERE "operationId"=ANY($1::uuid[]) AND status<>'POSTED') drafts,
+      (SELECT coalesce(sum(CASE p.side WHEN 'DEBIT' THEN p."functionalMinor" ELSE -p."functionalMinor" END),0)::text FROM posting p JOIN journal j ON j.id=p."journalId" WHERE j."operationId"=ANY($1::uuid[]) AND p."accountId"=$2) balance`,
+        [operations, h.users[0]!.bank],
+      )
+    ).rows[0];
+  const expectedBalance = (
+    BigInt(
+      original.legs.find(
+        (l: { accountId: string }) => l.accountId === h.users[0]!.bank,
+      ).functionalMinor,
+    ) *
+    2n *
+    (h.payload().legs.find((l) => l.accountId === h.users[0]!.bank)!.side ===
+    "DEBIT"
+      ? 1n
+      : -1n)
+  ).toString();
+  const before = await snapshot();
+  expect(before).toEqual({
+    receipts: 3,
+    journals: 4,
+    audits: 3,
+    drafts: 0,
+    balance: expectedBalance,
+  });
+  // Mutable account lifecycle data must not change any historical result.
+  await h.admin.query(
+    'UPDATE ledger_account SET name=$1,"archivedAt"=now() WHERE id=ANY($2::uuid[])',
+    ["D-T04 archived", h.payload().legs.map((l) => l.accountId)],
+  );
+  try {
+    for (const [replayKey, command, expected] of [
+      [originalKey, h.payload(), original],
+      [key, reverse, inverse],
+      [correctionKey, correction, result],
+    ] as const) {
+      const replay = await h.api(0, replayKey, command);
+      expect(replay.status).toBe(200);
+      expect(await replay.json()).toEqual(expected);
+      expect((await h.api(1, replayKey, command)).status).toBe(404);
+    }
+    expect((await h.api(0, randomUUID(), h.payload())).status).toBe(409);
+    expect(await snapshot()).toEqual(before);
+  } finally {
+    await h.admin.query(
+      'UPDATE ledger_account SET "archivedAt"=NULL WHERE id=ANY($1::uuid[])',
+      [h.payload().legs.map((l) => l.accountId)],
+    );
+  }
+}, 15000);
