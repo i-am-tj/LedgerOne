@@ -1,3 +1,4 @@
+import { queryText } from "../support/query-text";
 // Offline diagnostic sampling. Financial SQL and all decisions belong to the existing handler.
 import { AsyncLocalStorage } from "node:async_hooks";
 import { randomUUID } from "node:crypto";
@@ -20,6 +21,8 @@ type Sample = {
     reason?: string;
     routine?: string;
   }[];
+  commitBudgets?: number[];
+  writerOccupancyMs?: number;
   rollbacks: number;
   stage: string;
 };
@@ -94,10 +97,24 @@ it("samples local COMMIT and SSI paths without qualifying capacity", async () =>
     sample.stage = stage;
     if (stage === "connected") {
       sample.attempts++;
+      const acquired = performance.now(),
+        release = c.release.bind(c);
+      c.release = (err) => {
+        sample.writerOccupancyMs = ms(
+          (sample.writerOccupancyMs ?? 0) + performance.now() - acquired,
+        );
+        c.release = release;
+        release(err);
+      };
       const query = c.query.bind(c);
       c.query = (async (...args: unknown[]) => {
-        const sql = String(args[0]);
-        if (monitor && sql === "COMMIT") commitSent = now();
+        const sql = queryText(args[0]);
+        if (sql === "COMMIT") {
+          (sample.commitBudgets ??= []).push(
+            (args[0] as { query_timeout: number }).query_timeout,
+          );
+          if (monitor) commitSent = now();
+        }
         try {
           const r = await (query as (...a: unknown[]) => Promise<unknown>)(
             ...args,

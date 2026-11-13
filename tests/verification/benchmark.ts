@@ -16,7 +16,7 @@ export type Workload = {
   kind: "POST" | "REVERSE" | "CORRECT";
   legs: 2 | 50 | 500;
   union: "small" | "maximum";
-  concurrency: 1 | 4 | 6;
+  concurrency: 1 | 2 | 4 | 6;
   samples: number;
   critical?: boolean;
   maxAmount?: boolean;
@@ -123,10 +123,14 @@ export async function accounts(h: Harness, count: number) {
   );
   return values.map((v) => v.id);
 }
-export async function benchmark(c: Campaign, w: Workload) {
+export async function benchmark(
+  c: Campaign,
+  w: Workload,
+  verifyRecovery = false,
+) {
   if (
     ![2, 50, 500].includes(w.legs) ||
-    ![1, 4, 6].includes(w.concurrency) ||
+    ![1, 2, 4, 6].includes(w.concurrency) ||
     !Number.isInteger(w.samples) ||
     w.samples < 1 ||
     w.samples > 2000
@@ -154,7 +158,9 @@ export async function benchmark(c: Campaign, w: Workload) {
         amount: w.maxAmount ? "9999999999999999.99" : "1.00",
       }));
     const payload = (ids: string[]) => ({ ...h.payload(), legs: legs(ids) });
+    const setupStart = performance.now();
     const observations: Observation[] = [];
+    const failures: { key: string; body: unknown }[] = [];
     let setupFailures = 0;
     const retries = { attempts: 0, serialization: 0, deadlock: 0 };
     const failedAttempts: Record<string, number> = {};
@@ -213,15 +219,17 @@ export async function benchmark(c: Campaign, w: Workload) {
     }
     // Setup is complete before qualification. Shared-account contention is a
     // separately labelled challenge, not an uncontended service-budget sample.
+    const measuredStart = performance.now();
     async function executeOne(body: unknown) {
       const stages: Partial<Record<MetricStage, number>> = {};
       const counters = { attempts: 0, serialization: 0, deadlock: 0 };
       retryCounters.set(stages, counters);
       await storage.run(stages, async () => {
         const started = performance.now();
+        const key = randomUUID();
         const response = await h.api(
           0,
-          randomUUID(),
+          key,
           body,
           {},
           h.users[0]!.workspace,
@@ -230,6 +238,7 @@ export async function benchmark(c: Campaign, w: Workload) {
         );
         const reply = await response.json();
         if (response.status !== 201) {
+          if (verifyRecovery) failures.push({ key, body });
           const code = [
             "service_unavailable",
             "idempotency_conflict",
@@ -264,6 +273,62 @@ export async function benchmark(c: Campaign, w: Workload) {
       if (controller.signal.aborted) break;
       await Promise.all(bodies.slice(n, n + w.concurrency).map(executeOne));
     }
+    const measuredMs = performance.now() - measuredStart;
+    const recoveries = [];
+    for (const { key, body } of failures) {
+      if (controller.signal.aborted) break;
+      const user = h.users[0]!;
+      const totals = async () =>
+        (
+          await h.admin.query(
+            `SELECT count(DISTINCT o.id)::int receipts,count(DISTINCT j.id)::int journals,
+         count(DISTINCT p.id)::int postings,count(DISTINCT a.id)::int audits
+         FROM ledger_operation o LEFT JOIN journal j ON j."operationId"=o.id
+         LEFT JOIN posting p ON p."journalId"=j.id LEFT JOIN audit_event a ON a."operationId"=o.id
+         WHERE o."workspaceId"=$1 AND o."ownerId"=$2 AND o."idempotencyKey"=$3`,
+            [user.workspace, user.id, key],
+          )
+        ).rows[0];
+      const before = await totals();
+      const first = await h.api(
+        0,
+        key,
+        body,
+        {},
+        user.workspace,
+        true,
+        controller.signal,
+      );
+      const second = await h.api(
+        0,
+        key,
+        body,
+        {},
+        user.workspace,
+        true,
+        controller.signal,
+      );
+      const after = await totals();
+      const identical =
+        JSON.stringify(await first.json()) ===
+        JSON.stringify(await second.json());
+      const journals = w.kind === "CORRECT" ? 2 : 1;
+      recoveries.push({
+        before,
+        after,
+        first: first.status,
+        second: second.status,
+        identical,
+        safe:
+          [200, 201].includes(first.status) &&
+          second.status === 200 &&
+          identical &&
+          after.receipts === 1 &&
+          after.audits === 1 &&
+          after.journals === journals &&
+          after.postings === w.legs * journals,
+      });
+    }
     const summary = summarizeObservations(observations, w.critical ?? false);
     const inconsistent = await h.admin.query(`SELECT
     (SELECT count(*)::int FROM (SELECT "journalId" FROM ledgerone.posting GROUP BY "journalId" HAVING sum(CASE side WHEN 'DEBIT' THEN "functionalMinor" ELSE -"functionalMinor" END)<>0) broken) unbalanced,
@@ -282,6 +347,12 @@ export async function benchmark(c: Campaign, w: Workload) {
       setupFailures === 0 && summary.counts.success === w.samples;
     const result = {
       workload: w,
+      setupMs: measuredStart - setupStart,
+      measuredMs,
+      recoveries,
+      recoveryComplete:
+        failures.length === recoveries.length &&
+        recoveries.every((r) => r.safe),
       coldIncluded: true,
       accountContention: w.contention ?? "disjoint",
       setupInterleaved: false,
