@@ -2,7 +2,7 @@
 
 **Plan, not measured S06D evidence.** Hosted results NOT RUN. D-T03 follows accepted planning and D-T02 controls. Every hosted connection, fixture, benchmark or cleanup needs the [separate target permissions](S06D_TARGET_AND_ROLES.md). No paid service, production load or database size increase is authorized.
 
-The [invite-only capacity amendment](S06D_INVITE_ONLY_CAPACITY_AMENDMENT.md) is pending owner review. The [local diagnostic report](../reports/S06D_CONCURRENCY_RCA.md) records the existing gate failure and separates first responses from durable recovery.
+The [invite-only capacity amendment](S06D_INVITE_ONLY_CAPACITY_AMENDMENT.md) is the controlling operational envelope from 2026-11-13. The original manifest and budgets below remain the historical basis for published runs. Use the accepted amendment for new qualification cells, including POST2/c2 p99 and CORRECT50/c1 p95. The [local diagnostic report](../reports/S06D_CONCURRENCY_RCA.md) records the existing gate failure and separates first responses from durable recovery.
 
 ## Baseline and risk
 

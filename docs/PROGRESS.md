@@ -540,3 +540,7 @@ PR #30 stays draft and #32 open. Author-context fresh assessment is not independ
 ## 2026-11-12 — initial batch CI failure retained; test-only R04 correction
 
 Initial87a5a7e remote CI failed maximum first-response201 and, once, later shared global counts. #33/Low tracks fixture isolation; it does not waive #32. Separate644fe0d correction retains equivalent prehistory and strict maximum success, with owned SQL settlement and a real blocked-statement/separate-fixture regression. Corrected local full **220 unit / 243 integration / 48 browser PASS**,21.2s, zero flaky; all standard stages PASS. [Evidence and limitations](reports/S06D_BATCHING_PROTOTYPE.md). Financial/benchmark source and its5eba37c0…digest unchanged; both prior failures and current-head CI must be checked independently. No issue closure, merge, D-T04/D-T05, hosted or production action.
+
+## 2026-11-13 — D-T03 owner decisions A and B
+
+The owner accepted the [invite-only performance budget](plans/S06D_INVITE_ONLY_CAPACITY_AMENDMENT.md). D-T03 still fails because maximum CORRECT can return 503 at concurrency one. The [RCA at 14a22dc, recorded in 748b600](reports/S06D_CONCURRENCY_RCA.md) is local diagnostic evidence accepted for planning. The owner authorized the [deferred-validation design](plans/S06D_DEFERRED_VALIDATION_DESIGN.md) for review. Implementation requires another decision. Draft PR #30 and open #32 carry this work. D-T04/D-T05, financial write enablement and Phase 1 completion remain blocked.

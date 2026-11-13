@@ -189,3 +189,7 @@ Milestone [Phase 1](https://github.com/i-am-tj/LedgerOne/milestone/1) → epic [
 ## Owner acceptance and amendment provenance — 2026-11-12
 
 The owner explicitly accepted reviewed head `59171157f80216396273c61a2bfa5ee4c8d0d9b0` with two minor documentation amendments: staged performance acceptance separating protocol maxima from operational capacity, and local readiness separate from authorized hosted verification with explicit schema/role/shadowing tests. These clarifications are incorporated without redesign, validation-limit reduction or invariant changes. The owner authorizes reviewed planning merge followed by isolated local implementation; no hosted/production connection, mutation, activation or rollback is authorized. Final amended-head commands, CI and actual planning merge are recorded on PR #28. This is owner planning acceptance, not an invented native APPROVED review or approval of future implementation results.
+
+## D-T03 capacity decision — 2026-11-13
+
+Owner decision A supersedes the original ordinary-concurrency and critical-tail cells for subsequent D-T03 qualification. Apply the [accepted capacity policy](../plans/S06D_INVITE_ONLY_CAPACITY_AMENDMENT.md). Historical results retain their original decisions. An uncontended maximum CORRECT returned 503 and blocks #32. Decision B authorizes the [design proposal](../plans/S06D_DEFERRED_VALIDATION_DESIGN.md) only. D-T04 and D-T05 remain blocked.
