@@ -2,7 +2,8 @@ import { randomUUID } from "node:crypto";
 import { getEventListeners } from "node:events";
 import type { Socket } from "node:net";
 import { setTimeout as delay } from "node:timers/promises";
-import type pg from "pg";
+import pg from "pg";
+import { postRequest } from "../../src/lib/ledger/commands/http";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { postHarness } from "../support/post-harness";
 import { queryText } from "../support/query-text";
@@ -39,7 +40,16 @@ it.each([
     const key = randomUUID(),
       body = h.payload(),
       controller = new AbortController();
-    const baseListeners = getEventListeners(controller.signal, "abort").length;
+    const workspace = h.users[0]!.workspace;
+    const request = h.makeRequest(
+      0,
+      key,
+      body,
+      {},
+      workspace,
+      controller.signal,
+    );
+    const baseListeners = getEventListeners(request.signal, "abort").length;
     const attempts: number[] = [];
     const pids: number[] = [];
     let resumes: ReturnType<typeof setTimeout> | undefined;
@@ -113,14 +123,13 @@ it.each([
     });
     try {
       const start = performance.now();
-      const res = await h.api(
-        0,
-        key,
-        body,
-        {},
-        h.users[0]!.workspace,
-        true,
-        controller.signal,
+      const res = await postRequest(
+        request,
+        workspace,
+        h.runtime,
+        h.executor!,
+        h.recordTrace,
+        h.observeMetric,
       );
       const elapsed = performance.now() - start;
       h.setProbe(undefined);
@@ -200,9 +209,9 @@ it.each([
         postings: 2,
         audits: 1,
       });
-      expect(
-        getEventListeners(controller.signal, "abort").length,
-      ).toBeLessThanOrEqual(baseListeners + 1); // Request creates a dependent signal.
+      expect(getEventListeners(request.signal, "abort").length).toBe(
+        baseListeners,
+      );
     } finally {
       if (resumes) clearTimeout(resumes);
       h.setProbe(undefined);
@@ -250,3 +259,147 @@ it("a genuine aborted attempt spends the same deadline as final COMMIT", async (
     h.setProbe(undefined);
   }
 }, 15000);
+
+it.each(["confirmed", "unconfirmed"] as const)(
+  "a real deferred COMMIT rejection has %s deadline-bounded ROLLBACK cleanup",
+  async (mode) => {
+    const key = randomUUID(),
+      invalidKey = randomUUID(),
+      workspace = h.users[0]!.workspace;
+    const request = h.makeRequest(0, key, h.payload(), {}, workspace);
+    const listeners = getEventListeners(request.signal, "abort").length;
+    let pid = 0,
+      rejection = "",
+      releaseCount = 0,
+      destroyed = false,
+      dispatches = 0;
+    let commandDeadline = 0,
+      ackAt = 0,
+      cleanupStart = 0;
+    const attempts: number[] = [];
+    let finishAck!: () => void;
+    const ackGate = new Promise<void>((resolve) => {
+      finishAck = resolve;
+    });
+    let awaitingLateAck: Promise<unknown> | undefined;
+    h.setProbe(async (stage, c, attempt) => {
+      if (stage === "connected") attempts.push(attempt);
+      if (stage !== "beforeCommit") return;
+      pid = (await c.query("SELECT pg_backend_pid() AS pid")).rows[0].pid;
+      // An otherwise well-formed scoped receipt without a posted child fails
+      // operation_valid_at_commit, after the actual financial command was assembled.
+      await c.query(
+        'INSERT INTO ledger_operation(id,"workspaceId","ownerId","idempotencyKey","requestHash",kind) VALUES($1,$2,$3,$4,$5,\'POST\')',
+        [randomUUID(), workspace, h.users[0]!.id, invalidKey, "a".repeat(64)],
+      );
+      const query = c.query.bind(c),
+        release = c.release.bind(c);
+      c.release = (discard) => {
+        releaseCount++;
+        destroyed = !!discard;
+        c.release = release;
+        release(discard);
+      };
+      c.query = (async (...args: unknown[]) => {
+        const text = queryText(args[0]),
+          invoke = query as (...v: unknown[]) => Promise<pg.QueryResult>;
+        if (text === "COMMIT") {
+          const budget = (args[0] as { query_timeout: number }).query_timeout;
+          commandDeadline = performance.now() + budget;
+          try {
+            return await invoke(...args);
+          } catch (e) {
+            if (e instanceof pg.DatabaseError) rejection = e.code ?? "";
+            // The server has rejected the transaction. Deliver that real error
+            // near expiry, leaving the rejecting connection enough time to clean up.
+            if (mode === "unconfirmed")
+              await delay(
+                Math.max(0, commandDeadline - performance.now() - 800),
+              );
+            throw e;
+          }
+        }
+        if (text !== "ROLLBACK") return invoke(...args);
+        dispatches++;
+        cleanupStart = performance.now();
+        c.query = query;
+        const reply = await invoke(...args);
+        if (mode === "unconfirmed") {
+          // Withhold delivery above pg's own timer. Only an independent absolute
+          // deadline can settle the request before this ACK is released.
+          awaitingLateAck = ackGate.then(() => {
+            ackAt = performance.now();
+            return reply;
+          });
+          return awaitingLateAck;
+        }
+        ackAt = performance.now();
+        return reply;
+      }) as pg.PoolClient["query"];
+    });
+    try {
+      const pending = postRequest(
+        request,
+        workspace,
+        h.runtime,
+        h.executor!,
+        h.recordTrace,
+        h.observeMetric,
+      );
+      // Independent watchdog fails the regression if cleanup waits for the held ACK.
+      let watchdog: ReturnType<typeof setTimeout> | undefined;
+      const response = await Promise.race([
+        pending,
+        new Promise<never>((_, reject) => {
+          watchdog = setTimeout(() => {
+            finishAck();
+            reject(Error("cleanup outlived its deadline"));
+          }, 12500);
+        }),
+      ]).finally(() => clearTimeout(watchdog));
+      const elapsedToResponse = performance.now() - commandDeadline;
+      expect(response.status).toBe(503);
+      expect(rejection).toBe("23514");
+      expect(attempts).toEqual([1]);
+      expect(dispatches).toBe(1);
+      expect(releaseCount).toBe(1);
+      expect(destroyed).toBe(mode === "unconfirmed");
+      expect(getEventListeners(request.signal, "abort")).toHaveLength(
+        listeners,
+      );
+      if (mode === "confirmed") expect(ackAt).toBeLessThan(commandDeadline);
+      else {
+        expect(cleanupStart).toBeLessThan(commandDeadline);
+        expect(ackAt).toBe(0);
+        expect(elapsedToResponse).toBeGreaterThan(-10);
+        expect(elapsedToResponse).toBeLessThan(250);
+        finishAck();
+        await awaitingLateAck;
+        expect(ackAt).toBeGreaterThanOrEqual(commandDeadline - 10);
+      }
+      const zero = { receipts: 0, journals: 0, postings: 0, audits: 0 };
+      expect(await outcome(key)).toEqual(zero);
+      expect(await outcome(invalidKey)).toEqual(zero);
+      let nextPid = 0;
+      h.setProbe(async (stage, c) => {
+        if (stage === "connected")
+          nextPid = (await c.query("SELECT pg_backend_pid() AS pid")).rows[0]
+            .pid;
+      });
+      expect((await h.api(0, key, h.payload())).status).toBe(201);
+      if (mode === "unconfirmed") expect(nextPid).not.toBe(pid);
+      expect((await h.api(0, key, h.payload())).status).toBe(200);
+      expect(await outcome(key)).toEqual({
+        receipts: 1,
+        journals: 1,
+        postings: 2,
+        audits: 1,
+      });
+      expect(releaseCount).toBe(1);
+    } finally {
+      finishAck();
+      h.setProbe(undefined);
+    }
+  },
+  20000,
+);

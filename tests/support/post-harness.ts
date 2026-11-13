@@ -195,6 +195,33 @@ export async function postHarness(
           [id, u.workspace, u.id, type, kind],
         );
     }
+    const makeRequest = (
+      index: number | null,
+      key: string,
+      data: unknown,
+      extra: Record<string, string> = {},
+      workspace = users[0]!.workspace,
+      signal?: AbortSignal,
+    ) =>
+      new Request(
+        config.baseURL + `/api/workspaces/${workspace}/ledger/commands`,
+        {
+          method: "POST",
+          signal,
+          headers: {
+            origin: config.baseURL,
+            "content-type": "application/json",
+            "idempotency-key": key,
+            ...(index === null
+              ? {}
+              : {
+                  cookie: `ledgerone.session_token=${encodeURIComponent(users[index]!.token + "." + createHmac("sha256", secret).update(users[index]!.token).digest("base64"))}`,
+                }),
+            ...extra,
+          },
+          body: JSON.stringify(data),
+        },
+      );
     return {
       admin,
       database,
@@ -277,6 +304,7 @@ export async function postHarness(
           },
         ],
       }),
+      makeRequest,
       api: async (
         index: number | null,
         key: string,
@@ -287,25 +315,7 @@ export async function postHarness(
         signal?: AbortSignal,
       ) =>
         postRequest(
-          new Request(
-            config.baseURL + `/api/workspaces/${workspace}/ledger/commands`,
-            {
-              method: "POST",
-              signal,
-              headers: {
-                origin: config.baseURL,
-                "content-type": "application/json",
-                "idempotency-key": key,
-                ...(index === null
-                  ? {}
-                  : {
-                      cookie: `ledgerone.session_token=${encodeURIComponent(users[index]!.token + "." + createHmac("sha256", secret).update(users[index]!.token).digest("base64"))}`,
-                    }),
-                ...extra,
-              },
-              body: JSON.stringify(data),
-            },
-          ),
+          makeRequest(index, key, data, extra, workspace, signal),
           workspace,
           runtime,
           enabled ? executor! : null,

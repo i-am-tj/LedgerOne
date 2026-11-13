@@ -614,7 +614,18 @@ export class PostExecutor {
           await measured(
             this.metrics,
             "sql.rollback",
-            () => c.query("ROLLBACK"),
+            async () => {
+              // Cleanup owns the checkout even if the request was cancelled.
+              // Do not send a query after expiry or reuse an unconfirmed backend.
+              remaining(deadline);
+              const reply = await withinDeadline(c.query("ROLLBACK"), deadline);
+              remaining(deadline);
+              if (
+                reply.command !== "ROLLBACK" ||
+                c.getTransactionStatus() !== "I"
+              )
+                destroy = true;
+            },
             attempt,
           );
       } catch {
