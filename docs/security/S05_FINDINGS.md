@@ -174,3 +174,7 @@ S06B closure does not close the original A05 issues. A05-01 has real-handler pri
 ## Current S06D disposition plan
 
 The [criterion-level disposition matrix](../plans/S06D_FINDINGS.md) maps merged B/C mitigations, remaining private/hosted actual-role evidence and explicit S07 exclusions. All original issues and original acceptance checkboxes remain open/unaccepted here during planning. Closing separate S06C R01/#27 does not close A05-01–05. D-T01/04/05 must record each criterion and reviewer decision before any original issue closure.
+
+## D-T05 owner-authorized local merge checkpoint
+
+Local readiness may be reviewed and merged independently of hosted verification under the explicit owner scope clarification. See [local W matrix, individual A05 dispositions and dependency assessment](../reports/S06D_D_T05_LOCAL_REVIEW.md). Historical hosted-dependent requirements retain NOT RUN status. Production activation remains disabled. #13/#14/#15 are eligible for local-scope closure only after reviewed incorporation; #16 and account-specific #17 remain S07 obligations. #34 remains open. PR #30 requires separate owner merge approval.

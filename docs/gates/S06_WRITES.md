@@ -60,3 +60,7 @@ Fresh user-invoked adversarial review initially BLOCKED 2922ce3 for R01/#27; cor
 ## Current S06D planning handoff
 
 S06C is now reviewed/merged; #10/#27 closed. Initial BLOCKED review and corrected approval are retained, not superseded retroactively. Original A05 #13–#17 stay open. See [finding dispositions](../plans/S06D_FINDINGS.md), [target/roles and owner approvals](../plans/S06D_TARGET_AND_ROLES.md), [performance plan](../plans/S06D_PERFORMANCE.md) and [activation separation](../plans/S06D_ACTIVATION_AND_ROLLBACK.md). S06D tasks and final target evidence remain NOT RUN.
+
+## D-T05 owner-authorized local merge checkpoint
+
+Local readiness may be reviewed and merged independently of hosted verification under the explicit owner scope clarification. See [local W matrix, individual A05 dispositions and dependency assessment](../reports/S06D_D_T05_LOCAL_REVIEW.md). Historical hosted-dependent requirements retain NOT RUN status. Production activation remains disabled. #13/#14/#15 are eligible for local-scope closure only after reviewed incorporation; #16 and account-specific #17 remain S07 obligations. #34 remains open. PR #30 requires separate owner merge approval.

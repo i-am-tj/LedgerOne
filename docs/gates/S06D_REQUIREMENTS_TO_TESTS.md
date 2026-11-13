@@ -45,3 +45,7 @@ For each W row record L/P local result and H hosted result separately, with exac
 ## D-T04 local coverage update
 
 D-T03 is LOCAL ACCEPTED at 417374d by explicit owner decision. [D-T04 coverage reconciliation](../reports/S06D_D_T04_LOCAL.md) maps reused regressions and the added combined private-role test to W01–W15. The table above retains final target-gate status, including outstanding hosted and reviewed-merge evidence. Local execution is not final W approval. Shared-Docker limitation remains open in #34.
+
+## D-T05 owner-authorized local merge checkpoint
+
+Local readiness may be reviewed and merged independently of hosted verification under the explicit owner scope clarification. See [local W matrix, individual A05 dispositions and dependency assessment](../reports/S06D_D_T05_LOCAL_REVIEW.md). Historical hosted-dependent requirements retain NOT RUN status. Production activation remains disabled. #13/#14/#15 are eligible for local-scope closure only after reviewed incorporation; #16 and account-specific #17 remain S07 obligations. #34 remains open. PR #30 requires separate owner merge approval.

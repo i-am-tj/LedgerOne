@@ -552,3 +552,7 @@ Owner authorization covers publication and independent review. The experiment us
 ## Current owner decision — D-T03 LOCAL ACCEPTED
 
 The owner accepted restricted local D-T03 at `417374d6a5d3295a5b11133dd7c915348252f51a` and authorized D-T04 local work. The historical FAIL/BLOCKED entries above remain historical evidence. See [acceptance and Docker follow-up](reports/S06D_D_T03_ACCEPTANCE.md). #32 remains open pending incorporation through reviewed workflow. #34 tracks the unresolved Docker observations. Hosted verification is NOT RUN, production writes remain disabled, and complete S06D/Phase 1 remain incomplete.
+
+## D-T05 owner-authorized local merge checkpoint
+
+Local readiness may be reviewed and merged independently of hosted verification under the explicit owner scope clarification. See [local W matrix, individual A05 dispositions and dependency assessment](reports/S06D_D_T05_LOCAL_REVIEW.md). Historical hosted-dependent requirements retain NOT RUN status. Production activation remains disabled. #13/#14/#15 are eligible for local-scope closure only after reviewed incorporation; #16 and account-specific #17 remain S07 obligations. #34 remains open. PR #30 requires separate owner merge approval.
