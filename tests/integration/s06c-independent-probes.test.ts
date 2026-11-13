@@ -1,3 +1,4 @@
+import { queryText } from "../support/query-text";
 // Independent review probes introduced after publication 2922ce3. Existing
 // implementation is untouched during the initial review. Fixtures are local.
 import { randomBytes, randomUUID } from "node:crypto";
@@ -90,7 +91,8 @@ it.each([
               seen.push({ code: err.code, constraint: err.constraint });
             throw e;
           } finally {
-            if (args[0] === "COMMIT" || args[0] === "ROLLBACK") c.query = q;
+            if (queryText(args[0]) === "COMMIT" || args[0] === "ROLLBACK")
+              c.query = q;
           }
         }) as pg.PoolClient["query"];
       }
@@ -173,7 +175,8 @@ it("I02 genuine 40001 then session deletion before rollback cannot authorize ret
           }
           throw e;
         } finally {
-          if (args[0] === "ROLLBACK" || args[0] === "COMMIT") c.query = q;
+          if (args[0] === "ROLLBACK" || queryText(args[0]) === "COMMIT")
+            c.query = q;
         }
       }) as pg.PoolClient["query"];
     }
@@ -218,7 +221,8 @@ it("I03 real 40P01 through an original-journal/advisory inversion retries the wh
           states.push((e as { code: string }).code);
         throw e;
       } finally {
-        if (args[0] === "ROLLBACK" || args[0] === "COMMIT") c.query = q;
+        if (args[0] === "ROLLBACK" || queryText(args[0]) === "COMMIT")
+          c.query = q;
       }
     }) as pg.PoolClient["query"];
     const other = await h.admin.connect();

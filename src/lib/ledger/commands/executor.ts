@@ -370,6 +370,37 @@ export class PostExecutor {
       throwIfAborted(signal);
       remaining(deadline);
     };
+    const commit = async (replay: boolean) => {
+      await measured(
+        this.metrics,
+        "sql.commit",
+        async () => {
+          throwIfAborted(signal);
+          const budget = remaining(deadline);
+          // pg 8.23 supports query_timeout on the query object. Its published
+          // QueryConfig types omit that property; retain a checked local extension.
+          const config: pg.QueryConfig & { query_timeout: number } = {
+            text: "COMMIT",
+            query_timeout: replay ? Math.min(3000, budget) : budget,
+          };
+          committing = true;
+          const reply = await withinDeadline(
+            c.query(config),
+            deadline,
+            undefined,
+            signal,
+          );
+          if (reply.command === "ROLLBACK") {
+            committing = false;
+            throw unavailable();
+          }
+          if (reply.command !== "COMMIT") throw unavailable();
+          active();
+          committed = true;
+        },
+        attempt,
+      );
+    };
     const query = (sql: string, values?: unknown[]) => {
       active();
       return c.query(sql, values).then((result) => {
@@ -426,15 +457,7 @@ export class PostExecutor {
           old.rows[0].id,
           command,
         );
-        active();
-        committing = true;
-        await measured(
-          this.metrics,
-          "sql.commit",
-          () => c.query("COMMIT"),
-          attempt,
-        );
-        committed = true;
+        await commit(true);
         return { result, replayed: true };
       }
       if (recoverOriginalConflict && command.kind !== "POST") {
@@ -571,20 +594,18 @@ export class PostExecutor {
       await this.probe?.("audit", c, attempt);
       const result = await commandOutcome(c, actor, workspace, op, command);
       await this.probe?.("beforeCommit", c, attempt);
-      active();
-      committing = true;
-      await measured(
-        this.metrics,
-        "sql.commit",
-        () => c.query("COMMIT"),
-        attempt,
-      );
-      committed = true;
+      await commit(false);
       await this.probe?.("committed", c, attempt);
       return { result, replayed: false };
     } catch (error) {
       // A transport failure at COMMIT has no known outcome. Never retry it here.
-      if (committed || (committing && !sqlState(error))) {
+      const rejectedByServer =
+        error instanceof pg.DatabaseError &&
+        error.severity === "ERROR" &&
+        !!sqlState(error) &&
+        !error.code?.startsWith("08") &&
+        error.code !== "40003";
+      if (committed || (committing && !rejectedByServer)) {
         destroy = true;
         throw unavailable();
       }

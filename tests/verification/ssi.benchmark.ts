@@ -1,3 +1,4 @@
+import { queryText } from "../support/query-text";
 // Read-only diagnostic observations around the real local command engine.
 // These probes add overhead; their latency/rate is NOT capacity evidence.
 import { randomUUID } from "node:crypto";
@@ -141,7 +142,7 @@ it("D-T03 SSI diagnosis records real abort phases, default plans and predicate-l
             if (e.code === "40001" || e.code === "40P01")
               events.push({
                 code: e.code,
-                phase: phase(args[0]),
+                phase: phase(queryText(args[0])),
                 routine: e.routine?.replace(/[^A-Za-z0-9_]/g, "") ?? "unknown",
                 reason:
                   /during (commit|write|read)/.exec(e.detail ?? "")?.[0] ??
@@ -149,7 +150,8 @@ it("D-T03 SSI diagnosis records real abort phases, default plans and predicate-l
               });
             throw error;
           } finally {
-            if (args[0] === "COMMIT" || args[0] === "ROLLBACK") c.query = query;
+            if (queryText(args[0]) === "COMMIT" || args[0] === "ROLLBACK")
+              c.query = query;
           }
         }) as pg.PoolClient["query"];
       }

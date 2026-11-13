@@ -1,3 +1,4 @@
+import { queryText } from "../support/query-text";
 // D-T03 only: isolated private-schema insertion regressions, never a native writer.
 import { randomUUID } from "node:crypto";
 import type pg from "pg";
@@ -347,7 +348,7 @@ it("D-T03 500+500 correction locks 1000 distinct accounts and commits exact auth
             ...args,
           );
         } catch (error) {
-          if (args[0] === "COMMIT") {
+          if (queryText(args[0]) === "COMMIT") {
             const e = error as { code?: string; message?: string };
             commitFailure = /^[0-9A-Z]{5}$/.test(e.code ?? "")
               ? e.code
@@ -357,7 +358,8 @@ it("D-T03 500+500 correction locks 1000 distinct accounts and commits exact auth
           }
           throw error;
         } finally {
-          if (args[0] === "COMMIT" || args[0] === "ROLLBACK") c.query = query;
+          if (queryText(args[0]) === "COMMIT" || args[0] === "ROLLBACK")
+            c.query = query;
         }
       }) as pg.PoolClient["query"];
     });
@@ -508,7 +510,8 @@ it.each(["malformed-row", "short-count", "null-count"] as const)(
           sqlstate = (error as { code?: string }).code;
           throw error;
         } finally {
-          if (args[0] === "COMMIT" || args[0] === "ROLLBACK") c.query = query;
+          if (queryText(args[0]) === "COMMIT" || args[0] === "ROLLBACK")
+            c.query = query;
         }
       }) as pg.PoolClient["query"];
     });
@@ -562,7 +565,8 @@ it.each(["before", "during"] as const)(
             ...args,
           );
         } finally {
-          if (args[0] === "COMMIT" || args[0] === "ROLLBACK") c.query = query;
+          if (queryText(args[0]) === "COMMIT" || args[0] === "ROLLBACK")
+            c.query = query;
         }
       }) as pg.PoolClient["query"];
     });
@@ -704,7 +708,7 @@ it("D-T03 private batch loses actual COMMIT acknowledgement and recovers one imm
       const result = await (query as (...v: unknown[]) => Promise<unknown>)(
         ...args,
       );
-      if (args[0] === "COMMIT") {
+      if (queryText(args[0]) === "COMMIT") {
         lost = true;
         throw Object.assign(new Error("test ack loss"), { code: "ECONNRESET" });
       }
