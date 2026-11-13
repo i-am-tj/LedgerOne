@@ -193,3 +193,7 @@ The owner explicitly accepted reviewed head `59171157f80216396273c61a2bfa5ee4c8d
 ## D-T03 capacity decision — 2026-11-13
 
 Owner decision A supersedes the original ordinary-concurrency and critical-tail cells for subsequent D-T03 qualification. Apply the [accepted capacity policy](../plans/S06D_INVITE_ONLY_CAPACITY_AMENDMENT.md). Historical results retain their original decisions. An uncontended maximum CORRECT returned 503 and blocks #32. Decision B authorizes the [design proposal](../plans/S06D_DEFERRED_VALIDATION_DESIGN.md) only. D-T04 and D-T05 remain blocked.
+
+## Current owner decision — D-T03 LOCAL ACCEPTED
+
+The owner accepted restricted local D-T03 at `417374d6a5d3295a5b11133dd7c915348252f51a` and authorized D-T04 local work. The historical FAIL/BLOCKED entries above remain historical evidence. See [acceptance and Docker follow-up](../reports/S06D_D_T03_ACCEPTANCE.md). #32 remains open pending incorporation through reviewed workflow. #34 tracks the unresolved Docker observations. Hosted verification is NOT RUN, production writes remain disabled, and complete S06D/Phase 1 remain incomplete.

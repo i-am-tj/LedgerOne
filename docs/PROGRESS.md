@@ -548,3 +548,7 @@ The owner accepted the [invite-only performance budget](plans/S06D_INVITE_ONLY_C
 ## S06D local COMMIT-wait candidate published for review
 
 Owner authorization covers publication and independent review. The experiment used unmodified 007; the stopped queue and receipt-side SQL prototypes stay outside the publication. [Report, retained failures and measured source](reports/S06D_COMMIT_ACK_007.md). D-T03 acceptance is pending, #32 remains open and D-T04/D-T05 remain blocked.
+
+## Current owner decision — D-T03 LOCAL ACCEPTED
+
+The owner accepted restricted local D-T03 at `417374d6a5d3295a5b11133dd7c915348252f51a` and authorized D-T04 local work. The historical FAIL/BLOCKED entries above remain historical evidence. See [acceptance and Docker follow-up](reports/S06D_D_T03_ACCEPTANCE.md). #32 remains open pending incorporation through reviewed workflow. #34 tracks the unresolved Docker observations. Hosted verification is NOT RUN, production writes remain disabled, and complete S06D/Phase 1 remain incomplete.
