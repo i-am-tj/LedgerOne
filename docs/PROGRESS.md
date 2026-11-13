@@ -544,3 +544,7 @@ Initial87a5a7e remote CI failed maximum first-response201 and, once, later share
 ## 2026-11-13 — D-T03 owner decisions A and B
 
 The owner accepted the [invite-only performance budget](plans/S06D_INVITE_ONLY_CAPACITY_AMENDMENT.md). D-T03 still fails because maximum CORRECT can return 503 at concurrency one. The [RCA at 14a22dc, recorded in 748b600](reports/S06D_CONCURRENCY_RCA.md) is local diagnostic evidence accepted for planning. The owner authorized the [deferred-validation design](plans/S06D_DEFERRED_VALIDATION_DESIGN.md) for review. Implementation requires another decision. Draft PR #30 and open #32 carry this work. D-T04/D-T05, financial write enablement and Phase 1 completion remain blocked.
+
+## S06D local COMMIT-wait candidate published for review
+
+Owner authorization covers publication and independent review. The experiment used unmodified 007; the stopped queue and receipt-side SQL prototypes stay outside the publication. [Report, retained failures and measured source](reports/S06D_COMMIT_ACK_007.md). D-T03 acceptance is pending, #32 remains open and D-T04/D-T05 remain blocked.
