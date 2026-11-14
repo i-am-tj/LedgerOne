@@ -20,8 +20,10 @@ export function retryable(error: unknown) {
       typeof error === "object" &&
       error !== null &&
       "constraint" in error &&
-      error.constraint ===
-        "ledger_operation_workspaceId_ownerId_idempotencyKey_key")
+      (error.constraint ===
+        "ledger_operation_workspaceId_ownerId_idempotencyKey_key" ||
+        error.constraint ===
+          "account_command_workspaceId_ownerId_idempotencyKey_key"))
   );
 }
 // Different from receipt contention: after rollback only a fresh authorized

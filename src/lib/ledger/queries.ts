@@ -1,6 +1,6 @@
 import "server-only";
 import { z } from "zod";
-import type { PrismaClient } from "../../generated/prisma/client";
+import { Prisma, type PrismaClient } from "../../generated/prisma/client";
 import { AccessError, type Actor } from "../ownership/service";
 function scope(actor: Actor) {
   if (!actor.ownerId?.trim()) throw new AccessError(401, "unauthorized");
@@ -81,5 +81,40 @@ export async function readPostedJournal(
       nativeMinor: p.nativeMinor.toString(),
       functionalMinor: p.functionalMinor.toString(),
     })),
+  };
+}
+
+// S07 balances are derived from posted native quantities at an inclusive instant.
+// Explicit schema and timestamp casts avoid driver-local timezone conversions.
+export async function readAccountBalance(
+  database: PrismaClient,
+  actor: Actor,
+  id: string,
+  asOf: Date,
+  schema: "public" | "ledgerone",
+) {
+  if (!Number.isFinite(asOf.getTime()))
+    throw new AccessError(400, "invalid_request");
+  const account = await readAccount(database, actor, id);
+  if (schema !== "public" && schema !== "ledgerone")
+    throw new AccessError(400, "invalid_request");
+  const posting = Prisma.raw(`"${schema}"."posting"`);
+  const journal = Prisma.raw(`"${schema}"."journal"`);
+  const [row] = await database.$queryRaw<{ debitMinor: string }[]>(Prisma.sql`
+    SELECT coalesce(sum(CASE p.side WHEN 'DEBIT'
+      THEN p."nativeMinor"::numeric ELSE -p."nativeMinor"::numeric END),0)::text AS "debitMinor"
+    FROM ${posting} p JOIN ${journal} j ON j.id=p."journalId"
+      AND j."ownerId"=p."ownerId" AND j."workspaceId"=p."workspaceId"
+    WHERE p."accountId"=${account.id}::uuid AND p."ownerId"=${actor.ownerId}
+      AND p."workspaceId"=${account.workspaceId}::uuid
+      AND j.status='POSTED' AND j."effectiveAt"<=${asOf.toISOString()}::timestamptz
+  `);
+  const signed = BigInt(row!.debitMinor);
+  const debitNormal = account.type === "ASSET" || account.type === "EXPENSE";
+  return {
+    account,
+    asOf: asOf.toISOString(),
+    currency: account.currencyCode,
+    balanceMinor: (debitNormal ? signed : -signed).toString(),
   };
 }

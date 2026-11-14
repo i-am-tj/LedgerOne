@@ -159,6 +159,11 @@ async function posted(
       kind === "GENERAL" ? "POST" : kind === "OPENING" ? "OPENING" : "REVERSE",
       key,
     );
+    if (kind === "OPENING")
+      await c.query(
+        'INSERT INTO audit_event(id,"workspaceId","ownerId","actorId","requestId",action,"operationId","targetJournalId",reason) VALUES($1,$2,$3,$3,$4,\'ledger.opened\',$5,$6,\'Opening fixture\')',
+        [randomUUID(), scope.workspaceId, scope.ownerId, randomUUID(), op, id],
+      );
     return { id, op };
   });
 }

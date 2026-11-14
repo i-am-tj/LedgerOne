@@ -1,4 +1,11 @@
 import "server-only";
+import {
+  accountHash,
+  isAccountCommand,
+  type AccountCommand,
+  type AccountResult,
+} from "../../accounts/contract";
+import { mutateAccount } from "../../accounts/mutation";
 import pg from "pg";
 import {
   measured,
@@ -271,9 +278,16 @@ export class PostExecutor {
     authorize: () => Promise<Actor>,
     workspace: string,
     key: string,
-    command: FinancialCommand,
+    command: AccountCommand,
     signal?: AbortSignal,
-  ): Promise<{ result: FinancialResult; replayed: boolean }> {
+  ): Promise<{ result: AccountResult; replayed: boolean }>;
+  async execute(
+    authorize: () => Promise<Actor>,
+    workspace: string,
+    key: string,
+    command: FinancialCommand | AccountCommand,
+    signal?: AbortSignal,
+  ): Promise<{ result: FinancialResult | AccountResult; replayed: boolean }> {
     return measured(this.metrics, "command.total", async () => {
       throwIfAborted(signal);
       const deadline = performance.now() + 10000;
@@ -307,7 +321,8 @@ export class PostExecutor {
           );
         } catch (error) {
           const targetConflict =
-            command.kind !== "POST" && reversalConflict(error);
+            (command.kind === "REVERSE" || command.kind === "CORRECT") &&
+            reversalConflict(error);
           const delay =
             retryable(error) || targetConflict
               ? retryDelay(attempt, deadline - performance.now())
@@ -333,12 +348,12 @@ export class PostExecutor {
     authorize: () => Promise<Actor>,
     workspace: string,
     key: string,
-    command: FinancialCommand,
+    command: FinancialCommand | AccountCommand,
     attempt: number,
     deadline: number,
     signal?: AbortSignal,
     recoverOriginalConflict = false,
-  ): Promise<{ result: FinancialResult; replayed: boolean }> {
+  ): Promise<{ result: FinancialResult | AccountResult; replayed: boolean }> {
     throwIfAborted(signal);
     const actor = await measured(
         this.metrics,
@@ -346,7 +361,9 @@ export class PostExecutor {
         () => withinDeadline(authorize(), deadline, undefined, signal),
         attempt,
       ),
-      hash = requestHash(actor.ownerId, workspace, command);
+      hash = isAccountCommand(command)
+        ? accountHash(actor.ownerId, workspace, command)
+        : requestHash(actor.ownerId, workspace, command);
     const c = await measured(
       this.metrics,
       "command.connection_wait",
@@ -428,12 +445,60 @@ export class PostExecutor {
       if (
         !(
           await query(
-            'SELECT id FROM workspace WHERE id=$1 AND "ownerId"=$2 FOR KEY SHARE',
+            isAccountCommand(command)
+              ? 'SELECT id FROM workspace WHERE id=$1 AND "ownerId"=$2 FOR UPDATE'
+              : 'SELECT id FROM workspace WHERE id=$1 AND "ownerId"=$2 FOR KEY SHARE',
             [workspace, actor.ownerId],
           )
         ).rowCount
       )
         throw new CommandError(404, "not_found");
+      if (isAccountCommand(command)) {
+        const outcome = await mutateAccount(
+          query,
+          actor.ownerId,
+          actor.requestId,
+          workspace,
+          key,
+          hash,
+          command,
+          async (op, journal, account, date, name, legs) => {
+            await query(
+              'INSERT INTO ledger_operation(id,"workspaceId","ownerId","idempotencyKey","requestHash",kind) VALUES($1,$2,$3,$4,$5,\'OPENING\')',
+              [op, workspace, actor.ownerId, op, hash],
+            );
+            await this.writeJournal(
+              query,
+              c,
+              attempt,
+              actor,
+              workspace,
+              op,
+              journal,
+              date,
+              `Opening balance · ${name}`,
+              legs,
+              null,
+              account,
+            );
+            await query(
+              'INSERT INTO audit_event(id,"workspaceId","ownerId","actorId","requestId",action,"operationId","targetJournalId",reason) VALUES($1,$2,$3,$3,$4,\'ledger.opened\',$5,$6,\'Opening balance\')',
+              [
+                randomUUID(),
+                workspace,
+                actor.ownerId,
+                actor.requestId,
+                op,
+                journal,
+              ],
+            );
+          },
+        );
+        await this.probe?.("beforeCommit", c, attempt);
+        await commit(outcome.replayed);
+        await this.probe?.("committed", c, attempt);
+        return outcome;
+      }
       const old = await measured(
         this.metrics,
         "sql.receipt",
@@ -655,6 +720,7 @@ export class PostExecutor {
     description: string,
     legs: readonly Leg[],
     original: string | null,
+    openingAccount?: string,
   ) {
     return measured(
       this.metrics,
@@ -668,7 +734,11 @@ export class PostExecutor {
             actor.ownerId,
             description,
             effectiveAt,
-            original === null ? "GENERAL" : "REVERSAL",
+            openingAccount
+              ? "OPENING"
+              : original === null
+                ? "GENERAL"
+                : "REVERSAL",
             original,
           ],
         );
@@ -696,6 +766,11 @@ export class PostExecutor {
           attempt,
         );
         await this.probe?.("postings", c, attempt);
+        if (openingAccount)
+          await query(
+            'INSERT INTO opening_balance(id,"workspaceId","ownerId","accountId","journalId",source) VALUES($1,$2,$3,$4,$5,\'User-entered opening balance\')',
+            [randomUUID(), workspace, actor.ownerId, openingAccount, journal],
+          );
         await query(
           'UPDATE journal SET status=\'POSTED\',"postedAt"=clock_timestamp(),"operationId"=$1 WHERE id=$2 AND "workspaceId"=$3 AND "ownerId"=$4',
           [operation, journal, workspace, actor.ownerId],

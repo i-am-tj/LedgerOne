@@ -97,3 +97,9 @@ Accepted plan/ADR-007 is implemented and reviewed/merged in [PR #26](https://git
 ## S06D accounting verification boundary
 
 [W01–W15](gates/S06D_REQUIREMENTS_TO_TESTS.md) must prove combined POST/REVERSE/CORRECT, immutable semantic replay, exact multiset/target/audit, date/period behavior and safe concurrency on actual roles/profile. Technical PASS does not authorize arbitrary consumer journals or implement expense/income/transfer/loan/investment business rules. S07 retains OPENING/account workflows and their mandatory audit extension. Original A05 findings remain individually tracked and open during planning.
+
+## S07 account opening and reconciliation
+
+The owner approved the additive ledger.opened contract and audited-comparison-only reconciliation. Nonzero openings atomically commit the physical account, one OPENING receipt/journal, two balanced INR legs, unique original marker, exact financial audit and immutable account receipt/event. Zero opens the account without zero-valued postings or an OPENING receipt. Signed normal balances mean positive assets debit and positive liabilities credit; negative values reverse those sides. Existing opening-equity constraints remain enforced.
+
+Opening descriptions retain the initial account name and immutable lifecycle events retain name snapshots after rename/archive/restore. Reconciliation records ledger-minus-statement at the chosen effective instant, without mutating posted balances. INR account totals exclude other currencies. See ADR-008 and the S07 browser gate.

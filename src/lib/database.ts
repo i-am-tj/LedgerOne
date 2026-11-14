@@ -14,6 +14,7 @@ export function getDatabase(): PrismaClient {
           connectionString: settings.connectionString,
           connectionTimeoutMillis: 3000,
           max: 5,
+          options: "-c timezone=UTC",
           ...(settings.tls
             ? {
                 ssl: {

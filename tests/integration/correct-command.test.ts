@@ -325,21 +325,23 @@ it("C-T03 ledger-only repeated opening correction retains one original marker; h
           [op, id],
         );
       }
-      // OPENING's exposed audit contract belongs to S07; this is a legacy/core
-      // schema fixture, not a test capability or public OPENING command.
-      if (kind !== "OPENING")
-        await c.query(
-          'INSERT INTO audit_event(id,"workspaceId","ownerId","actorId","requestId",action,"operationId","targetJournalId",reason) VALUES($1,$2,$3,$3,$4,$5,$6,$7,\'Core provenance fixture\')',
-          [
-            randomUUID(),
-            u.workspace,
-            u.id,
-            randomUUID(),
-            kind === "CORRECT" ? "ledger.corrected" : "ledger.reversed",
-            op,
-            drafts[0]!.original,
-          ],
-        );
+      // S07 now requires audit for newly inserted OPENING receipts as well.
+      await c.query(
+        'INSERT INTO audit_event(id,"workspaceId","ownerId","actorId","requestId",action,"operationId","targetJournalId",reason) VALUES($1,$2,$3,$3,$4,$5,$6,$7,\'Core provenance fixture\')',
+        [
+          randomUUID(),
+          u.workspace,
+          u.id,
+          randomUUID(),
+          kind === "OPENING"
+            ? "ledger.opened"
+            : kind === "CORRECT"
+              ? "ledger.corrected"
+              : "ledger.reversed",
+          op,
+          kind === "OPENING" ? ids[0] : drafts[0]!.original,
+        ],
+      );
       await c.query("COMMIT");
       return ids;
     } catch (e) {

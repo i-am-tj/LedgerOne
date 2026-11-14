@@ -76,3 +76,7 @@ Accept the exact [S06D planning breakdown](stories/P1-S06D_BREAKDOWN.md), includ
 ## S06D current local authorization — 2026-11-12
 
 The historical planning/proposal requests above are superseded by recorded planning acceptance/merge and the owner's explicit bounded batching approval. [Authorization](https://github.com/i-am-tj/LedgerOne/pull/30#issuecomment-6826341877) allows only the isolated local D-T03 prototype and tests under unchanged 500-leg/accounting/retry/deadline contracts. A **new insertion-path accounting/security review and decision** is required before any merge. [Prototype report](reports/S06D_BATCHING_PROTOTYPE.md) records evidence and remaining capacity decisions. No hosted read, migration/provisioning/grant, synthetic write/benchmark, production operation or consumer writer permission has been supplied. #32 stays open and PR #30 draft pending verification/review; full S06 and Phase 1 gates remain closed.
+
+## S07 owner decisions resolved
+
+The owner approved the ledger.opened additive contract for isolated local implementation and required user-facing Accounts delivery within the current PR. The owner subsequently selected audited comparison only for S07 reconciliation. No discrepancy adjustment postings are authorized. Implementation source review and reviewed merge remain required. Hosted/production operations remain unauthorized.

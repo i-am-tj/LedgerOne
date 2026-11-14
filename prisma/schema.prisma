@@ -196,19 +196,21 @@ model Currency {
 }
 
 model Account {
-  id           String          @id @default(uuid()) @db.Uuid
-  workspaceId  String          @db.Uuid
+  id           String           @id @default(uuid()) @db.Uuid
+  workspaceId  String           @db.Uuid
   ownerId      String
-  name         String          @db.VarChar(80)
+  name         String           @db.VarChar(80)
   type         AccountClass
   kind         AccountKind
-  currencyCode String          @db.VarChar(3)
-  archivedAt   DateTime?       @db.Timestamptz(3)
-  createdAt    DateTime        @default(now()) @db.Timestamptz(3)
-  updatedAt    DateTime        @updatedAt @db.Timestamptz(3)
-  workspace    Workspace       @relation(fields: [workspaceId, ownerId], references: [id, ownerId], onDelete: Restrict, onUpdate: Restrict)
-  currency     Currency        @relation(fields: [currencyCode], references: [code], onDelete: Restrict, onUpdate: Restrict)
+  currencyCode String           @db.VarChar(3)
+  archivedAt   DateTime?        @db.Timestamptz(3)
+  createdAt    DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime         @updatedAt @db.Timestamptz(3)
+  workspace    Workspace        @relation(fields: [workspaceId, ownerId], references: [id, ownerId], onDelete: Restrict, onUpdate: Restrict)
+  currency     Currency         @relation(fields: [currencyCode], references: [code], onDelete: Restrict, onUpdate: Restrict)
   postings     Posting[]
+  commands     AccountCommand[]
+  events       AccountEvent[]
   opening      OpeningBalance?
 
   @@unique([id, workspaceId, ownerId])
@@ -320,4 +322,40 @@ model OpeningBalance {
   @@unique([accountId, workspaceId, ownerId])
   @@unique([journalId, workspaceId, ownerId])
   @@map("opening_balance")
+}
+
+model AccountCommand {
+  id             String         @id @db.Uuid
+  workspaceId    String         @db.Uuid
+  ownerId        String
+  accountId      String         @db.Uuid
+  idempotencyKey String         @db.VarChar(128)
+  requestHash    String         @db.Char(64)
+  result         Json
+  createdAt      DateTime       @default(now()) @db.Timestamptz(3)
+  account        Account        @relation(fields: [accountId, workspaceId, ownerId], references: [id, workspaceId, ownerId], onDelete: Restrict, onUpdate: Restrict)
+  events         AccountEvent[]
+
+  @@unique([id, workspaceId, ownerId])
+  @@unique([workspaceId, ownerId, idempotencyKey])
+  @@map("account_command")
+}
+
+model AccountEvent {
+  id          String         @id @db.Uuid
+  requestId   String         @db.Uuid
+  commandId   String         @unique @db.Uuid
+  workspaceId String         @db.Uuid
+  ownerId     String
+  accountId   String         @db.Uuid
+  actorId     String
+  action      String         @db.VarChar(32)
+  data        Json
+  effectiveAt DateTime       @db.Timestamptz(3)
+  createdAt   DateTime       @default(now()) @db.Timestamptz(3)
+  command     AccountCommand @relation(fields: [commandId, workspaceId, ownerId], references: [id, workspaceId, ownerId], onDelete: Restrict, onUpdate: Restrict)
+  account     Account        @relation(fields: [accountId, workspaceId, ownerId], references: [id, workspaceId, ownerId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([ownerId, accountId, createdAt])
+  @@map("account_event")
 }
