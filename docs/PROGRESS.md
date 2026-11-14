@@ -570,3 +570,7 @@ Targeted opening/correction tests passed 23/23. Targeted public/private account/
 ## S07-UI01–UI04 corrected local verification
 
 Typed Accounts overview/lifecycle/opening/history/reconciliation UI is implemented on PR #35. Full corrected local pipeline at source 92f9844 passed 234 unit, 281 integration and 50 browser tests. Both actual desktop/mobile walkthroughs passed, including ₹50,000 opening persistence, retained original name after rename, ₹500 discrepancy versus ₹49,500 and second-user denial. New migration008/009 schema rehearsal and attestation passed. [Evidence and retained development failures](reports/P1-S07.md). Source/accounting review, final publication CI and reviewed merge remain required before S07/P1-E3 closure. Reconciliation is comparison only by owner decision.
+
+## S07 pending-result and browser-runner corrections
+
+#36 tracks a confirmed UI idempotency risk after a lost response and edited input. b6e8750 preserves the pending request and offers exact same-key recovery; real desktop/mobile response-loss regression passed4/4 alongside the normal walkthrough. Initial4c89d04 CI rejected the fixed browser database name at the local capability guard. f3038dc prepares a generated shared disposable browser database and retains loopback/test-only restrictions. Final complete checks and corrected-head CI remain required. PR #35 stays draft; no S07/P1-E3 closure or production activation is claimed.
