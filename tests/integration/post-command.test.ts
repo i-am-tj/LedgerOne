@@ -1,3 +1,4 @@
+import { queryText } from "../support/query-text";
 import { randomUUID } from "node:crypto";
 import type pg from "pg";
 import { beforeAll, afterAll, it, expect } from "vitest";
@@ -127,7 +128,7 @@ it("B-T04 ambiguous COMMIT transport error destroys connection; fresh replay fin
       const result = await (
         original as (...args: unknown[]) => Promise<unknown>
       )(...args);
-      if (args[0] === "COMMIT") {
+      if (queryText(args[0]) === "COMMIT") {
         intercepted = true;
         throw Object.assign(new Error("lost ack"), { code: "ECONNRESET" });
       }

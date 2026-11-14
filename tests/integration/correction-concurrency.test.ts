@@ -1,3 +1,4 @@
+import { queryText } from "../support/query-text";
 import { randomUUID } from "node:crypto";
 import type pg from "pg";
 import { beforeAll, afterAll, it, expect } from "vitest";
@@ -222,7 +223,7 @@ it.each(["REVERSE", "CORRECT"] as const)(
       const q = c.query.bind(c);
       c.query = (async (...args: unknown[]) => {
         const r = await (q as (...x: unknown[]) => Promise<unknown>)(...args);
-        if (args[0] === "COMMIT")
+        if (queryText(args[0]) === "COMMIT")
           throw Object.assign(Error("lost ack"), { code: "ECONNRESET" });
         return r;
       }) as pg.PoolClient["query"];

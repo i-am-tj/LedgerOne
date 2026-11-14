@@ -1,0 +1,58 @@
+# D-T03 local COMMIT acknowledgement experiment
+
+**Local experimental result: the remaining-budget wait met the initial-response criterion in this run. Implementation and D-T03 acceptance are pending.** The original three-second client returned 201 on one of three uncontended maximum corrections. The candidate returned three initial 201s on matched fixtures. The separate uninstrumented capacity campaign returned three more initial 201s on the maximum 500+500-leg, 1,000-account cell. The strict maximum regression also passed locally. Publication-head CI on the candidate is outstanding. [Measurement records](../evidence/s06d/COMMIT_ACK_007.json) · [Capacity policy](../plans/S06D_INVITE_ONLY_CAPACITY_AMENDMENT.md) · [Prior failed PR workflow](https://github.com/i-am-tj/LedgerOne/actions/runs/43365146614) · [Prior failed push workflow](https://github.com/i-am-tj/LedgerOne/actions/runs/43365139913)
+
+## Source and contract
+
+Baseline `41b8e28fd24c9746272d1a1f680976f64c79861d`. Candidate executor/tests `2d4e192`, measured clean tree `6bec888fb87a05c7644a64e4cafdf5ca2271ecfa`. Both used PostgreSQL 17.6 in generated loopback databases with migrations 001–007, restricted private-schema roles and the identical catalog digest `8bce7905c92637cc89c31c876f47cefae1e38f52075ee77566e88328207b9547`. No experimental SQL installed. Node 22.22.0, pg 8.23.1, darwin/arm64, pools 6 writer / 2 verifier. Histories, commands and account counts matched; UUIDs, physical database sizes and machine scheduling varied.
+
+The local-only shared executor calculates the remaining monotonic budget immediately before COMMIT. A new write uses that positive duration as its per-query read timeout. A replay takes the smaller of the residual and three seconds. The driver reads the option from the query object. The code types the object as a local extension of pg.QueryConfig, since the installed runtime supports this property and the published query type omits it. Existing pool configuration, transaction SQL, isolation, lock and statement timeouts and the three-attempt retry loop are unchanged. Existing instrumentation that intercepted SQL strings now recognizes both pg query forms; the maximum acceptance assertion still requires 201. [Executor](../../src/lib/ledger/commands/executor.ts) · [New timing tests](../../tests/integration/commit-wait.test.ts)
+
+The executor checks the signal and remaining budget before dispatch, bounds the outstanding acknowledgement by that same absolute deadline, accepts only the COMMIT command tag and checks the deadline again before returning. Definitive server ERROR responses can follow the existing rollback/error path. A post-dispatch transport loss, deadline, cancellation, server connection-class error or statement-completion-unknown error is treated conservatively. The pool destroys that checkout and the current request issues no further write. Fresh requests still reauthenticate, verify the key/hash, and reconstruct immutable outcome. A synthetic transport EPIPE (five uppercase letters) verifies that looking like a SQLSTATE is insufficient. Tests hold back reads on the actual PostgreSQL socket to exercise pg's own query timeout, resume processing, and inspect durable counts on a separate connection.
+
+## Matched maximum corrections
+
+| Source / trial | First HTTP | Client COMMIT wait limit, ms | COMMIT acknowledgement or timeout, ms | Command / HTTP, ms | Writer checkout / pool wait, ms |
+| -------------- | ---------: | ---------------------------: | ------------------------------------: | ------------------ | ------------------------------- |
+| Baseline 1     |        201 |                         3000 |                               2504.74 | 2691.49 / 2700.18  | unmeasured / 0.02               |
+| Baseline 2     |        503 |                         3000 |                               3014.96 | 3686.40 / 3705.53  | unmeasured / 0.04               |
+| Baseline 3     |        503 |                         3000 |                               3003.56 | 3175.31 / 3183.90  | unmeasured / 0.02               |
+| Candidate 1    |        201 |                         9829 |                               3193.31 | 3363.85 / 3375.39  | 3334.92 / 0.02                  |
+| Candidate 2    |        201 |                         9770 |                               3793.28 | 4022.58 / 4036.34  | 3973.67 / 0.03                  |
+| Candidate 3    |        201 |                         9828 |                               2478.12 | 2650.23 / 2665.46  | 2622.75 / 0.02                  |
+
+Each maximum cell began with 336, 339 or 342 existing journals respectively on both profiles. Each added the original seed POST and one CORRECT: net two receipts, three journals, 1,500 postings and two audits. Both baseline 503s had COMMIT activity sampled beyond the handler response and ultimately one correction receipt, two children, 1,000 postings and one audit. Fresh twice-repeated replay returned identical 200s. These remain failed first responses. Samples of server activity give bounds, not the exact server commit timestamp. Baseline residual command time and full checkout occupancy were not instrumented; the 3000 ms in its row is its actual configured wait. The candidate's extra instrumentation adds overhead. This sample cannot establish a maximum-size p99 or a reliability guarantee.
+
+Across the complete 191-request traced workload each profile returned 184 initial 201s and seven 503s, with no cancellations or unmeasured requests. Baseline: 276 attempts, 90 genuine 40001s and two COMMIT driver timeouts. Candidate: 278 attempts, 94 genuine 40001s, zero driver timeouts. All seven candidate failures were c4 REVERSE requests; the changed wait did not eliminate SSI contention. Both fixtures cleaned up and their final aggregate checks found zero drafts, unbalanced journals or receipt/audit gaps.
+
+## Accepted local capacity campaign
+
+| Simultaneous commands | Cells | First 201 / observed | Failed first responses | Writer attempts / serialization aborts |
+| --------------------: | ----: | -------------------: | ---------------------: | -------------------------------------: |
+|                     1 |    18 |            378 / 378 |                      0 |                                378 / 0 |
+|                     2 |    13 |          1360 / 1360 |                      0 |                              1451 / 91 |
+|                     4 |     4 |              37 / 40 |                      3 |                                 45 / 5 |
+|                     6 |     4 |              37 / 42 |                      5 |                                 45 / 3 |
+
+39/39 cells met their **class-specific** assertions. All 1,820 first responses counted, zero missing/cancelled/setup failures. Eight 503s occurred on shared-account maximum corrections, each after one attempt. Their scoped pre-recovery counts were zero. Each authorized same-key recovery returned 201, then an identical 200, with exactly one receipt, two journals, 1,000 postings and one audit. The benchmarking harness did not establish a specific SQLSTATE for those eight 503s. The c4/c6 safety checks include post-load recovery. A qualifying stress cell can contain unsuccessful commands.
+
+Two-leg POST/c2 measured 1,000 initial successes with 12 serialization aborts across 1,012 attempts. Command p99 was **194.93 ms**, HTTP p99 **197.29 ms**. CORRECT50 command p95 ranged **129.20–500.30 ms** across c1/c2 and small/maximal unions (30 observations per cell); its p99 is **NOT PROVEN**. Capacity tooling charged setup to the original limits. Workloads with instrumentation and capacity qualification are reported separately. [Campaign manifest](../../tests/verification/ack-capacity.benchmark.ts)
+
+## Verification record
+
+Prerequisite: disposable local PostgreSQL test profile, public documented dummy TEST_DATABASE_URL on 127.0.0.1:5432, DATABASE_URL and DIRECT_DATABASE_URL set to it for the lease factory. The pipeline ran within its own freshly migrated public-schema database, with the existing tests creating nested disposable private fixtures. Neither SQL experiment is discovered by Prisma.
+
+- Baseline and candidate: `node_modules/.bin/vitest run --project verification tests/verification/root-cause.benchmark.ts` — 1/1 each, 39.68 s / 33.52 s.
+- Candidate: `node_modules/.bin/vitest run --project integration tests/integration/commit-wait.test.ts tests/integration/batching-prototype.test.ts tests/integration/post-command.test.ts tests/integration/correction-concurrency.test.ts` — 95/95, 77.81 s. Includes original production-disabled handler, real 40001/40P01, actual deferred COMMIT rejection, strict initial-201 maximum case, late/missing replies, shortened budget, cancellation before/after dispatch, fresh checkout and identical replay/conflict.
+- One preliminary test expected an explicit client ROLLBACK on pre-dispatch expiry. The server's unchanged transaction timeout can already have disconnected that backend. The corrected regression requires zero COMMIT dispatches, no durable effects and either explicit rollback or destruction of the expired backend. The first run had five passes and one failed assertion; subsequent tests include an additional regression for budget spent on a failed first attempt.
+- `node_modules/.bin/vitest run --project verification tests/verification/ack-capacity.benchmark.ts` — 39/39, 196.76 s. Safety checks and failure denominators are preserved in the evidence.
+
+The strict CI scenario ran locally within its complete regression file. No remote exact-head CI or independent implementation approval is asserted. Larger ACK budgets can extend writer occupancy while PostgreSQL finishes; they do not reduce trigger CPU or provide an ACK when a connection is lost. Neither a local pass nor replay recovery enables a production writer. Prior V05 stop, owner DDL differential, receipt-audit review, open #32 and all subsequent release gates retain their disposition.
+
+### Full candidate regression pipeline
+
+Exit 0 using the existing withFreshLedgerDatabase lease factory around the repository's CI stages. In order: `npm run db:generate`, `npm run db:migrate:test`, `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test:unit` (220 passed), `npm run test:integration` (250 passed), `npm run test:schema`, `npm run ledger:attest`, `npm run build`, `npm run test:e2e` (48 desktop/mobile browser tests passed in 27.5 s), `python3 scripts/check_foundation.py`. The parent lease cleaned up successfully. This exercised the repo's normal local-browser runner and private-schema rehearsal, without installing or executing the blocked coalescing or audit-only fixtures. The local report is ready for review; the prior failed GitHub runs have not been superseded by a candidate GitHub run.
+
+## Publication provenance
+
+The published executor and all changed regression/harness files have identical Git blobs to the locally measured source. The original JSON is byte-identical to the local evidence commit. Its SHA-256 is `13ed775ac5706de9f65af7a4d0c939a42702e0cae649f58c952bf69aeae7b667`. Recomputed baseline, candidate and qualification source digests match the recorded metadata. The clean publication fingerprint using the benchmark’s file-selection algorithm is `7a61ab3de5cc95866db3717ddbb47e8bc2505b45ce68463a602e72dabeb26ba2`. The original digest also covered local-only experiment files that were never loaded by the acknowledgement campaigns. Those SQL experiments and their commits are excluded from this branch. The local SHA labels in the JSON identify the original measurements. Exact publication-head CI, repeat capacity results and independent review disposition belong in the draft PR record.

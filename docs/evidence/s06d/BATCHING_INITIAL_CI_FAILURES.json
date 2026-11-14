@@ -1,0 +1,38 @@
+{
+  "publicationHead": "87a5a7e49371cbc06af1656255287661d5fc696b",
+  "financialExecutionDigest": "5eba37c0ce00d5538207d2d367b9395ef7756b4cfcb461e2206e7fcb73af3255",
+  "results": [
+    {
+      "event": "pull_request",
+      "run": 43243111919,
+      "job": 131268573690,
+      "url": "https://github.com/i-am-tj/LedgerOne/actions/runs/43243111919/job/131268573690",
+      "conclusion": "FAILURE",
+      "unitPassed": 220,
+      "integrationPassed": 241,
+      "integrationFailed": 1,
+      "failures": [
+        "Maximum 500+500/1000-account CORRECT: first response 503 instead of required 201"
+      ],
+      "integrationSeconds": 114.77
+    },
+    {
+      "event": "push",
+      "run": 43243099692,
+      "job": 131268533357,
+      "url": "https://github.com/i-am-tj/LedgerOne/actions/runs/43243099692/job/131268533357",
+      "conclusion": "FAILURE",
+      "unitPassed": 220,
+      "integrationPassed": 240,
+      "integrationFailed": 2,
+      "failures": [
+        "Maximum 500+500/1000-account CORRECT: first response 503 instead of required 201",
+        "Later 40001 test sees two extra journals,1000 postings,one receipt and audit in shared fixture"
+      ],
+      "integrationSeconds": 112.61
+    }
+  ],
+  "formatLintTypecheck": "PASS in both jobs",
+  "schemaAttestationBuildBrowser": "NOT RUN in these jobs after integration failure",
+  "disposition": "Capacity #32 remains FAIL; test-isolation #33 corrected separately, independent review/merge pending. No failed positive assertion waived."
+}

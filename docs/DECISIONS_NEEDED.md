@@ -2,7 +2,7 @@
 
 # Decisions and authorization
 
-> Current status (2026-11-12): S06C completed/reviewed merge `3502754` at corrected head `c22488b`; #10/#27 closed. [Verified closure](reports/S06C_CLOSURE.md). S06D predecessor satisfied; detailed planning awaits acceptance and reviewed planning merge. A05-01–05 remain open. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. Earlier dated checkpoints retain their original decisions and evidence.
+> Current status (2026-11-12): S06C completed/reviewed merge `3502754` at corrected head `c22488b`; #10/#27 closed. [Verified closure](reports/S06C_CLOSURE.md). S06D planning PR #28 accepted/amended and merged `d048d8b`; isolated local implementation now proceeds in a separate PR. Hosted operations remain unauthorized. A05-01–05 remain open. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. Earlier dated checkpoints retain their original decisions and evidence.
 
 Current approvals: expanded Phase 1, GitHub delivery and reviewed S05/S06A/S06B/S06C merges are confirmed. S06C implementation PR #26 merged as 3502754 at corrected c22488b; S06D planning acceptance and reviewed planning merge are still required before implementation. Google sign-in with an owner allowlist is selected. The table below preserves the initial proposed decisions; outstanding accounting/security reviews still apply before dependent implementation.
 
@@ -72,3 +72,7 @@ S06B reviewed merge is confirmed. Accept or amend the [S06C breakdown](stories/P
 ## S06D pending approvals
 
 Accept the exact [S06D planning breakdown](stories/P1-S06D_BREAKDOWN.md), including proposed capacity budgets and technical-versus-activation separation, then record reviewed planning merge before implementation. [O-P01 / O-HREAD / O-HDDL / O-HWRITE / O-PROD / O-ROLLBACK](plans/S06D_TARGET_AND_ROLES.md) define separate scopes. No hosted connection/read, migration, permission change, test/benchmark write, teardown, deployment or production activation is authorized by this planning request. Missing hosted permissions leave target-dependent technical evidence NOT RUN; they are not silently waived. Production target/domain/role details remain TBD until supplied privately under a concrete approved operation.
+
+## S06D current local authorization — 2026-11-12
+
+The historical planning/proposal requests above are superseded by recorded planning acceptance/merge and the owner's explicit bounded batching approval. [Authorization](https://github.com/i-am-tj/LedgerOne/pull/30#issuecomment-6826341877) allows only the isolated local D-T03 prototype and tests under unchanged 500-leg/accounting/retry/deadline contracts. A **new insertion-path accounting/security review and decision** is required before any merge. [Prototype report](reports/S06D_BATCHING_PROTOTYPE.md) records evidence and remaining capacity decisions. No hosted read, migration/provisioning/grant, synthetic write/benchmark, production operation or consumer writer permission has been supplied. #32 stays open and PR #30 draft pending verification/review; full S06 and Phase 1 gates remain closed.

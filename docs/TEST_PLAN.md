@@ -2,7 +2,7 @@
 
 # Verification and traceability
 
-> Current status (2026-11-12): S06C completed/reviewed merge `3502754` at corrected head `c22488b`; #10/#27 closed. [Verified closure](reports/S06C_CLOSURE.md). S06D predecessor satisfied; detailed planning awaits acceptance and reviewed planning merge. A05-01–05 remain open. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. Earlier dated checkpoints retain their original decisions and evidence.
+> Current status (2026-11-12): S06C completed/reviewed merge `3502754` at corrected head `c22488b`; #10/#27 closed. [Verified closure](reports/S06C_CLOSURE.md). S06D planning PR #28 accepted/amended and merged `d048d8b`; isolated local implementation now proceeds in a separate PR. Hosted operations remain unauthorized. A05-01–05 remain open. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. Earlier dated checkpoints retain their original decisions and evidence.
 
 Status: the application, runners and CI exist. Reviewed S06B corrected-head evidence is 144 unit / 132 integration / 48 browser PASS. Initial matrices below preserve planned identifiers; per-story reports and closure evidence identify implemented coverage. S06C and later coverage must not be inferred from S06B.
 
@@ -203,3 +203,11 @@ Corrected adversarial source 977f701 full `npm run verify:pipeline`: PASS 144 un
 ## S06D planned verification coverage
 
 The authoritative [W01–W15 requirements-to-tests matrix](gates/S06D_REQUIREMENTS_TO_TESTS.md) links existing B/C evidence, missing assertions, profiles, packages and acceptance IDs. [D-T01–05](stories/P1-S06D_BREAKDOWN.md) add combined actual-handler/private-schema/restricted-role evidence, authorized hosted target attestation, [capacity campaigns](plans/S06D_PERFORMANCE.md), and final adversarial review. All final S06D results remain NOT RUN; no S06C test count is inherited as a D PASS. Exact new commands will be recorded when implemented; no hosted test is authorized by this plan.
+
+## S06D D-T03 authorized bounded insertion prototype
+
+[Prototype evidence](reports/S06D_BATCHING_PROTOTYPE.md) separates original row-loop and batching sources, posting-only versus complete-command timers, heavy benchmark failures and ordinary CI. `tests/integration/batching-prototype.test.ts` maps the prototype obligations to actual private restricted-role HTTP/handler cases: 2/50/500 exact MAX and duplicate multiset POST/REVERSE/CORRECT; 500+500 and sorted 1,000-account union; final-row CHECK failure after 50 row evaluations with zero durable effects; null/short affected-row counts; pre-INSERT and observed in-INSERT cancellation; genuine PostgreSQL 40001/40P01 fresh retries; successful COMMIT with deliberately lost driver acknowledgement; two-user/forged/origin denial; archived historical replay and revoked session denial. Existing S06C TCP proxy probes independently exercise real dropped PostgreSQL COMMIT response transport. Test-only SQL faults/gates are not consumer inputs or exposed capabilities. No trigger is disabled, persistent constraint altered or production grant changed by the prototype tests.
+
+Heavy `verification` campaigns remain separately required and retain failures, canceled/unmeasured samples and NOT PROVEN tails. Fresh author-context probes do not substitute for independent review or owner’s new final decision. D-T04/D-T05 are not advanced by this prototype.
+
+S06D-R04 #33 adds a fifteenth targeted case: actual advisory-gated owned SQL, fixture separation and bounded non-forcing settlement. Maximum fixture retains the prior12-journal/2,208-posting history and mandatory first201; uncertain durable outcomes are audited/replayed only for safety proof, never counted as positive capacity. Corrected local full220/243/48 passes; initial CI87a5a7e failures remain in [the evidence](evidence/s06d/BATCHING_INITIAL_CI_FAILURES.json).

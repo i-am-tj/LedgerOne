@@ -1,6 +1,6 @@
 # S06 financial write-enablement gate
 
-**Status: NOT RUN. Technical financial-verification recommendation: FAIL (closed).** S06A/B/C have reviewed merges; [S06C closure](../reports/S06C_CLOSURE.md) confirms corrected c22488b / merge 3502754 and 166/212/48. S06D is planning only, pending acceptance and reviewed planning merge. All final W rows below remain unaccepted; local predecessor evidence does not prove target roles, private-schema handlers or hosted capacity. Normal-runtime financial writes remain disabled, grants SELECT-only and posting INR-only. No production operation is authorized.
+**Status: NOT RUN / FAIL (closed).** S06D planning PR #28 accepted/amended/merged `d048d8b`; separate draft implementation PR #30 has verified local D-T01/D-T02 and D-T03 tooling. Required local capacity qualification FAIL #32; one designated critical tail passed empirically while correction tail is NOT PROVEN. D-T04 and final D-T05 remain blocked/unperformed. [Current local evidence](S06D_LOCAL_CHECKPOINT.md). Native financial capability remains null, published financial grants SELECT-only and posting INR-only. Hosted operations and production activation remain unauthorized.
 
 The [detailed D plan](../stories/P1-S06D_BREAKDOWN.md) and [requirements-to-tests matrix](S06D_REQUIREMENTS_TO_TESTS.md) distinguish technical verification from separately approved production activation. Generic raw financial endpoints stay unavailable to consumers even after technical PASS. Hosted verification uses only a separately authorized isolated synthetic target; absent evidence means NOT RUN/FAIL, not a waiver.
 
@@ -60,3 +60,7 @@ Fresh user-invoked adversarial review initially BLOCKED 2922ce3 for R01/#27; cor
 ## Current S06D planning handoff
 
 S06C is now reviewed/merged; #10/#27 closed. Initial BLOCKED review and corrected approval are retained, not superseded retroactively. Original A05 #13–#17 stay open. See [finding dispositions](../plans/S06D_FINDINGS.md), [target/roles and owner approvals](../plans/S06D_TARGET_AND_ROLES.md), [performance plan](../plans/S06D_PERFORMANCE.md) and [activation separation](../plans/S06D_ACTIVATION_AND_ROLLBACK.md). S06D tasks and final target evidence remain NOT RUN.
+
+## D-T05 owner-authorized local merge checkpoint
+
+Local readiness may be reviewed and merged independently of hosted verification under the explicit owner scope clarification. See [local W matrix, individual A05 dispositions and dependency assessment](../reports/S06D_D_T05_LOCAL_REVIEW.md). Historical hosted-dependent requirements retain NOT RUN status. Production activation remains disabled. #13/#14/#15 are eligible for local-scope closure only after reviewed incorporation; #16 and account-specific #17 remain S07 obligations. #34 remains open. PR #30 requires separate owner merge approval.

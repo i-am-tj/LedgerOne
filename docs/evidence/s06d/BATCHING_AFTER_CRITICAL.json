@@ -1,0 +1,851 @@
+{
+  "metadata": {
+    "sourceCommit": "85cbdfafc57b1a45cf36b85f2b07fd12bcf664a7",
+    "dirty": true,
+    "codeDigest": "5eba37c0ce00d5538207d2d367b9395ef7756b4cfcb461e2206e7fcb73af3255",
+    "node": "v22.22.0",
+    "profile": "local-private",
+    "schema": "ledgerone",
+    "connectionMode": "direct-loopback",
+    "writerPool": 6,
+    "verifierPool": 2,
+    "postgres": "17.6",
+    "catalogDigest": "8bce7905c92637cc89c31c876f47cefae1e38f52075ee77566e88328207b9547",
+    "hosted": "NOT_RUN / NOT_AUTHORIZED",
+    "productionWritesEnabled": false
+  },
+  "elapsedMs": 265500.115875,
+  "results": [
+    {
+      "workload": {
+        "kind": "POST",
+        "legs": 2,
+        "union": "small",
+        "concurrency": 4,
+        "samples": 1000,
+        "critical": true
+      },
+      "coldIncluded": true,
+      "accountContention": "disjoint",
+      "setupInterleaved": false,
+      "resourceBudgetMs": 240000,
+      "budgetAborted": false,
+      "unmeasured": 0,
+      "setupFailures": 0,
+      "retries": {
+        "attempts": 1287,
+        "serialization": 290,
+        "deadlock": 0
+      },
+      "failedAttempts": {
+        "3": 3
+      },
+      "mappedErrors": {
+        "service_unavailable": 3
+      },
+      "summary": {
+        "observations": 1000,
+        "p50Ms": 57.99699999999939,
+        "p95Ms": 152.1204170000001,
+        "p99": {
+          "result": "PROVEN",
+          "valueMs": 227.29958299999998
+        },
+        "counts": {
+          "success": 997,
+          "conflict": 0,
+          "failed": 3,
+          "cancelled": 0,
+          "uncertain": 0,
+          "recovered": 0
+        },
+        "unexpectedFailureRate": 0.003,
+        "stages": {
+          "http.authentication": {
+            "observations": 1000,
+            "p50Ms": 2.341042000000016,
+            "p95Ms": 7.237375000000611,
+            "p99": {
+              "result": "PROVEN",
+              "valueMs": 13.468082999999751
+            }
+          },
+          "http.body": {
+            "observations": 1000,
+            "p50Ms": 0.02954199999840057,
+            "p95Ms": 0.12329200000021956,
+            "p99": {
+              "result": "PROVEN",
+              "valueMs": 0.2272499999999127
+            }
+          },
+          "http.response": {
+            "observations": 1000,
+            "p50Ms": 57.91454199999953,
+            "p95Ms": 151.97095900000022,
+            "p99": {
+              "result": "PROVEN",
+              "valueMs": 226.7637079999986
+            }
+          },
+          "command.total": {
+            "observations": 1000,
+            "p50Ms": 54.7607909999997,
+            "p95Ms": 146.57466699999895,
+            "p99": {
+              "result": "PROVEN",
+              "valueMs": 212.74325
+            }
+          },
+          "command.authentication": {
+            "observations": 1000,
+            "p50Ms": 4.043584000002738,
+            "p95Ms": 11.855458000001818,
+            "p99": {
+              "result": "PROVEN",
+              "valueMs": 20.290917000000263
+            }
+          },
+          "command.attestation": {
+            "observations": 1000,
+            "p50Ms": 37.35737499999959,
+            "p95Ms": 83.15920900000128,
+            "p99": {
+              "result": "PROVEN",
+              "valueMs": 130.12758399999984
+            }
+          },
+          "command.verifier_wait": {
+            "observations": 1000,
+            "p50Ms": 10.229749999998603,
+            "p95Ms": 25.120374999999967,
+            "p99": {
+              "result": "PROVEN",
+              "valueMs": 40.810999999997875
+            }
+          },
+          "command.connection_wait": {
+            "observations": 1000,
+            "p50Ms": 0.010457999999744061,
+            "p95Ms": 0.057125000001178705,
+            "p99": {
+              "result": "PROVEN",
+              "valueMs": 0.10124999999970896
+            }
+          },
+          "locks.accounts": {
+            "observations": 1000,
+            "p50Ms": 0.7594169999974838,
+            "p95Ms": 3.009667000000263,
+            "p99": {
+              "result": "PROVEN",
+              "valueMs": 5.21337499999936
+            }
+          },
+          "locks.original": {
+            "observations": 0,
+            "p50Ms": null,
+            "p95Ms": null,
+            "p99": {
+              "result": "NOT_PROVEN",
+              "valueMs": null
+            }
+          },
+          "sql.receipt": {
+            "observations": 1000,
+            "p50Ms": 1.22099999999773,
+            "p95Ms": 4.050334000003204,
+            "p99": {
+              "result": "PROVEN",
+              "valueMs": 10.664249000001291
+            }
+          },
+          "sql.insertion": {
+            "observations": 1000,
+            "p50Ms": 2.976458000001003,
+            "p95Ms": 8.846957999998267,
+            "p99": {
+              "result": "PROVEN",
+              "valueMs": 13.681500000000597
+            }
+          },
+          "sql.postings": {
+            "observations": 1000,
+            "p50Ms": 1.1462910000009288,
+            "p95Ms": 3.8444580000013957,
+            "p99": {
+              "result": "PROVEN",
+              "valueMs": 7.537625000000844
+            }
+          },
+          "sql.audit": {
+            "observations": 1000,
+            "p50Ms": 0.7656660000002375,
+            "p95Ms": 2.366415999997116,
+            "p99": {
+              "result": "PROVEN",
+              "valueMs": 4.802167000001646
+            }
+          },
+          "sql.commit": {
+            "observations": 999,
+            "p50Ms": 2.5666670000009617,
+            "p95Ms": 8.140125000001717,
+            "p99": {
+              "result": "NOT_PROVEN",
+              "valueMs": null
+            }
+          },
+          "sql.rollback": {
+            "observations": 243,
+            "p50Ms": 0.5660410000000411,
+            "p95Ms": 1.9471250000005966,
+            "p99": {
+              "result": "NOT_PROVEN",
+              "valueMs": null
+            }
+          }
+        }
+      },
+      "commandTimes": {
+        "observations": 1000,
+        "p50Ms": 54.7607909999997,
+        "p95Ms": 146.57466699999895,
+        "p99": {
+          "result": "PROVEN",
+          "valueMs": 212.74325
+        },
+        "counts": {
+          "success": 997,
+          "conflict": 0,
+          "failed": 3,
+          "cancelled": 0,
+          "uncertain": 0,
+          "recovered": 0
+        },
+        "unexpectedFailureRate": 0.003,
+        "stages": {
+          "http.authentication": {
+            "observations": 1000,
+            "p50Ms": 2.341042000000016,
+            "p95Ms": 7.237375000000611,
+            "p99": {
+              "result": "PROVEN",
+              "valueMs": 13.468082999999751
+            }
+          },
+          "http.body": {
+            "observations": 1000,
+            "p50Ms": 0.02954199999840057,
+            "p95Ms": 0.12329200000021956,
+            "p99": {
+              "result": "PROVEN",
+              "valueMs": 0.2272499999999127
+            }
+          },
+          "http.response": {
+            "observations": 1000,
+            "p50Ms": 57.91454199999953,
+            "p95Ms": 151.97095900000022,
+            "p99": {
+              "result": "PROVEN",
+              "valueMs": 226.7637079999986
+            }
+          },
+          "command.total": {
+            "observations": 1000,
+            "p50Ms": 54.7607909999997,
+            "p95Ms": 146.57466699999895,
+            "p99": {
+              "result": "PROVEN",
+              "valueMs": 212.74325
+            }
+          },
+          "command.authentication": {
+            "observations": 1000,
+            "p50Ms": 4.043584000002738,
+            "p95Ms": 11.855458000001818,
+            "p99": {
+              "result": "PROVEN",
+              "valueMs": 20.290917000000263
+            }
+          },
+          "command.attestation": {
+            "observations": 1000,
+            "p50Ms": 37.35737499999959,
+            "p95Ms": 83.15920900000128,
+            "p99": {
+              "result": "PROVEN",
+              "valueMs": 130.12758399999984
+            }
+          },
+          "command.verifier_wait": {
+            "observations": 1000,
+            "p50Ms": 10.229749999998603,
+            "p95Ms": 25.120374999999967,
+            "p99": {
+              "result": "PROVEN",
+              "valueMs": 40.810999999997875
+            }
+          },
+          "command.connection_wait": {
+            "observations": 1000,
+            "p50Ms": 0.010457999999744061,
+            "p95Ms": 0.057125000001178705,
+            "p99": {
+              "result": "PROVEN",
+              "valueMs": 0.10124999999970896
+            }
+          },
+          "locks.accounts": {
+            "observations": 1000,
+            "p50Ms": 0.7594169999974838,
+            "p95Ms": 3.009667000000263,
+            "p99": {
+              "result": "PROVEN",
+              "valueMs": 5.21337499999936
+            }
+          },
+          "locks.original": {
+            "observations": 0,
+            "p50Ms": null,
+            "p95Ms": null,
+            "p99": {
+              "result": "NOT_PROVEN",
+              "valueMs": null
+            }
+          },
+          "sql.receipt": {
+            "observations": 1000,
+            "p50Ms": 1.22099999999773,
+            "p95Ms": 4.050334000003204,
+            "p99": {
+              "result": "PROVEN",
+              "valueMs": 10.664249000001291
+            }
+          },
+          "sql.insertion": {
+            "observations": 1000,
+            "p50Ms": 2.976458000001003,
+            "p95Ms": 8.846957999998267,
+            "p99": {
+              "result": "PROVEN",
+              "valueMs": 13.681500000000597
+            }
+          },
+          "sql.postings": {
+            "observations": 1000,
+            "p50Ms": 1.1462910000009288,
+            "p95Ms": 3.8444580000013957,
+            "p99": {
+              "result": "PROVEN",
+              "valueMs": 7.537625000000844
+            }
+          },
+          "sql.audit": {
+            "observations": 1000,
+            "p50Ms": 0.7656660000002375,
+            "p95Ms": 2.366415999997116,
+            "p99": {
+              "result": "PROVEN",
+              "valueMs": 4.802167000001646
+            }
+          },
+          "sql.commit": {
+            "observations": 999,
+            "p50Ms": 2.5666670000009617,
+            "p95Ms": 8.140125000001717,
+            "p99": {
+              "result": "NOT_PROVEN",
+              "valueMs": null
+            }
+          },
+          "sql.rollback": {
+            "observations": 243,
+            "p50Ms": 0.5660410000000411,
+            "p95Ms": 1.9471250000005966,
+            "p99": {
+              "result": "NOT_PROVEN",
+              "valueMs": null
+            }
+          }
+        }
+      },
+      "safe": true,
+      "positiveResult": "FAIL",
+      "capacityResult": "PASS",
+      "criticalBatches": [
+        {
+          "batch": 1,
+          "observations": 250,
+          "p50Ms": 96.76387499999873,
+          "p95Ms": 212.40954199999942,
+          "counts": {
+            "success": 247,
+            "conflict": 0,
+            "failed": 3,
+            "cancelled": 0,
+            "uncertain": 0,
+            "recovered": 0
+          },
+          "unexpectedFailureRate": 0.012
+        },
+        {
+          "batch": 2,
+          "observations": 250,
+          "p50Ms": 55.07508400000006,
+          "p95Ms": 133.55187500000102,
+          "counts": {
+            "success": 250,
+            "conflict": 0,
+            "failed": 0,
+            "cancelled": 0,
+            "uncertain": 0,
+            "recovered": 0
+          },
+          "unexpectedFailureRate": 0
+        },
+        {
+          "batch": 3,
+          "observations": 250,
+          "p50Ms": 56.73837499999718,
+          "p95Ms": 130.24137500000143,
+          "counts": {
+            "success": 250,
+            "conflict": 0,
+            "failed": 0,
+            "cancelled": 0,
+            "uncertain": 0,
+            "recovered": 0
+          },
+          "unexpectedFailureRate": 0
+        },
+        {
+          "batch": 4,
+          "observations": 250,
+          "p50Ms": 50.254124999999476,
+          "p95Ms": 89.60550000000148,
+          "counts": {
+            "success": 250,
+            "conflict": 0,
+            "failed": 0,
+            "cancelled": 0,
+            "uncertain": 0,
+            "recovered": 0
+          },
+          "unexpectedFailureRate": 0
+        }
+      ],
+      "p99Qualification": "PROVEN",
+      "maximumDistinctAccountUnion": 2
+    },
+    {
+      "workload": {
+        "kind": "CORRECT",
+        "legs": 50,
+        "union": "maximum",
+        "concurrency": 1,
+        "samples": 1000,
+        "critical": true
+      },
+      "coldIncluded": true,
+      "accountContention": "disjoint",
+      "setupInterleaved": false,
+      "resourceBudgetMs": 240000,
+      "budgetAborted": true,
+      "unmeasured": 426,
+      "setupFailures": 0,
+      "retries": {
+        "attempts": 574,
+        "serialization": 0,
+        "deadlock": 0
+      },
+      "failedAttempts": {
+        "1": 1
+      },
+      "mappedErrors": {
+        "service_unavailable": 1
+      },
+      "summary": {
+        "observations": 574,
+        "p50Ms": 146.5465409999888,
+        "p95Ms": 302.22191700001713,
+        "p99": {
+          "result": "NOT_PROVEN",
+          "valueMs": null
+        },
+        "counts": {
+          "success": 573,
+          "conflict": 0,
+          "failed": 0,
+          "cancelled": 1,
+          "uncertain": 0,
+          "recovered": 0
+        },
+        "unexpectedFailureRate": 0,
+        "stages": {
+          "http.authentication": {
+            "observations": 574,
+            "p50Ms": 2.7294589999946766,
+            "p95Ms": 9.210665999999037,
+            "p99": {
+              "result": "NOT_PROVEN",
+              "valueMs": null
+            }
+          },
+          "http.body": {
+            "observations": 574,
+            "p50Ms": 0.1362080000108108,
+            "p95Ms": 0.33850000001257285,
+            "p99": {
+              "result": "NOT_PROVEN",
+              "valueMs": null
+            }
+          },
+          "http.response": {
+            "observations": 574,
+            "p50Ms": 145.97849999999744,
+            "p95Ms": 301.9600419999915,
+            "p99": {
+              "result": "NOT_PROVEN",
+              "valueMs": null
+            }
+          },
+          "command.total": {
+            "observations": 574,
+            "p50Ms": 141.876082999981,
+            "p95Ms": 292.66695799998706,
+            "p99": {
+              "result": "NOT_PROVEN",
+              "valueMs": null
+            }
+          },
+          "command.authentication": {
+            "observations": 574,
+            "p50Ms": 4.284834000020055,
+            "p95Ms": 10.90470899999491,
+            "p99": {
+              "result": "NOT_PROVEN",
+              "valueMs": null
+            }
+          },
+          "command.attestation": {
+            "observations": 574,
+            "p50Ms": 20.285957999993116,
+            "p95Ms": 60.863458000007086,
+            "p99": {
+              "result": "NOT_PROVEN",
+              "valueMs": null
+            }
+          },
+          "command.verifier_wait": {
+            "observations": 574,
+            "p50Ms": 0.026916000002529472,
+            "p95Ms": 0.06541599999764003,
+            "p99": {
+              "result": "NOT_PROVEN",
+              "valueMs": null
+            }
+          },
+          "command.connection_wait": {
+            "observations": 574,
+            "p50Ms": 0.02337499998975545,
+            "p95Ms": 0.054124999995110556,
+            "p99": {
+              "result": "NOT_PROVEN",
+              "valueMs": null
+            }
+          },
+          "locks.accounts": {
+            "observations": 573,
+            "p50Ms": 1.7247910000151023,
+            "p95Ms": 5.619999999995343,
+            "p99": {
+              "result": "NOT_PROVEN",
+              "valueMs": null
+            }
+          },
+          "locks.original": {
+            "observations": 573,
+            "p50Ms": 0.7707499999960419,
+            "p95Ms": 3.0813750000088476,
+            "p99": {
+              "result": "NOT_PROVEN",
+              "valueMs": null
+            }
+          },
+          "sql.receipt": {
+            "observations": 574,
+            "p50Ms": 0.9001250000146683,
+            "p95Ms": 4.584373999998206,
+            "p99": {
+              "result": "NOT_PROVEN",
+              "valueMs": null
+            }
+          },
+          "sql.insertion": {
+            "observations": 573,
+            "p50Ms": 20.812124999967637,
+            "p95Ms": 50.97562499996275,
+            "p99": {
+              "result": "NOT_PROVEN",
+              "valueMs": null
+            }
+          },
+          "sql.postings": {
+            "observations": 573,
+            "p50Ms": 17.584292000014102,
+            "p95Ms": 44.98541799999657,
+            "p99": {
+              "result": "NOT_PROVEN",
+              "valueMs": null
+            }
+          },
+          "sql.audit": {
+            "observations": 573,
+            "p50Ms": 0.565708000009181,
+            "p95Ms": 3.1135420000064187,
+            "p99": {
+              "result": "NOT_PROVEN",
+              "valueMs": null
+            }
+          },
+          "sql.commit": {
+            "observations": 573,
+            "p50Ms": 80.74399999997695,
+            "p95Ms": 161.2625409999746,
+            "p99": {
+              "result": "NOT_PROVEN",
+              "valueMs": null
+            }
+          },
+          "sql.rollback": {
+            "observations": 1,
+            "p50Ms": 1.323374999978114,
+            "p95Ms": 1.323374999978114,
+            "p99": {
+              "result": "NOT_PROVEN",
+              "valueMs": null
+            }
+          }
+        }
+      },
+      "commandTimes": {
+        "observations": 574,
+        "p50Ms": 141.876082999981,
+        "p95Ms": 292.66695799998706,
+        "p99": {
+          "result": "NOT_PROVEN",
+          "valueMs": null
+        },
+        "counts": {
+          "success": 573,
+          "conflict": 0,
+          "failed": 0,
+          "cancelled": 1,
+          "uncertain": 0,
+          "recovered": 0
+        },
+        "unexpectedFailureRate": 0,
+        "stages": {
+          "http.authentication": {
+            "observations": 574,
+            "p50Ms": 2.7294589999946766,
+            "p95Ms": 9.210665999999037,
+            "p99": {
+              "result": "NOT_PROVEN",
+              "valueMs": null
+            }
+          },
+          "http.body": {
+            "observations": 574,
+            "p50Ms": 0.1362080000108108,
+            "p95Ms": 0.33850000001257285,
+            "p99": {
+              "result": "NOT_PROVEN",
+              "valueMs": null
+            }
+          },
+          "http.response": {
+            "observations": 574,
+            "p50Ms": 145.97849999999744,
+            "p95Ms": 301.9600419999915,
+            "p99": {
+              "result": "NOT_PROVEN",
+              "valueMs": null
+            }
+          },
+          "command.total": {
+            "observations": 574,
+            "p50Ms": 141.876082999981,
+            "p95Ms": 292.66695799998706,
+            "p99": {
+              "result": "NOT_PROVEN",
+              "valueMs": null
+            }
+          },
+          "command.authentication": {
+            "observations": 574,
+            "p50Ms": 4.284834000020055,
+            "p95Ms": 10.90470899999491,
+            "p99": {
+              "result": "NOT_PROVEN",
+              "valueMs": null
+            }
+          },
+          "command.attestation": {
+            "observations": 574,
+            "p50Ms": 20.285957999993116,
+            "p95Ms": 60.863458000007086,
+            "p99": {
+              "result": "NOT_PROVEN",
+              "valueMs": null
+            }
+          },
+          "command.verifier_wait": {
+            "observations": 574,
+            "p50Ms": 0.026916000002529472,
+            "p95Ms": 0.06541599999764003,
+            "p99": {
+              "result": "NOT_PROVEN",
+              "valueMs": null
+            }
+          },
+          "command.connection_wait": {
+            "observations": 574,
+            "p50Ms": 0.02337499998975545,
+            "p95Ms": 0.054124999995110556,
+            "p99": {
+              "result": "NOT_PROVEN",
+              "valueMs": null
+            }
+          },
+          "locks.accounts": {
+            "observations": 573,
+            "p50Ms": 1.7247910000151023,
+            "p95Ms": 5.619999999995343,
+            "p99": {
+              "result": "NOT_PROVEN",
+              "valueMs": null
+            }
+          },
+          "locks.original": {
+            "observations": 573,
+            "p50Ms": 0.7707499999960419,
+            "p95Ms": 3.0813750000088476,
+            "p99": {
+              "result": "NOT_PROVEN",
+              "valueMs": null
+            }
+          },
+          "sql.receipt": {
+            "observations": 574,
+            "p50Ms": 0.9001250000146683,
+            "p95Ms": 4.584373999998206,
+            "p99": {
+              "result": "NOT_PROVEN",
+              "valueMs": null
+            }
+          },
+          "sql.insertion": {
+            "observations": 573,
+            "p50Ms": 20.812124999967637,
+            "p95Ms": 50.97562499996275,
+            "p99": {
+              "result": "NOT_PROVEN",
+              "valueMs": null
+            }
+          },
+          "sql.postings": {
+            "observations": 573,
+            "p50Ms": 17.584292000014102,
+            "p95Ms": 44.98541799999657,
+            "p99": {
+              "result": "NOT_PROVEN",
+              "valueMs": null
+            }
+          },
+          "sql.audit": {
+            "observations": 573,
+            "p50Ms": 0.565708000009181,
+            "p95Ms": 3.1135420000064187,
+            "p99": {
+              "result": "NOT_PROVEN",
+              "valueMs": null
+            }
+          },
+          "sql.commit": {
+            "observations": 573,
+            "p50Ms": 80.74399999997695,
+            "p95Ms": 161.2625409999746,
+            "p99": {
+              "result": "NOT_PROVEN",
+              "valueMs": null
+            }
+          },
+          "sql.rollback": {
+            "observations": 1,
+            "p50Ms": 1.323374999978114,
+            "p95Ms": 1.323374999978114,
+            "p99": {
+              "result": "NOT_PROVEN",
+              "valueMs": null
+            }
+          }
+        }
+      },
+      "safe": true,
+      "positiveResult": "FAIL",
+      "capacityResult": "FAIL",
+      "criticalBatches": [
+        {
+          "batch": 1,
+          "observations": 250,
+          "p50Ms": 142.05691699997988,
+          "p95Ms": 301.36316599999554,
+          "counts": {
+            "success": 250,
+            "conflict": 0,
+            "failed": 0,
+            "cancelled": 0,
+            "uncertain": 0,
+            "recovered": 0
+          },
+          "unexpectedFailureRate": 0
+        },
+        {
+          "batch": 2,
+          "observations": 250,
+          "p50Ms": 146.51687499997206,
+          "p95Ms": 288.158666000003,
+          "counts": {
+            "success": 250,
+            "conflict": 0,
+            "failed": 0,
+            "cancelled": 0,
+            "uncertain": 0,
+            "recovered": 0
+          },
+          "unexpectedFailureRate": 0
+        },
+        {
+          "batch": 3,
+          "observations": 74,
+          "p50Ms": 160.41545800000313,
+          "p95Ms": 515.1053750000428,
+          "counts": {
+            "success": 73,
+            "conflict": 0,
+            "failed": 0,
+            "cancelled": 1,
+            "uncertain": 0,
+            "recovered": 0
+          },
+          "unexpectedFailureRate": 0
+        }
+      ],
+      "p99Qualification": "NOT_PROVEN",
+      "maximumDistinctAccountUnion": 100
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # S05 finding disposition register
 
-> Current status (2026-11-12): S06C completed/reviewed merge `3502754` at corrected head `c22488b`; #10/#27 closed. [Verified closure](../reports/S06C_CLOSURE.md). S06D predecessor satisfied; detailed planning awaits acceptance and reviewed planning merge. A05-01–05 remain open. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. Earlier dated checkpoints retain their original decisions and evidence.
+> Current status (2026-11-12): S06C completed/reviewed merge `3502754` at corrected head `c22488b`; #10/#27 closed. [Verified closure](../reports/S06C_CLOSURE.md). S06D planning PR #28 accepted/amended and merged `d048d8b`; isolated local implementation now proceeds in a separate PR. Hosted operations remain unauthorized. A05-01–05 remain open. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. Earlier dated checkpoints retain their original decisions and evidence.
 
 Verified input: [S05 adversarial review](S05_ADVERSARIAL_REVIEW.md), reviewed source `1243360`. Conditional S05 approval covers only the read-only INR foundation. Every finding remains open; issue creation is not remediation. The user confirmed completed human S05 review and merge; evidence: https://github.com/i-am-tj/LedgerOne/pull/1#issuecomment-6796866109. New control implementation remains subject to its own review. Original finding severity/classification is preserved.
 
@@ -174,3 +174,7 @@ S06B closure does not close the original A05 issues. A05-01 has real-handler pri
 ## Current S06D disposition plan
 
 The [criterion-level disposition matrix](../plans/S06D_FINDINGS.md) maps merged B/C mitigations, remaining private/hosted actual-role evidence and explicit S07 exclusions. All original issues and original acceptance checkboxes remain open/unaccepted here during planning. Closing separate S06C R01/#27 does not close A05-01–05. D-T01/04/05 must record each criterion and reviewer decision before any original issue closure.
+
+## D-T05 owner-authorized local merge checkpoint
+
+Local readiness may be reviewed and merged independently of hosted verification under the explicit owner scope clarification. See [local W matrix, individual A05 dispositions and dependency assessment](../reports/S06D_D_T05_LOCAL_REVIEW.md). Historical hosted-dependent requirements retain NOT RUN status. Production activation remains disabled. #13/#14/#15 are eligible for local-scope closure only after reviewed incorporation; #16 and account-specific #17 remain S07 obligations. #34 remains open. PR #30 requires separate owner merge approval.

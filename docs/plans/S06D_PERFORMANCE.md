@@ -2,6 +2,8 @@
 
 **Plan, not measured S06D evidence.** Hosted results NOT RUN. D-T03 follows accepted planning and D-T02 controls. Every hosted connection, fixture, benchmark or cleanup needs the [separate target permissions](S06D_TARGET_AND_ROLES.md). No paid service, production load or database size increase is authorized.
 
+The [invite-only capacity amendment](S06D_INVITE_ONLY_CAPACITY_AMENDMENT.md) is the controlling operational envelope from 2026-11-13. The original manifest and budgets below remain the historical basis for published runs. Use the accepted amendment for new qualification cells, including POST2/c2 p99 and CORRECT50/c1 p95. The [local diagnostic report](../reports/S06D_CONCURRENCY_RCA.md) records the existing gate failure and separates first responses from durable recovery.
+
 ## Baseline and risk
 
 [S06C I09](../gates/S06C_PERFORMANCE_HANDOFF.md) observed approximately 2.28s/2.22s locally for a correction with 500 distinct original accounts plus 500 distinct replacement accounts and 1,000 new postings. That probe permits bounded atomic 503 as well as successful 201, so it is not proof of a successful hosted maximum-size service envelope. Current per-posting sequential INSERTs, repeated trigger work and deferred COMMIT checks can amplify latency with network RTT and account count. This is an unverified capacity risk, not a confirmed hosted defect.

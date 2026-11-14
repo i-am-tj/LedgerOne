@@ -1,6 +1,6 @@
 # P1-S06D — Financial verification and release-gate breakdown
 
-**Status: owner ACCEPTED WITH TWO MINOR DOCUMENTATION AMENDMENTS; both incorporated below; amended-head checks and reviewed planning merge pending.** The owner authorizes isolated local implementation after planning merge, not hosted operations or production activation. The complete S06 gate is NOT RUN / FAIL (closed). Production financial writes remain disabled; published financial grants SELECT-only; consumer raw posting unavailable; INR-only posting unchanged.
+**Status: planning ACCEPTED with amendments and reviewed/merged as `d048d8b` at amended head `2a7ec7c`; isolated local implementation underway in a separate PR.** The owner authorizes isolated local implementation after planning merge, not hosted operations or production activation. The complete S06 gate is NOT RUN / FAIL (closed). Production financial writes remain disabled; published financial grants SELECT-only; consumer raw posting unavailable; INR-only posting unchanged.
 
 **ID:** P1-S06D | **Title:** Complete financial-command verification and separate activation design | **Epic:** [P1-E3C #5](https://github.com/i-am-tj/LedgerOne/issues/5) | **Priority:** P0 | **Dependencies:** reviewed S06A/B/C merges, accepted/merged S06D planning, task-specific owner permissions below
 
@@ -174,18 +174,26 @@ Milestone [Phase 1](https://github.com/i-am-tj/LedgerOne/milestone/1) → epic [
 
 ## Planning, story and phase gates
 
-| Gate   | Requirement                                                                                          | Current status                                                                    |
-| ------ | ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| D-PG01 | Verify S06C actual reviewed merge, #10/#27 closed, preserve initial/final evidence                   | PASS; closure report                                                              |
-| D-PG02 | Five packages, W matrix, A05 matrix, target/role/performance/activation plans and explicit approvals | Owner accepted with two minor amendments, incorporated; final-head checks pending |
-| D-PG03 | Format, foundation, link/traceability consistency and clean documentation-only diff                  | Results recorded in planning report                                               |
-| D-PG04 | Planning PR exact-head required CI                                                                   | Prior 5917115 checks passed; amended-head CI pending                              |
-| D-PG05 | Owner accepts exact plan/amendments; record reviewed planning merge under protections                | Owner acceptance recorded in chat; amended-head checks/reviewed merge pending     |
+| Gate   | Requirement                                                                                          | Current status                                                                                        |
+| ------ | ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| D-PG01 | Verify S06C actual reviewed merge, #10/#27 closed, preserve initial/final evidence                   | PASS; closure report                                                                                  |
+| D-PG02 | Five packages, W matrix, A05 matrix, target/role/performance/activation plans and explicit approvals | Owner accepted with two minor amendments, incorporated; final-head checks pending                     |
+| D-PG03 | Format, foundation, link/traceability consistency and clean documentation-only diff                  | Results recorded in planning report                                                                   |
+| D-PG04 | Planning PR exact-head required CI                                                                   | PASS at amended 2a7ec7c; both exact-head checks SUCCESS, precise totals/provenance on PR #28          |
+| D-PG05 | Owner accepts exact plan/amendments; record reviewed planning merge under protections                | PASS; owner acceptance/amendments, exact-head CI and actual planning merge d048d8b recorded on PR #28 |
 
 **Definition of done:** Planning D-PG01–05 precedes a separate implementation branch/PR. S06D is complete only after ordered D-T01–05, D-AC01–12, final W01–15 PASS for the defined target, approved supported-scope A05 dispositions, full exact-head checks, independent adversarial review and reviewed implementation merge. Technical completion does not activate production. Phase 1 remains incomplete until S07–S09 and its quality gate pass.
 
-**GitHub issue and pull-request references:** [#11 story](https://github.com/i-am-tj/LedgerOne/issues/11), [#5 epic](https://github.com/i-am-tj/LedgerOne/issues/5), [#7 umbrella](https://github.com/i-am-tj/LedgerOne/issues/7), predecessor [PR #26](https://github.com/i-am-tj/LedgerOne/pull/26), S07 [#12](https://github.com/i-am-tj/LedgerOne/issues/12), A05 [#13–#17](../plans/S06D_FINDINGS.md). Documentation-only [planning PR #28](https://github.com/i-am-tj/LedgerOne/pull/28) is published and tracked on #11; implementation PR not opened.
+**GitHub issue and pull-request references:** [#11 story](https://github.com/i-am-tj/LedgerOne/issues/11), [#5 epic](https://github.com/i-am-tj/LedgerOne/issues/5), [#7 umbrella](https://github.com/i-am-tj/LedgerOne/issues/7), predecessor [PR #26](https://github.com/i-am-tj/LedgerOne/pull/26), S07 [#12](https://github.com/i-am-tj/LedgerOne/issues/12), A05 [#13–#17](../plans/S06D_FINDINGS.md). Documentation-only [planning PR #28](https://github.com/i-am-tj/LedgerOne/pull/28) is published and tracked on #11; separate draft [implementation PR #30](https://github.com/i-am-tj/LedgerOne/pull/30) records sequential local packages; story #11 remains open.
 
 ## Owner acceptance and amendment provenance — 2026-11-12
 
 The owner explicitly accepted reviewed head `59171157f80216396273c61a2bfa5ee4c8d0d9b0` with two minor documentation amendments: staged performance acceptance separating protocol maxima from operational capacity, and local readiness separate from authorized hosted verification with explicit schema/role/shadowing tests. These clarifications are incorporated without redesign, validation-limit reduction or invariant changes. The owner authorizes reviewed planning merge followed by isolated local implementation; no hosted/production connection, mutation, activation or rollback is authorized. Final amended-head commands, CI and actual planning merge are recorded on PR #28. This is owner planning acceptance, not an invented native APPROVED review or approval of future implementation results.
+
+## D-T03 capacity decision — 2026-11-13
+
+Owner decision A supersedes the original ordinary-concurrency and critical-tail cells for subsequent D-T03 qualification. Apply the [accepted capacity policy](../plans/S06D_INVITE_ONLY_CAPACITY_AMENDMENT.md). Historical results retain their original decisions. An uncontended maximum CORRECT returned 503 and blocks #32. Decision B authorizes the [design proposal](../plans/S06D_DEFERRED_VALIDATION_DESIGN.md) only. D-T04 and D-T05 remain blocked.
+
+## Current owner decision — D-T03 LOCAL ACCEPTED
+
+The owner accepted restricted local D-T03 at `417374d6a5d3295a5b11133dd7c915348252f51a` and authorized D-T04 local work. The historical FAIL/BLOCKED entries above remain historical evidence. See [acceptance and Docker follow-up](../reports/S06D_D_T03_ACCEPTANCE.md). #32 remains open pending incorporation through reviewed workflow. #34 tracks the unresolved Docker observations. Hosted verification is NOT RUN, production writes remain disabled, and complete S06D/Phase 1 remain incomplete.

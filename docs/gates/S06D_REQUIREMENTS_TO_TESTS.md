@@ -33,3 +33,19 @@ The final report repeats all 15 rows with PASS or FAIL, linking the exact artifa
 ## Separate checkpoint record
 
 For each W row record L/P local result and H hosted result separately, with exact profile/evidence. The local checkpoint may PASS on completed local assertions while the final W status remains NOT RUN/FAIL for absent H evidence. Do not promote local results to final PASS or defer local development merely because O-H* permissions are absent. Private-schema identifier/search_path/trigger/function resolution, effective role inheritance and public-shadowing tests are mandatory W10/W11/W13 local and hosted criteria. Performance evidence follows P0–P3 stages: broad correctness/smoke, representative load, statistically qualified designated critical p99, and maximum-size stress; insufficient p99 samples are NOT PROVEN and never a tail PASS.
+
+## Current implementation checkpoint
+
+[Local checkpoint report](S06D_LOCAL_CHECKPOINT.md): D-T01/D-T02 local components verified; D-T03 capacity FAIL #32, correction critical p99 NOT PROVEN. D-T04 and final review/merge outstanding. W14 cannot pass on ordinary green CI while its required capacity evidence fails; all H-dependent criteria remain NOT RUN. No final W or complete S06D PASS and no production authorization.
+
+## D-T03 local prototype evidence (does not change final W results)
+
+[Exact local prototype report](../reports/S06D_BATCHING_PROTOTYPE.md) adds fourteen real private-role accounting/security/fault cases relevant to W01–W04/W06–W10/W13/W14, with full 220/242/48 regression PASS. This is D-T03 verification only, not execution or acceptance of D-T04's complete W matrix. Required W14 capacity remains FAIL #32; W15 review/merge remains NOT RUN: four required matrix failures, concurrent max stress failure and CORRECT critical p99 NOT PROVEN. Independent review, target-specific hosted W assertions, final evidence/reviewed merge remain outstanding. Original A05 issues stay open; final W results and gate remain closed.
+
+## D-T04 local coverage update
+
+D-T03 is LOCAL ACCEPTED at 417374d by explicit owner decision. [D-T04 coverage reconciliation](../reports/S06D_D_T04_LOCAL.md) maps reused regressions and the added combined private-role test to W01–W15. The table above retains final target-gate status, including outstanding hosted and reviewed-merge evidence. Local execution is not final W approval. Shared-Docker limitation remains open in #34.
+
+## D-T05 owner-authorized local merge checkpoint
+
+Local readiness may be reviewed and merged independently of hosted verification under the explicit owner scope clarification. See [local W matrix, individual A05 dispositions and dependency assessment](../reports/S06D_D_T05_LOCAL_REVIEW.md). Historical hosted-dependent requirements retain NOT RUN status. Production activation remains disabled. #13/#14/#15 are eligible for local-scope closure only after reviewed incorporation; #16 and account-specific #17 remain S07 obligations. #34 remains open. PR #30 requires separate owner merge approval.

@@ -1,6 +1,6 @@
 # Progress and evidence
 
-> Current status (2026-11-12): S06C completed/reviewed merge `3502754` at corrected head `c22488b`; #10/#27 closed. [Verified closure](reports/S06C_CLOSURE.md). S06D predecessor satisfied; detailed planning awaits acceptance and reviewed planning merge. A05-01–05 remain open. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. Earlier dated checkpoints retain their original decisions and evidence.
+> Current status (2026-11-12): S06C completed/reviewed merge `3502754` at corrected head `c22488b`; #10/#27 closed. [Verified closure](reports/S06C_CLOSURE.md). S06D planning PR #28 accepted/amended and merged `d048d8b`; isolated local implementation now proceeds in a separate PR. Hosted operations remain unauthorized. A05-01–05 remain open. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. Earlier dated checkpoints retain their original decisions and evidence.
 
 ## 2026-11-11 — P1-S01 Docker Compose and outage verification
 
@@ -514,3 +514,45 @@ At owner's explicit request reviewed exact 2922ce3 with new negative probes befo
 Verified PR #26 merged 3502754 at corrected c22488b; #10/#27 closed and original A05 #13–#17 open. [Closure report](reports/S06C_CLOSURE.md) records exact-head CI, final 166/212/48 evidence and honest native COMMENTED/user-confirmed reviewed-merge provenance. Initial BLOCKED evidence, correction commits and independent probes remain preserved.
 
 Prepared documentation-only [S06D breakdown](stories/P1-S06D_BREAKDOWN.md), [W matrix](gates/S06D_REQUIREMENTS_TO_TESTS.md), target/role permissions, performance campaign, findings disposition and activation/rollback design. No S06D implementation, migration, dependency, source, grant, environment or workflow change. Exact planning checks/PR evidence are recorded in [the planning report](reports/P1-S06D_PLANNING.md). Next action is owner acceptance and reviewed planning merge, followed by a separate implementation branch/PR; hosted actions need additional explicit approval. Normal writes disabled; full S06 and Phase 1 incomplete.
+
+## 2026-11-12 — Accepted S06D planning merge and D-T01 local evidence
+
+Owner accepted planning with staged-performance/local-versus-hosted amendments; PR #28 amended 2a7ec7c merged d048d8b normally after both CI checks SUCCESS. Precise push browser result 47 passed + 1 retry-passed flaky, PR 48 passed; the overstated first summary and failed log-assertion shell continuation are explicitly corrected on PR #28 and in [implementation evidence](reports/P1-S06D.md). #11 remains open. Separate branch feat/p1-s06d-verification fixes fixture race #29 and adds gate policy/regressions; local full pipeline PASS 199 unit / 213 integration / 48 browser (22.9s), no retries. No hosted/production permission or financial writer enabled. D-T02 local work follows; complete S06/Phase 1 remain incomplete.
+
+## 2026-11-12 — S06D D-T02 verified; D-T03 capacity FAIL
+
+D-T02 local adapter/three-role/private fresh-upgrade/shadowing/history/cleanup package passed full 210/227/48. Independent column-ACL mismatch #31 was reproduced before correction, fixed in separate 7fb4344; package 0a0523f has both remote checks green. D-T03 timing/statistics/benchmark tooling passed ordinary full 220/228/48 (33.0s browser), but the corrected disjoint 48-cell capacity campaign had 6 failures (42 pass). Real 40001 exhaustion exceeds the four-way error budget; no partial/imbalanced/unaudited outcome observed. #32/proposed batching remain unaccepted; D-T04 does not advance while required performance checks are red. [Precise evidence](reports/P1-S06D.md). No hosted operation, grant, migration, native writer enablement or Phase 1 completion.
+
+## 2026-11-12 — S06D exact baseline critical measurements; optimization review pending
+
+At clean 1b29221, critical benchmark 1 passed / 1 failed (265.98s): POST2/c4 1,000 samples, p99 166.68ms, 0.2% failures (empirical cell PASS); CORRECT50/max-union/c1 806 samples, resource cap at 240s, 805 successes/1 budget cancellation/194 unmeasured, p99 NOT PROVEN. Aggregate accounting checks safe. Full artifact and exact-source fingerprint in [implementation report](reports/P1-S06D.md). Prior representative FAIL #32 remains; user is reviewing the concrete batching proposal, no source optimization/retry change authorized or made. D-T04/final D-T05 do not advance; native writes disabled, grants/INR unchanged, hosted unauthorized, story/full S06/Phase 1 incomplete.
+
+## 2026-11-12 — S06D bounded batching local prototype authorized
+
+Owner reviewed #30 at 4aed8b3/proposal 1b29221 and explicitly authorized only the bounded posting insertion prototype, preserving every invariant, existing limits, retry/deadline policies and closed production gate. [Authorization](https://github.com/i-am-tj/LedgerOne/pull/30#issuecomment-6826341877). New approval supersedes the historical pending-proposal status above, without altering its FAIL/NOT PROVEN evidence. [Prototype report](reports/S06D_BATCHING_PROTOTYPE.md) tracks exact row-loop versus batch source and verification. PR #30 stays draft, #32 stays open; D-T04/D-T05 do not advance.
+
+## 2026-11-12 — bounded batching implemented; D-T03 remains FAIL
+
+Metric-only row-loop 31b5341 and batch source 95f1efe/measurement 85cbdfa have matching fresh local database profiles/catalog digest and unchanged workload/retry/limit contracts. Full local pipeline 220/242/48 PASS; fourteen new private-role HTTP/accounting/fault cases, real 40001/40P01, cancellation and COMMIT/replay evidence pass. [Exact comparison](reports/S06D_BATCHING_PROTOTYPE.md): 48-cell before/after both 44P/4F; larger insertion costs fall but four-way retry exhaustion persists. Batched critical POST 1000 observations/p99 212.74ms/0.3% failures; CORRECT 574 observations/426 unmeasured/p99 NOT PROVEN. Max concurrent stress still FAIL; no accounting side effects/imbalance/audit gaps observed.
+
+PR #30 stays draft and #32 open. Author-context fresh assessment is not independent approval; new review decision required. [Separate SSI proposal](plans/S06D_SSI_FOLLOWUP_PROPOSAL.md) is unapproved documentation. Zero generated fixture DBs/roles remain after owned cleanup; no unrelated/active connection terminated. D-T04/D-T05, hosted work, grants, native writer, full S06 and Phase 1 remain closed.
+
+## 2026-11-12 — initial batch CI failure retained; test-only R04 correction
+
+Initial87a5a7e remote CI failed maximum first-response201 and, once, later shared global counts. #33/Low tracks fixture isolation; it does not waive #32. Separate644fe0d correction retains equivalent prehistory and strict maximum success, with owned SQL settlement and a real blocked-statement/separate-fixture regression. Corrected local full **220 unit / 243 integration / 48 browser PASS**,21.2s, zero flaky; all standard stages PASS. [Evidence and limitations](reports/S06D_BATCHING_PROTOTYPE.md). Financial/benchmark source and its5eba37c0…digest unchanged; both prior failures and current-head CI must be checked independently. No issue closure, merge, D-T04/D-T05, hosted or production action.
+
+## 2026-11-13 — D-T03 owner decisions A and B
+
+The owner accepted the [invite-only performance budget](plans/S06D_INVITE_ONLY_CAPACITY_AMENDMENT.md). D-T03 still fails because maximum CORRECT can return 503 at concurrency one. The [RCA at 14a22dc, recorded in 748b600](reports/S06D_CONCURRENCY_RCA.md) is local diagnostic evidence accepted for planning. The owner authorized the [deferred-validation design](plans/S06D_DEFERRED_VALIDATION_DESIGN.md) for review. Implementation requires another decision. Draft PR #30 and open #32 carry this work. D-T04/D-T05, financial write enablement and Phase 1 completion remain blocked.
+
+## S06D local COMMIT-wait candidate published for review
+
+Owner authorization covers publication and independent review. The experiment used unmodified 007; the stopped queue and receipt-side SQL prototypes stay outside the publication. [Report, retained failures and measured source](reports/S06D_COMMIT_ACK_007.md). D-T03 acceptance is pending, #32 remains open and D-T04/D-T05 remain blocked.
+
+## Current owner decision — D-T03 LOCAL ACCEPTED
+
+The owner accepted restricted local D-T03 at `417374d6a5d3295a5b11133dd7c915348252f51a` and authorized D-T04 local work. The historical FAIL/BLOCKED entries above remain historical evidence. See [acceptance and Docker follow-up](reports/S06D_D_T03_ACCEPTANCE.md). #32 remains open pending incorporation through reviewed workflow. #34 tracks the unresolved Docker observations. Hosted verification is NOT RUN, production writes remain disabled, and complete S06D/Phase 1 remain incomplete.
+
+## D-T05 owner-authorized local merge checkpoint
+
+Local readiness may be reviewed and merged independently of hosted verification under the explicit owner scope clarification. See [local W matrix, individual A05 dispositions and dependency assessment](reports/S06D_D_T05_LOCAL_REVIEW.md). Historical hosted-dependent requirements retain NOT RUN status. Production activation remains disabled. #13/#14/#15 are eligible for local-scope closure only after reviewed incorporation; #16 and account-specific #17 remain S07 obligations. #34 remains open. PR #30 requires separate owner merge approval.

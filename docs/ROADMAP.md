@@ -1,6 +1,6 @@
 # Current delivery roadmap
 
-> Current status (2026-11-12): S06C completed/reviewed merge `3502754` at corrected head `c22488b`; #10/#27 closed. [Verified closure](reports/S06C_CLOSURE.md). S06D predecessor satisfied; detailed planning awaits acceptance and reviewed planning merge. A05-01–05 remain open. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. Earlier dated checkpoints retain their original decisions and evidence.
+> Current status (2026-11-12): S06C completed/reviewed merge `3502754` at corrected head `c22488b`; #10/#27 closed. [Verified closure](reports/S06C_CLOSURE.md). S06D planning PR #28 accepted/amended and merged `d048d8b`; isolated local implementation now proceeds in a separate PR. Hosted operations remain unauthorized. A05-01–05 remain open. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. Earlier dated checkpoints retain their original decisions and evidence.
 
 The user authorized an expanded Phase 1 on 2026-11-11. It replaces the initial seven-phase schedule for implementation order. Local Git and the GitHub story workflow are established in `i-am-tj/LedgerOne`; no public deployment is implied.
 
@@ -62,3 +62,7 @@ S06C [planning](stories/P1-S06C_BREAKDOWN.md) accepted/amended/merged as b31ab0b
 ## Current next step — S06D planning
 
 S06C completed by reviewed merge 3502754 at corrected c22488b; #10/#27 closed. [Closure evidence](reports/S06C_CLOSURE.md) preserves initial BLOCKED/fixes/final restricted approval. Next is [S06D planning](stories/P1-S06D_BREAKDOWN.md), not immediate implementation: accept and merge the documentation-only PR, then create a separate implementation branch/PR and execute D-T01–05. Hosted operations require separate scoped owner approval. S07–S09 remain unimplemented; complete S06 and Phase 1 gates closed.
+
+## Current next step — D-T03 capacity blocker review
+
+S06D planning #28 is accepted/merged; isolated implementation is draft #30. The owner-approved bounded insertion prototype passed standard 220/242/48 regressions but retains capacity FAIL #32. [Current evidence](reports/S06D_BATCHING_PROTOTYPE.md) and [separate proposed SSI investigation](plans/S06D_SSI_FOLLOWUP_PROPOSAL.md) need a new review decision. D-T04/D-T05 do not advance while required local capacity remains red; no hosted/production operation, normal financial writer, S07–S09 or Phase 1 completion. Earlier planning-only checkpoints are historical.

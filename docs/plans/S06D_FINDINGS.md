@@ -19,3 +19,7 @@ Finding [#27](https://github.com/i-am-tj/LedgerOne/issues/27) is CLOSED followin
 ## Final finding decision record
 
 For each original criterion record implementation/test reference, command/result, exact commit, profile/role, reviewer/provenance and RESOLVED or SCOPE-EXCLUDED/OPEN. Unmet exposed-contract criteria block W12 and technical PASS. Out-of-contract deferrals need explicit route denial and an open owning story; a prose promise alone is insufficient. Add any new confirmed D defect as its own linked issue with initial decision, separate correction commit, permanent regression and fresh corrected-head review. Planning creates no remediation claim or premature issue closure.
+
+## D-T05 owner-authorized local merge checkpoint
+
+Local readiness may be reviewed and merged independently of hosted verification under the explicit owner scope clarification. See [local W matrix, individual A05 dispositions and dependency assessment](../reports/S06D_D_T05_LOCAL_REVIEW.md). Historical hosted-dependent requirements retain NOT RUN status. Production activation remains disabled. #13/#14/#15 are eligible for local-scope closure only after reviewed incorporation; #16 and account-specific #17 remain S07 obligations. #34 remains open. PR #30 requires separate owner merge approval.
