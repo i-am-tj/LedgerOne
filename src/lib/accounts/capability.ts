@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { PostExecutor } from "../ledger/commands/executor";
 let capability: Promise<PostExecutor> | undefined;
 // Only the explicitly provisioned disposable local application obtains typed
-// account writes. The generic ledger route never imports this capability.
+// account and transaction-template writes. The generic ledger route never imports this capability.
 export function getAccountExecutor() {
   if (
     process.env.LEDGERONE_ENV !== "test" ||

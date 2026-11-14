@@ -29,8 +29,8 @@ async function main() {
       `CREATE ROLE "${role}" LOGIN PASSWORD '${password}' NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS`,
     );
     await admin.query(`GRANT USAGE ON SCHEMA public TO "${role}";
-   GRANT SELECT ON workspace,ledger_account,ledger_operation,journal,posting,audit_event,currency,opening_balance,fx_rate,account_command,account_event TO "${role}";
-   GRANT INSERT ON ledger_account,ledger_operation,journal,posting,opening_balance,audit_event,account_command,account_event TO "${role}";
+   GRANT SELECT ON workspace,ledger_account,ledger_operation,journal,posting,audit_event,currency,opening_balance,fx_rate,account_command,account_event,transaction_record TO "${role}";
+   GRANT INSERT ON ledger_account,ledger_operation,journal,posting,opening_balance,audit_event,account_command,account_event,transaction_record TO "${role}";
    GRANT UPDATE(id) ON workspace TO "${role}";
    GRANT UPDATE(id,name,"archivedAt","updatedAt") ON ledger_account TO "${role}";
    GRANT UPDATE(status,"postedAt","operationId",revision) ON journal TO "${role}"`);
