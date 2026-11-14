@@ -111,3 +111,9 @@ The [target/role plan](plans/S06D_TARGET_AND_ROLES.md) proposes a reviewed offli
 ## S07 local typed account capability
 
 Typed account commands extend the existing shared executor, with immutable account receipts/events and linked mandatory opening audit. The dedicated Accounts UI/API supports lifecycle and audited reconciliation comparisons. The explicit generated local test server provisions a restricted account writer and a private manifest file; only the typed account handler reads it in test profile. Native generic journal routes remain disabled. No hosted operation or production grant change is included. ADR-008 records lock ordering, replay and original-context policy.
+
+## S08-A local typed transaction boundary
+
+`/transactions` uses `/api/transactions` for owned history/balances and strict EXPENSE/INCOME payloads. `transactions/contract.ts` validates/canonicalizes, `template.ts` derives eligible accounts and two ledger legs, and the accepted shared `PostExecutor` owns authorization rechecks, locks, SERIALIZABLE retries, attestation, deadline-bounded COMMIT/ROLLBACK and result recovery. The immutable migration-010 context is inserted in that same transaction and verified against the balanced audited POST at deferred COMMIT.
+
+The existing guarded disposable local account capability is reused by typed S08 handlers. Its loopback/generated-database/role attestation and `LEDGERONE_ENV=test` restrictions remain intact; production configuration cannot obtain this capability. The generic native financial endpoint remains disabled. Only fixture role grants gain transaction_record SELECT/INSERT; no published production grants change. GET queries are always owner-scoped. Typed business commands are not exposed via the generic raw executor endpoint.
