@@ -45,13 +45,58 @@ test("S07 actual accounts walkthrough, persistence, history, reconciliation and 
   await expect(
     page.getByText("Opening balance · SBI Savings", { exact: true }),
   ).toBeVisible();
+  await page.getByLabel("Balance as of (India date)").fill("2025-12-31");
+  await expect(page.getByTestId("account-balance")).toHaveText("₹0.00");
+  await expect(page.getByTestId("activity-date-scope")).toHaveText(
+    "Activity covers all dates, including entries after the balance date.",
+  );
+  await expect(
+    page.getByText("Opening balance · SBI Savings", { exact: true }),
+  ).toBeVisible();
   await page.getByLabel("Balance as of (India date)").fill("2026-01-31");
   await expect(page.getByTestId("account-balance")).toHaveText("₹50,000.00");
+  const activityHeading = page.getByRole("heading", {
+    name: "Recent account activity",
+    exact: true,
+  });
+  const comparisonHeading = page.getByRole("heading", {
+    name: "Compare with bank statement",
+    exact: true,
+  });
+  expect(
+    await activityHeading.evaluate((node) =>
+      Boolean(
+        node.compareDocumentPosition(
+          [...document.querySelectorAll("h2")].find(
+            (h) => h.textContent === "Compare with bank statement",
+          )!,
+        ) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ),
+    ),
+  ).toBe(true);
+  await expect(comparisonHeading).toBeVisible();
+  await page.getByLabel("Statement balance (INR)").fill("50000");
+  await page.getByRole("button", { name: "Record reconciliation" }).click();
+  await expect(
+    page.getByText("Matched when recorded", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page
+      .locator("p")
+      .filter({ hasText: /^Recorded / })
+      .first(),
+  ).toContainText("(India time) · Balance as of");
   await page.getByLabel("Statement balance (INR)").fill("49500");
   await page.getByRole("button", { name: "Record reconciliation" }).click();
   await expect(page.getByTestId("discrepancy").first()).toHaveText(
     "Difference ₹500.00",
   );
+  await expect(
+    page.getByText("Matched when recorded", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Discrepancy when recorded", { exact: true }),
+  ).toBeVisible();
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({
     path: testInfo.outputPath("02-reconciliation.png"),

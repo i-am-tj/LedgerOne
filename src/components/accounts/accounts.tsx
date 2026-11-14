@@ -33,6 +33,7 @@ type Account = {
   events: {
     id: string;
     action: string;
+    createdAt: string;
     data: AccountResult;
     effectiveAt: string;
   }[];
@@ -48,7 +49,11 @@ type Account = {
     };
   }[];
 };
-type Data = { accounts: Account[]; workspaces: { id: string; name: string }[] };
+type Data = {
+  asOf: string;
+  accounts: Account[];
+  workspaces: { id: string; name: string }[];
+};
 function money(value: string, currency = "INR") {
   const [whole, fraction] = formatAmount(BigInt(value), currency).split(".");
   return `${currency === "INR" ? "₹" : currency + " "}${whole!.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}${fraction === undefined ? "" : "." + fraction}`;
@@ -486,14 +491,34 @@ export function Accounts({ accountId }: { accountId?: string }) {
               {account.archivedAt ? " · Archived" : ""}
             </p>
             <h2 className="mt-3 text-sm text-muted-foreground">
-              {asOf ? "Balance as of " + asOf : "Current ledger balance"}
+              Ledger balance
             </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              As of{" "}
+              {new Date(data!.asOf).toLocaleString("en-IN", {
+                timeZone: "Asia/Kolkata",
+                dateStyle: "medium",
+                timeStyle: "short",
+              })}{" "}
+              (India time)
+            </p>
             <p
               className="mt-2 text-4xl font-semibold tabular-nums [overflow-wrap:anywhere]"
               data-testid="account-balance"
             >
               {money(account.balanceMinor, account.currencyCode)}
             </p>
+            <div className="mt-5 max-w-sm">
+              {" "}
+              <label className={field}>
+                Balance as of (India date)
+                <Input
+                  type="date"
+                  value={asOf}
+                  onChange={(e) => setAsOf(e.target.value)}
+                />
+              </label>
+            </div>
           </Card>
           <Card>
             <h2 className="text-xl font-semibold">Manage account</h2>
@@ -550,79 +575,14 @@ export function Accounts({ accountId }: { accountId?: string }) {
             </Button>
           </Card>
           <Card>
-            <h2 className="text-xl font-semibold">
-              Reconcile with a statement
-            </h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Compare your ledger to a statement. Recording a check preserves
-              posted history.
-            </p>
-            <form
-              className="mt-5 grid gap-4 sm:grid-cols-2"
-              onSubmit={(e) => {
-                e.preventDefault();
-                act(
-                  {
-                    kind: "RECONCILE_ACCOUNT",
-                    accountId: account.id,
-                    statement,
-                    effectiveAt: (asOf || indiaToday()) + "T23:59:59.999+05:30",
-                  },
-                  account.workspaceId,
-                );
-              }}
-            >
-              <label className={field}>
-                Balance as of (India date)
-                <Input
-                  type="date"
-                  value={asOf}
-                  onChange={(e) => setAsOf(e.target.value)}
-                />
-              </label>
-              <label className={field}>
-                Statement balance (INR)
-                <Input
-                  required
-                  inputMode="decimal"
-                  value={statement}
-                  onChange={(e) => setStatement(e.target.value)}
-                />
-              </label>
-              <Button
-                type="submit"
-                disabled={busy}
-                className="sm:col-span-2 sm:justify-self-start"
-              >
-                Record reconciliation
-              </Button>
-            </form>
-            {account.events
-              .filter((e) => e.action === "RECONCILE_ACCOUNT")
-              .map((e) => (
-                <div key={e.id} className="mt-4 rounded-xl bg-muted p-4">
-                  <strong>
-                    {e.data.differenceMinor === "0"
-                      ? "Reconciled"
-                      : "Discrepancy"}
-                  </strong>
-                  <p>
-                    Ledger {money(e.data.ledgerMinor!)} · Statement{" "}
-                    {money(e.data.statementMinor!)}
-                  </p>
-                  <p data-testid="discrepancy">
-                    Difference {money(e.data.differenceMinor!)}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {new Date(e.effectiveAt).toLocaleDateString("en-IN", {
-                      timeZone: "Asia/Kolkata",
-                    })}
-                  </p>
-                </div>
-              ))}
-          </Card>
-          <Card>
             <h2 className="text-xl font-semibold">Recent account activity</h2>
+            <p
+              className="mt-2 text-sm text-muted-foreground"
+              data-testid="activity-date-scope"
+            >
+              Activity covers all dates, including entries after the balance
+              date.
+            </p>
             {!account.activity.length ? (
               <p className="mt-3 text-muted-foreground">
                 No posted entries yet. A zero opening creates no journal.
@@ -676,6 +636,77 @@ export function Accounts({ accountId }: { accountId?: string }) {
                   </li>
                 ))}
             </ul>
+          </Card>
+          <Card>
+            <h2 className="text-xl font-semibold">
+              Compare with bank statement
+            </h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Each comparison is a saved snapshot. Later entries, including
+              backdated entries, can change the ledger balance.
+            </p>
+            <form
+              className="mt-5 grid gap-4 sm:grid-cols-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                act(
+                  {
+                    kind: "RECONCILE_ACCOUNT",
+                    accountId: account.id,
+                    statement,
+                    effectiveAt: (asOf || indiaToday()) + "T23:59:59.999+05:30",
+                  },
+                  account.workspaceId,
+                );
+              }}
+            >
+              <label className={field}>
+                Statement balance (INR)
+                <Input
+                  required
+                  inputMode="decimal"
+                  value={statement}
+                  onChange={(e) => setStatement(e.target.value)}
+                />
+              </label>
+              <Button
+                type="submit"
+                disabled={busy}
+                className="sm:col-span-2 sm:justify-self-start"
+              >
+                Record reconciliation
+              </Button>
+            </form>
+            {account.events
+              .filter((e) => e.action === "RECONCILE_ACCOUNT")
+              .map((e) => (
+                <div key={e.id} className="mt-4 rounded-xl bg-muted p-4">
+                  <strong>
+                    {e.data.differenceMinor === "0"
+                      ? "Matched when recorded"
+                      : "Discrepancy when recorded"}
+                  </strong>
+                  <p>
+                    Ledger {money(e.data.ledgerMinor!)} · Statement{" "}
+                    {money(e.data.statementMinor!)}
+                  </p>
+                  <p data-testid="discrepancy">
+                    Difference {money(e.data.differenceMinor!)}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Recorded{" "}
+                    {new Date(e.createdAt).toLocaleString("en-IN", {
+                      timeZone: "Asia/Kolkata",
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    })}{" "}
+                    (India time) · Balance as of{" "}
+                    {new Date(e.effectiveAt).toLocaleDateString("en-IN", {
+                      timeZone: "Asia/Kolkata",
+                    })}
+                  </p>
+                </div>
+              ))}
           </Card>
         </>
       )}

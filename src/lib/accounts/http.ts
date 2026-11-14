@@ -78,7 +78,13 @@ export async function accountRequest(request: Request) {
             },
             orderBy: [{ createdAt: "desc" }, { id: "desc" }],
             take: 100,
-            select: { id: true, action: true, data: true, effectiveAt: true },
+            select: {
+              id: true,
+              action: true,
+              data: true,
+              effectiveAt: true,
+              createdAt: true,
+            },
           });
           const activity = await database.posting.findMany({
             where: {
