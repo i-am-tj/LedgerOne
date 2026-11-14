@@ -86,7 +86,9 @@ export function Accounts({ accountId }: { accountId?: string }) {
     [workspace, setWorkspace] = useState(""),
     [rename, setRename] = useState(""),
     [statement, setStatement] = useState("");
-  const retry = useRef<{ body: string; key: string } | null>(null);
+  const retry = useRef<{ body: string; key: string; workspace: string } | null>(
+    null,
+  );
   const reload = useCallback(async () => {
     const response = await fetch(
       "/api/accounts" +
@@ -110,8 +112,17 @@ export function Accounts({ accountId }: { accountId?: string }) {
   }, [reload]);
   async function command(body: AccountCommand, scope: string) {
     const serialized = JSON.stringify(body);
-    if (retry.current?.body !== serialized)
-      retry.current = { body: serialized, key: crypto.randomUUID() };
+    const hadPending = retry.current !== null;
+    if (
+      retry.current &&
+      (retry.current.body !== serialized || retry.current.workspace !== scope)
+    )
+      throw Error("Recover the pending result before changing these details.");
+    retry.current ??= {
+      body: serialized,
+      key: crypto.randomUUID(),
+      workspace: scope,
+    };
     const response = await fetch("/api/accounts?workspace=" + scope, {
       method: "POST",
       headers: {
@@ -121,7 +132,8 @@ export function Accounts({ accountId }: { accountId?: string }) {
       body: serialized,
     });
     const result = await response.json();
-    if (!response.ok)
+    if (!response.ok) {
+      if (response.status < 500 && !hadPending) retry.current = null;
       throw Error(
         result.error === "account_writes_unavailable"
           ? "Account changes are unavailable in this environment."
@@ -129,6 +141,7 @@ export function Accounts({ accountId }: { accountId?: string }) {
             ? "The result could not be confirmed. Retry the same request to recover safely."
             : "The account could not be saved. Check your inputs and access.",
       );
+    }
     retry.current = null;
     try {
       await reload();
@@ -248,6 +261,26 @@ export function Accounts({ accountId }: { accountId?: string }) {
       {error && (
         <div role="alert" className="rounded-xl border border-destructive p-4">
           {error}
+          {retry.current && (
+            <Button
+              variant="outline"
+              disabled={busy}
+              onClick={async () => {
+                const pending = retry.current!;
+                const result = await act(
+                  JSON.parse(pending.body),
+                  pending.workspace,
+                );
+                if (result?.kind === "CREATE_ACCOUNT") {
+                  setAdding(false);
+                  setConfirm(false);
+                  router.push("/accounts/" + result.accountId);
+                }
+              }}
+            >
+              Recover pending result
+            </Button>
+          )}
           <Button
             variant="ghost"
             onClick={() => {

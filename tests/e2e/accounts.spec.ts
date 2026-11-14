@@ -169,3 +169,63 @@ test("S07 actual accounts walkthrough, persistence, history, reconciliation and 
     await db.$disconnect();
   }
 });
+
+test("S07 lost creation response recovers the same key and blocks changed-input duplicate creation", async ({
+  page,
+}) => {
+  const name = "Recovery " + randomUUID();
+  let forwarded = 0;
+  await page.route("**/api/accounts?workspace=*", async (route) => {
+    const body = route.request().postDataJSON();
+    if (
+      body.kind === "CREATE_ACCOUNT" &&
+      body.name === name &&
+      forwarded === 0
+    ) {
+      forwarded++;
+      const response = await route.fetch();
+      expect(response.status()).toBe(201);
+      await route.abort("failed");
+    } else await route.continue();
+  });
+  await page.goto("/accounts");
+  await page.getByRole("button", { name: "Add Account", exact: true }).click();
+  await page.getByLabel("Account name", { exact: true }).fill(name);
+  await page.getByLabel("Opening amount (INR)").fill("123.45");
+  await page.getByLabel("Opening date").fill("2026-01-01");
+  await page
+    .getByRole("button", { name: "Review account", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Confirm and save" }).click();
+  await expect(
+    page.getByRole("button", { name: "Recover pending result" }),
+  ).toBeVisible();
+  await page.getByLabel("Opening amount (INR)").fill("999");
+  await page
+    .getByRole("button", { name: "Review account", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Confirm and save" }).click();
+  await expect(
+    page
+      .getByRole("alert")
+      .filter({
+        hasText: "Recover the pending result before changing these details.",
+      }),
+  ).toBeVisible();
+  expect(forwarded).toBe(1);
+  await page.getByRole("button", { name: "Recover pending result" }).click();
+  await expect(page).toHaveURL(/\/accounts\/[a-f0-9-]+$/);
+  await expect(page.getByTestId("account-balance")).toHaveText("₹123.45");
+  const database = testDatabase();
+  try {
+    const rows = await database.account.findMany({ where: { name } });
+    expect(rows).toHaveLength(1);
+    expect(
+      await database.openingBalance.count({
+        where: { accountId: rows[0]!.id },
+      }),
+    ).toBe(1);
+  } finally {
+    await database.$disconnect();
+  }
+});
