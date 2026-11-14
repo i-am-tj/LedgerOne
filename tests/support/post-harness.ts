@@ -115,7 +115,7 @@ export async function postHarness(
       GRANT UPDATE(id) ON workspace,ledger_account TO "${role}";
       GRANT UPDATE(status,"postedAt","operationId",revision) ON journal TO "${role}"`);
     if (options.accounts)
-      await admin.query(`GRANT SELECT,INSERT ON account_command,account_event TO "${role}";
+      await admin.query(`GRANT SELECT,INSERT ON account_command,account_event,transaction_record TO "${role}";
         GRANT INSERT ON ledger_account,opening_balance TO "${role}";
         GRANT UPDATE(name,"archivedAt","updatedAt") ON ledger_account TO "${role}"`);
     if (schema === "ledgerone") {

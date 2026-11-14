@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 const links = [
   { href: "/home", title: "Overview", icon: LayoutDashboard },
   { href: "/accounts", title: "Accounts", icon: Layers3 },
+  { href: "/transactions", title: "Transactions", icon: Layers3 },
   { href: "/settings/appearance", title: "Appearance", icon: Palette },
   { href: "/design-system", title: "Component library", icon: Layers3 },
 ];
@@ -66,7 +67,6 @@ function Navigation({ onNavigate }: { onNavigate?: () => void }) {
       <div className="upcoming-nav">
         <p className="nav-caption">COMING NEXT</p>
         <ul>
-          <li>Transaction capture</li>
           <li>Budgets & insights</li>
         </ul>
       </div>

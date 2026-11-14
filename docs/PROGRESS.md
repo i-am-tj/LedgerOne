@@ -1,6 +1,6 @@
 # Progress and evidence
 
-> Current status (2026-11-12): S06C completed/reviewed merge `3502754` at corrected head `c22488b`; #10/#27 closed. [Verified closure](reports/S06C_CLOSURE.md). S06D planning PR #28 accepted/amended and merged `d048d8b`; isolated local implementation now proceeds in a separate PR. Hosted operations remain unauthorized. A05-01–05 remain open. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. Earlier dated checkpoints retain their original decisions and evidence.
+> Current status (2026-11-14): S07 PR #35 reviewed/merged `1fd3b936a3ccdce2194bc5b6be2fa769acaa0318`; #36 closed with merged recovery evidence. Original remaining S07 requirements and #16/#17 remain tracked. S08-A expense/income UI and typed local commands are implemented on `codex/p1-s08-transactions`, under #38 / epic #37, local pipeline PASS (245 unit / 305 integration / 56 browser), pending owner review and merge. S08-B/C/D and S09 remain required. P1-E3 and Phase 1 are incomplete. Hosted verification NOT RUN; normal-runtime financial writers disabled. Earlier dated checkpoints retain their historical decisions and evidence.
 
 ## 2026-11-11 — P1-S01 Docker Compose and outage verification
 
@@ -580,3 +580,11 @@ Typed Accounts overview/lifecycle/opening/history/reconciliation UI is implement
 The owner supplied an independent AI source review of 24c9545f2d1320c9c4531349bdaf54cdd289a3fa with no confirmed material blocker in the inspected restricted local scope. This is not native GitHub approval or human security certification. The requested delta moves statement comparison below activity, keeps the balance cutoff beside the balance, labels activity as all-date activity, and labels each immutable comparison with its recorded time and balance cutoff. No accounting mutation, migration, reconciliation engine or adjustment was changed.
 
 Focused actual desktop/mobile account and recovery tests passed 4/4 after typecheck/build. Updated screenshots show the secondary comparison placement and snapshot labels. Final publication CI remains required. The original S05–S09 inputs, tasks, outputs and acceptance criteria remain authoritative. S07 includes accounts/opening/reconciliation/as-of; S08 retains cash/card expense, income, transfer, card settlement and loan principal/interest with entry/history UI; S09 retains backend invariants/isolation/reproducible gate evidence. No expense-only replacement or additional UI for backend-only stories is introduced.
+
+## 2026-11-14 — S07 merged; S08-A visible transaction capture
+
+Verified GitHub PR #35 MERGED at `1fd3b936a3ccdce2194bc5b6be2fa769acaa0318`, fetched main and branched `codex/p1-s08-transactions`. Closed #36 with its incorporated recovery regression; did not close #16/#17 or original S07 requirements. Original P1-E4 #37 / S08 #38 preserve the approved full scope.
+
+Implemented S08-A: typed EXPENSE/INCOME handlers and real `/transactions` form/history, exact ledger balances/consumption, immutable capture context via additive migration 010, scoped canonical replay and existing shared audited executor. Real desktop/mobile browser evidence demonstrates ₹50,000 → ₹49,150 after ₹850 Groceries, refresh persistence, subsequent ₹1,500 income → ₹50,650, and safe same-key recovery after a lost response. Report: [S08-A](reports/P1-S08-A.md).
+
+No hosted operations, published runtime grant changes or generic consumer command activation. No S07/S06 rebuild or generalized independent agent review. Owner independent review and explicitly authorized merge remain required. S08 is not complete; B transfers/card settlement, C FD/loan, D combined history/reporting remain next in order.

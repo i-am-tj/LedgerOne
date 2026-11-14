@@ -219,3 +219,17 @@ S07 and P1-E3 require S07-UI01–UI04 user-facing completion. `tests/e2e/account
 `opening-audit.test.ts` verifies new OPENING receipts require the exact audit at COMMIT under actual restricted roles. `account-commands.test.ts` covers public/private scopes, signed/zero openings, concurrency/replay, immutable historical responses, ownership denial and atomic rollback. `account-balance.test.ts` retains exact inclusive-time/read precision regressions. Full S05/S06 tests, native generic denial and migration/catalog checks remain required.
 
 Reconciliation is an owner-approved audited comparison only. Expected ledger-minus-statement discrepancy is exact in account native INR units; reconciliation cannot overwrite posted balances.
+
+## S08-A requirements-to-tests
+
+| Requirement                                                                                        | Reproducible evidence                                                                                    |
+| -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Strict typed INR payloads and canonical semantic replay                                            | `src/lib/transactions/contract.test.ts`                                                                  |
+| Cash/card expense signs, income, exact maximum quantity                                            | `tests/integration/transaction-capture.test.ts` public/private real-handler fixtures                     |
+| Immutable replay after rename/archive; changed-key payload conflicts; concurrent duplicate submit  | Same integration suite; existing S06 recovery suites                                                     |
+| Two-user/session/origin/raw-field/account-type denial without side effects                         | Same real-handler suite; S06/S07 authentication and default-disabled capability suites retained          |
+| Atomic category/journal/receipt/audit/context; immutable context and SQL mismatch rejection        | Capture integration staged failures and direct SQL negatives; migration fresh/upgrade/attestation suites |
+| Reversal nets consumption without erasing original history                                         | Capture integration maximum-quantity reversal assertion                                                  |
+| ₹850 Groceries, persisted ₹49,150, income, mobile/desktop accessibility and lost-response recovery | `tests/e2e/transactions.spec.ts`, [screenshots](evidence/s08-a/)                                         |
+
+The original S08 transfer, settlement, FD, loan and full combined-history cases remain required subsequent slices; S09 phase-gate evidence is not replaced by this increment.

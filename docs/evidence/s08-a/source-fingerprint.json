@@ -1,0 +1,26 @@
+{
+  "implementationCommit": "552c0298938d8b58d7227233bc6bb3b0e9f0a627",
+  "baseCommit": "1fd3b936a3ccdce2194bc5b6be2fa769acaa0318",
+  "sha256": {
+    "prisma/migrations/202611140010_transaction_capture/migration.sql": "87e0b8f82c695e4bcfb66799d150ac01d2c26d67efc3a77668dbcaf2466a6863",
+    "prisma/schema.prisma": "f90f3a66347960a33890c46c15afbb5f57125e49aebe433a35251d402543b9c0",
+    "scripts/account-app-server.ts": "8394e50ab897be04e93e0f43bbd6dbf572264b9feb4e6f45a80d5932317827c3",
+    "src/app/(workspace)/transactions/loading.tsx": "a7a5b0aca4c713677f9b6692d9e1d1a82e3fe3a53f3a14a4cff532ef3b918e75",
+    "src/app/(workspace)/transactions/page.tsx": "2de20b77136454b87629374ee377b5a789e41186293a1c9a334bd4e7f4016175",
+    "src/app/api/transactions/route.ts": "e79c50600a767839ae2e528a15095a1d8eecd2bd6199e16caff630ad197f127b",
+    "src/components/shell/app-shell.tsx": "92c3f7ab2e72a22aae06bd0043d6995ca3b971e2c246cc1910a4ea15b9eddcd8",
+    "src/components/transactions/transactions.tsx": "143714ec25865817d91c039128e7fbc89d561c653a5c050a3c80634f51befad9",
+    "src/lib/accounts/capability.ts": "b4a8ba17cd91f0c37e8336edb0cde9b6e0cb76362f18eb00049bc03fc043c82b",
+    "src/lib/ledger/commands/executor.ts": "136093078df64f29af95c10ee3e10afffa1a08bc941c50cdf00c4effdc8744a3",
+    "src/lib/schema-version.ts": "caf7d372d942da8acbfb53933a8fd8dde9682b5c629bb0bb7afe6b4f6b09697d",
+    "src/lib/transactions/contract.test.ts": "a8cdec0a02cf2619cacde2a1532c66a62f034fc8bba589e81928d165a6fa804a",
+    "src/lib/transactions/contract.ts": "cb456e4783b2641a301a11180484f9b03a9bb01b94a4acc80e998856b9275a35",
+    "src/lib/transactions/http.ts": "6514a92794ca7f5759cd00676465b4102369cbca46a760b2a359be4916a90066",
+    "src/lib/transactions/server.ts": "9709a7fe41e06800ab541a08b22af60c842adc34bd5e93c44ce0b256aba5283e",
+    "src/lib/transactions/shared.ts": "2871b377075fbec1a874623787e0e672565ec4ad9573800a1ce98e24af12e111",
+    "src/lib/transactions/template.ts": "2a42e2cb81d4ca11b326748ec90db9a90f257077a06618bc6b0a691f5fa14de8",
+    "tests/e2e/transactions.spec.ts": "fb55e3c72bf490ee23d558317eff4cb7fb7c233416f591d96c449448523dcab0",
+    "tests/integration/transaction-capture.test.ts": "32eaf9593e901b70194e474c1f29132fecea86e9814cfb3ec0b28aed9e4cb0a5",
+    "tests/support/post-harness.ts": "7b5d33821458efb8e27d9fafa7630fce9409322f6751eb29bc79a03b2ed77e0f"
+  }
+}
