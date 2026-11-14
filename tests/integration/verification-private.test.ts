@@ -135,12 +135,15 @@ it("D-T02 real Prisma private upgrade from 006 preserves ordered original checks
     expect(() =>
       assertLedgerInvariants(upgraded.expected, h.expected),
     ).not.toThrow();
-    const { readFileSync } = await import("node:fs");
+    const { readFileSync, readdirSync } = await import("node:fs");
     const { createHash } = await import("node:crypto");
     const history = await upgraded.admin.query(
       "SELECT migration_name,checksum,finished_at,rolled_back_at FROM ledgerone._prisma_migrations ORDER BY migration_name",
     );
-    expect(history.rows).toHaveLength(7);
+    expect(history.rows).toHaveLength(
+      readdirSync("prisma/migrations").filter((name) => /^20[0-9]+_/.test(name))
+        .length,
+    );
     for (const row of history.rows) {
       expect(row.finished_at).not.toBeNull();
       expect(row.rolled_back_at).toBeNull();

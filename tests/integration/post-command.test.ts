@@ -1,4 +1,5 @@
 import { queryText } from "../support/query-text";
+import { SCHEMA_VERSION } from "../../src/lib/schema-version";
 import { randomUUID } from "node:crypto";
 import type pg from "pg";
 import { beforeAll, afterAll, it, expect } from "vitest";
@@ -525,7 +526,7 @@ it.each([
   [
     "version",
     "UPDATE app_metadata SET value='unknown' WHERE key='schema_version'",
-    "UPDATE app_metadata SET value='7' WHERE key='schema_version'",
+    `UPDATE app_metadata SET value='${SCHEMA_VERSION}' WHERE key='schema_version'`,
   ],
   [
     "checksum",
