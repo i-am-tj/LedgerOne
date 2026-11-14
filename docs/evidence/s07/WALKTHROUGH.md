@@ -17,3 +17,7 @@ These screenshots come from the real Next application with a verified synthetic 
 ![Desktop reconciliation and original history](desktop-reconciliation.png)
 
 Mobile screenshots are linked in the table to keep the walkthrough compact. The corresponding browser test is tests/e2e/accounts.spec.ts. Full local result is 234 unit / 281 integration / 50 browser, recorded in the S07 report. Hosted verification, production writes and reviewed merge remain separate gates.
+
+## Presentation review delta
+
+Statement comparison is below recent activity. Balance-as-of selection sits beside the balance. The browser test selects a cutoff before the opening and verifies a zero historical balance while the later opening remains clearly labeled as all-date activity. Saved comparisons show both their recorded time and effective balance date, with “when recorded” status labels. The updated desktop/mobile detail screenshots include both a matched snapshot and a discrepancy snapshot.

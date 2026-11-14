@@ -574,3 +574,9 @@ Typed Accounts overview/lifecycle/opening/history/reconciliation UI is implement
 ## S07 pending-result and browser-runner corrections
 
 #36 tracks a confirmed UI idempotency risk after a lost response and edited input. b6e8750 preserves the pending request and offers exact same-key recovery; real desktop/mobile response-loss regression passed4/4 alongside the normal walkthrough. Initial4c89d04 CI rejected the fixed browser database name at the local capability guard. f3038dc prepares a generated shared disposable browser database and retains loopback/test-only restrictions. Final complete checks and corrected-head CI remain required. PR #35 stays draft; no S07/P1-E3 closure or production activation is claimed.
+
+## S07 targeted presentation review amendments
+
+The owner supplied an independent AI source review of 24c9545f2d1320c9c4531349bdaf54cdd289a3fa with no confirmed material blocker in the inspected restricted local scope. This is not native GitHub approval or human security certification. The requested delta moves statement comparison below activity, keeps the balance cutoff beside the balance, labels activity as all-date activity, and labels each immutable comparison with its recorded time and balance cutoff. No accounting mutation, migration, reconciliation engine or adjustment was changed.
+
+Focused actual desktop/mobile account and recovery tests passed 4/4 after typecheck/build. Updated screenshots show the secondary comparison placement and snapshot labels. Final publication CI remains required. The original S05–S09 inputs, tasks, outputs and acceptance criteria remain authoritative. S07 includes accounts/opening/reconciliation/as-of; S08 retains cash/card expense, income, transfer, card settlement and loan principal/interest with entry/history UI; S09 retains backend invariants/isolation/reproducible gate evidence. No expense-only replacement or additional UI for backend-only stories is introduced.
