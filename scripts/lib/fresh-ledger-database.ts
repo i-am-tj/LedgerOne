@@ -50,10 +50,14 @@ export async function createLocalPrivateLedgerDatabase(
 ) {
   return createLocalLedgerDatabase(source, "ledgerone", upgrade);
 }
+export async function createLegacyOpeningDatabase(source: string) {
+  return createLocalLedgerDatabase(source, "public", true, true);
+}
 async function createLocalLedgerDatabase(
   source: string,
   schema: "public" | "ledgerone",
   upgrade = false,
+  legacyOnly = false,
 ) {
   databaseSettings({ LEDGERONE_ENV: "test", DATABASE_URL: source });
   const input = new URL(source);
@@ -118,10 +122,12 @@ async function createLocalLedgerDatabase(
           join(migrations, "migration_lock.toml"),
         );
         const names = readdirSync("prisma/migrations")
-          .filter((n) => /^20261111000[1-6]_/.test(n))
+          .filter((n) =>
+            (legacyOnly ? /^20261111000[1-7]_/ : /^20261111000[1-6]_/).test(n),
+          )
           .sort();
-        if (names.length !== 6)
-          throw new Error("Expected six predecessor migrations");
+        if (names.length !== (legacyOnly ? 7 : 6))
+          throw new Error("Unexpected predecessor migration set");
         for (const name of names)
           cpSync(join("prisma/migrations", name), join(migrations, name), {
             recursive: true,
@@ -153,14 +159,17 @@ async function createLocalLedgerDatabase(
         try {
           await inspector.connect();
           const version = await inspector.query(
-            "SELECT value FROM ledgerone.app_metadata WHERE key='schema_version'",
+            `SELECT value FROM "${schema}".app_metadata WHERE key='schema_version'`,
           );
           const history = await inspector.query(
-            "SELECT count(*)::int AS count FROM ledgerone._prisma_migrations WHERE finished_at IS NOT NULL",
+            `SELECT count(*)::int AS count FROM "${schema}"._prisma_migrations WHERE finished_at IS NOT NULL`,
           );
-          if (version.rows[0]?.value !== "6" || history.rows[0]?.count !== 6)
+          if (
+            version.rows[0]?.value !== (legacyOnly ? "7" : "6") ||
+            history.rows[0]?.count !== (legacyOnly ? 7 : 6)
+          )
             throw new Error("Private predecessor history mismatch");
-          upgradeFrom = "6";
+          upgradeFrom = legacyOnly ? "7" : "6";
         } finally {
           await inspector.end();
         }
@@ -168,6 +177,7 @@ async function createLocalLedgerDatabase(
         rmSync(directory, { recursive: true, force: true });
       }
     }
+    if (legacyOnly) return { url: target.toString(), cleanup, upgradeFrom };
     const result = spawnSync(
       process.execPath,
       ["node_modules/prisma/build/index.js", "migrate", "deploy"],

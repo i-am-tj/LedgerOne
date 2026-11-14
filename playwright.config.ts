@@ -30,7 +30,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run start -- --port 3100",
+    command: "node_modules/.bin/tsx scripts/account-app-server.ts",
     url: "http://127.0.0.1:3100",
     reuseExistingServer: false,
     timeout: 60000,

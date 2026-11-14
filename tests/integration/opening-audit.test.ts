@@ -125,3 +125,94 @@ it.each([
     );
   },
 );
+
+it("S07 real 007-to-current upgrade preserves unaudited legacy opening evidence", async () => {
+  const { createLegacyOpeningDatabase } =
+    await import("../../scripts/lib/fresh-ledger-database");
+  const { testDatabaseURL } = await import("../support/database");
+  const { spawnSync } = await import("node:child_process");
+  const { default: pg } = await import("pg");
+  const lease = await createLegacyOpeningDatabase(testDatabaseURL());
+  const c = new pg.Client({ connectionString: lease.url });
+  try {
+    await c.connect();
+    const owner = randomUUID(),
+      workspace = randomUUID(),
+      account = randomUUID(),
+      equity = randomUUID(),
+      op = randomUUID(),
+      journal = randomUUID();
+    await c.query(
+      'INSERT INTO auth_user(id,name,email,"emailVerified","createdAt","updatedAt") VALUES($1,\'Legacy owner\',$2,true,now(),now())',
+      [owner, owner + "@ledgerone.test"],
+    );
+    await c.query(
+      'INSERT INTO workspace(id,"ownerId",name,"updatedAt") VALUES($1,$2,\'Legacy workspace\',now())',
+      [workspace, owner],
+    );
+    await c.query(
+      "INSERT INTO ledger_account(id,\"workspaceId\",\"ownerId\",name,type,kind,\"currencyCode\",\"updatedAt\") VALUES($1,$3,$4,'Legacy bank','ASSET','BANK','INR',now()),($2,$3,$4,'Legacy equity','EQUITY','OPENING_EQUITY','INR',now())",
+      [account, equity, workspace, owner],
+    );
+    await c.query("BEGIN");
+    await c.query(
+      'INSERT INTO ledger_operation(id,"workspaceId","ownerId","idempotencyKey","requestHash",kind) VALUES($1,$2,$3,$4,$5,\'OPENING\')',
+      [op, workspace, owner, randomUUID(), "a".repeat(64)],
+    );
+    await c.query(
+      'INSERT INTO journal(id,"workspaceId","ownerId","effectiveAt",kind) VALUES($1,$2,$3,\'2026-01-01T00:00:00Z\',\'OPENING\')',
+      [journal, workspace, owner],
+    );
+    for (const [id, side] of [
+      [account, "DEBIT"],
+      [equity, "CREDIT"],
+    ])
+      await c.query(
+        'INSERT INTO posting(id,"journalId","workspaceId","ownerId","accountId","currencyCode",side,"nativeMinor","functionalMinor") VALUES($1,$2,$3,$4,$5,\'INR\',$6,1234,1234)',
+        [randomUUID(), journal, workspace, owner, id, side],
+      );
+    await c.query(
+      'INSERT INTO opening_balance(id,"workspaceId","ownerId","accountId","journalId",source) VALUES($1,$2,$3,$4,$5,\'Legacy statement\')',
+      [randomUUID(), workspace, owner, account, journal],
+    );
+    await c.query(
+      'UPDATE journal SET status=\'POSTED\',"postedAt"=now(),"operationId"=$1 WHERE id=$2',
+      [op, journal],
+    );
+    await c.query("COMMIT");
+    const snapshot = async () =>
+      (
+        await c.query(
+          "SELECT jsonb_build_object('receipt',(SELECT to_jsonb(o) FROM ledger_operation o WHERE id=$1),'journal',(SELECT to_jsonb(j) FROM journal j WHERE id=$2),'marker',(SELECT to_jsonb(b) FROM opening_balance b WHERE \"journalId\"=$2),'postings',(SELECT jsonb_agg(to_jsonb(p) ORDER BY p.id) FROM posting p WHERE \"journalId\"=$2)) evidence",
+          [op, journal],
+        )
+      ).rows[0].evidence;
+    const before = await snapshot();
+    const migrated = spawnSync(
+      process.execPath,
+      ["node_modules/prisma/build/index.js", "migrate", "deploy"],
+      {
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          LEDGERONE_ENV: "test",
+          DATABASE_URL: lease.url,
+          DIRECT_DATABASE_URL: lease.url,
+        },
+      },
+    );
+    expect(migrated.status).toBe(0);
+    expect(await snapshot()).toEqual(before);
+    expect(
+      (
+        await c.query(
+          'SELECT count(*)::int n FROM audit_event WHERE "operationId"=$1',
+          [op],
+        )
+      ).rows[0].n,
+    ).toBe(0);
+  } finally {
+    await c.end();
+    await lease.cleanup();
+  }
+}, 30000);

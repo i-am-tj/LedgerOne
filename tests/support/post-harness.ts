@@ -20,7 +20,11 @@ import {
   type PostTrace,
 } from "../../src/lib/ledger/commands/http";
 export async function postHarness(
-  options: { schema?: "public" | "ledgerone"; upgrade?: boolean } = {},
+  options: {
+    schema?: "public" | "ledgerone";
+    upgrade?: boolean;
+    accounts?: boolean;
+  } = {},
 ) {
   const schema = options.schema ?? "public";
   if (schema !== "public" && schema !== "ledgerone")
@@ -110,6 +114,10 @@ export async function postHarness(
       GRANT INSERT ON ledger_operation,journal,posting,audit_event TO "${role}";
       GRANT UPDATE(id) ON workspace,ledger_account TO "${role}";
       GRANT UPDATE(status,"postedAt","operationId",revision) ON journal TO "${role}"`);
+    if (options.accounts)
+      await admin.query(`GRANT SELECT,INSERT ON account_command,account_event TO "${role}";
+        GRANT INSERT ON ledger_account,opening_balance TO "${role}";
+        GRANT UPDATE(name,"archivedAt","updatedAt") ON ledger_account TO "${role}"`);
     if (schema === "ledgerone") {
       for (const name of privateRoles)
         await admin.query(

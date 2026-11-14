@@ -22,7 +22,8 @@ test("P1-S06B actual Next POST route stays disabled and anonymous requests remai
       },
     ],
   };
-  const before = await database.ledgerOperation.count();
+  const scope = { where: { workspaceId: path.split("/")[3]! } };
+  const before = await database.ledgerOperation.count(scope);
   const anonymous = await playwright.request.newContext({ baseURL: origin });
   try {
     for (const kind of ["POST", "REVERSE", "CORRECT"]) {
@@ -61,7 +62,7 @@ test("P1-S06B actual Next POST route stays disabled and anonymous requests remai
           })
         ).status(),
       ).toBe(401);
-      expect(await database.ledgerOperation.count()).toBe(before);
+      expect(await database.ledgerOperation.count(scope)).toBe(before);
     }
   } finally {
     await anonymous.dispose();
