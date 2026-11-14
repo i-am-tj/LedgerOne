@@ -4,7 +4,7 @@ CREATE TABLE account_command (
  id uuid PRIMARY KEY, "workspaceId" uuid NOT NULL, "ownerId" text NOT NULL, "accountId" uuid NOT NULL,
  "idempotencyKey" varchar(128) NOT NULL, "requestHash" char(64) NOT NULL,
  result jsonb NOT NULL, "createdAt" timestamptz(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
- CONSTRAINT account_command_accountId_workspaceId_ownerId_fkey FOREIGN KEY ("accountId","workspaceId","ownerId") REFERENCES ledger_account(id,"workspaceId","ownerId") ON DELETE RESTRICT ON UPDATE RESTRICT
+ CONSTRAINT "account_command_accountId_workspaceId_ownerId_fkey" FOREIGN KEY ("accountId","workspaceId","ownerId") REFERENCES ledger_account(id,"workspaceId","ownerId") ON DELETE RESTRICT ON UPDATE RESTRICT
 );
 CREATE UNIQUE INDEX "account_command_id_workspaceId_ownerId_key" ON account_command(id,"workspaceId","ownerId");
 CREATE UNIQUE INDEX "account_command_workspaceId_ownerId_idempotencyKey_key" ON account_command("workspaceId","ownerId","idempotencyKey");
@@ -14,8 +14,8 @@ CREATE TABLE account_event (
  "effectiveAt" timestamptz(3) NOT NULL, "createdAt" timestamptz(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
  CONSTRAINT account_event_actor CHECK ("actorId"="ownerId"),
  CONSTRAINT account_event_action CHECK (action IN ('CREATE_ACCOUNT','RENAME_ACCOUNT','ARCHIVE_ACCOUNT','RESTORE_ACCOUNT','RECONCILE_ACCOUNT')),
- CONSTRAINT account_event_commandId_workspaceId_ownerId_fkey FOREIGN KEY ("commandId","workspaceId","ownerId") REFERENCES account_command(id,"workspaceId","ownerId") ON DELETE RESTRICT ON UPDATE RESTRICT,
- CONSTRAINT account_event_accountId_workspaceId_ownerId_fkey FOREIGN KEY ("accountId","workspaceId","ownerId") REFERENCES ledger_account(id,"workspaceId","ownerId") ON DELETE RESTRICT ON UPDATE RESTRICT
+ CONSTRAINT "account_event_commandId_workspaceId_ownerId_fkey" FOREIGN KEY ("commandId","workspaceId","ownerId") REFERENCES account_command(id,"workspaceId","ownerId") ON DELETE RESTRICT ON UPDATE RESTRICT,
+ CONSTRAINT "account_event_accountId_workspaceId_ownerId_fkey" FOREIGN KEY ("accountId","workspaceId","ownerId") REFERENCES ledger_account(id,"workspaceId","ownerId") ON DELETE RESTRICT ON UPDATE RESTRICT
 );
 CREATE UNIQUE INDEX "account_event_commandId_key" ON account_event("commandId");
 CREATE INDEX "account_event_ownerId_accountId_createdAt_idx" ON account_event("ownerId","accountId","createdAt");
