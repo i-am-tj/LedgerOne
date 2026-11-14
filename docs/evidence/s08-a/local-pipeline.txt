@@ -102,9 +102,9 @@ Prisma schema loaded from prisma/schema.prisma.
   Finished TypeScript in 2.3s ...
   Collecting page data using 7 workers ...
   Generating static pages using 7 workers (0/4) ...
-  Generating static pages using 7 workers (1/4) 
-  Generating static pages using 7 workers (2/4) 
-  Generating static pages using 7 workers (3/4) 
+  Generating static pages using 7 workers (1/4)
+  Generating static pages using 7 workers (2/4)
+  Generating static pages using 7 workers (3/4)
 ✓ Generating static pages using 7 workers (4/4) in 177ms
   Finalizing page optimization ...
   Collecting build traces ...
@@ -146,7 +146,7 @@ Route (app)
 [WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
 [WebServer] ⚠ Warning: Next.js ignored package-lock.json in /Users/iamtj because it is outside the current Git repository (/Users/iamtj/Document/Projects/Self/LedgerOne).
 [WebServer]  To use this directory, set `outputFileTracingRoot` in your Next.js config.
-[WebServer] 
+[WebServer]
 
 Running 56 tests using 2 workers
 
