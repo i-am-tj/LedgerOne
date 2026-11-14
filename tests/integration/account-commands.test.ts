@@ -68,11 +68,12 @@ describe.each(["public", "ledgerone"] as const)(
           )
         ).rows[0].n;
         expect(count).toBe(amount === "0" ? 0 : 1);
-        await command({
+        const renamed = await command({
           kind: "RENAME_ACCOUNT",
           accountId: id,
           name: "Renamed savings",
         });
+        expect(renamed.result.previousName).toBe("SBI Savings");
         await command({ kind: "ARCHIVE_ACCOUNT", accountId: id });
         expect((await command(body, key)).result).toEqual(first.result);
         await expect(
@@ -173,6 +174,19 @@ describe.each(["public", "ledgerone"] as const)(
       await expect(
         h.admin.query('DELETE FROM account_event WHERE "accountId"=$1', [id]),
       ).rejects.toMatchObject({ code: "23514" });
+    });
+    it("S07 snapshots the prior name of an account created before lifecycle history", async () => {
+      const id = h.users[0]!.bank;
+      expect(
+        await h.database.accountEvent.count({ where: { accountId: id } }),
+      ).toBe(0);
+      const renamed = await command({
+        kind: "RENAME_ACCOUNT",
+        accountId: id,
+        name: "Legacy renamed",
+      });
+      expect(renamed.result.previousName).toBe("Fixture");
+      expect(renamed.result.name).toBe("Legacy renamed");
     });
   },
 );

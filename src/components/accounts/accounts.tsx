@@ -635,7 +635,11 @@ export function Accounts({ accountId }: { accountId?: string }) {
                 .filter((e) => e.action !== "RECONCILE_ACCOUNT")
                 .map((e) => (
                   <li key={e.id}>
-                    {label(e.action)} · {e.data.name}
+                    {label(e.action)} ·{" "}
+                    {e.action === "RENAME_ACCOUNT" && e.data.previousName
+                      ? e.data.previousName + " → "
+                      : ""}
+                    {e.data.name}
                   </li>
                 ))}
             </ul>

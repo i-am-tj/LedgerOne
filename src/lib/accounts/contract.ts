@@ -47,6 +47,7 @@ export const accountResult = z
     ]),
     accountId: uuid,
     name: z.string(),
+    previousName: z.string().nullable(),
     archived: z.boolean(),
     openingOperationId: uuid.nullable(),
     effectiveAt: z.string().nullable(),

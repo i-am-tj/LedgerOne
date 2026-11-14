@@ -87,6 +87,7 @@ export async function mutateAccount(
     name: string,
     archived = false,
     openingOperationId: string | null = null;
+  let previousName: string | null = null;
   let effectiveAt: string | null = null,
     ledgerMinor: string | null = null,
     statementMinor: string | null = null,
@@ -166,6 +167,7 @@ export async function mutateAccount(
     ).rows[0];
     if (!row) throw new CommandError(404, "not_found");
     name = row.name;
+    previousName = row.name;
     archived = row.archivedAt !== null;
     if (command.kind === "RENAME_ACCOUNT") {
       name = command.name;
@@ -202,6 +204,7 @@ export async function mutateAccount(
     kind: command.kind,
     accountId,
     name,
+    previousName,
     archived,
     openingOperationId,
     effectiveAt,
