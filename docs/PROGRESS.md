@@ -556,3 +556,7 @@ The owner accepted restricted local D-T03 at `417374d6a5d3295a5b11133dd7c9153482
 ## D-T05 owner-authorized local merge checkpoint
 
 Local readiness may be reviewed and merged independently of hosted verification under the explicit owner scope clarification. See [local W matrix, individual A05 dispositions and dependency assessment](reports/S06D_D_T05_LOCAL_REVIEW.md). Historical hosted-dependent requirements retain NOT RUN status. Production activation remains disabled. #13/#14/#15 are eligible for local-scope closure only after reviewed incorporation; #16 and account-specific #17 remain S07 obligations. #34 remains open. PR #30 requires separate owner merge approval.
+
+## Confirmed local S06D merge
+
+D-T01–D-T05 locally completed and accepted. PR #30 merged as 88df3950058c997a10cd66b5765d1c99db6d323a after owner approval of c5ae54f. [Actual merge and scoped closure](reports/S06D_LOCAL_CLOSURE.md). Hosted evidence remains NOT RUN, production financial writes disabled, Phase 1 incomplete. S07 local predecessor is satisfied under the accepted scope. Historical failed observations remain preserved.
