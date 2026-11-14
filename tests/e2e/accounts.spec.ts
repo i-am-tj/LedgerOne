@@ -206,11 +206,9 @@ test("S07 lost creation response recovers the same key and blocks changed-input 
     .click();
   await page.getByRole("button", { name: "Confirm and save" }).click();
   await expect(
-    page
-      .getByRole("alert")
-      .filter({
-        hasText: "Recover the pending result before changing these details.",
-      }),
+    page.getByRole("alert").filter({
+      hasText: "Recover the pending result before changing these details.",
+    }),
   ).toBeVisible();
   expect(forwarded).toBe(1);
   await page.getByRole("button", { name: "Recover pending result" }).click();
