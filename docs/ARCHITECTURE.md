@@ -107,3 +107,7 @@ The [S06C breakdown](stories/P1-S06C_BREAKDOWN.md) generalizes the existing comm
 ## S06D verification architecture — planning only
 
 The [target/role plan](plans/S06D_TARGET_AND_ROLES.md) proposes a reviewed offline private-schema verification composition using the same financial engine, authentication and retry contracts. Existing disposable guards and native null writer remain unchanged; no production role configuration or generic enable flag is added by planning. Technical acceptance and [future typed-command activation](plans/S06D_ACTIVATION_AND_ROLLBACK.md) are separate decisions.
+
+## S07 local typed account capability
+
+Typed account commands extend the existing shared executor, with immutable account receipts/events and linked mandatory opening audit. The dedicated Accounts UI/API supports lifecycle and audited reconciliation comparisons. The explicit generated local test server provisions a restricted account writer and a private manifest file; only the typed account handler reads it in test profile. Native generic journal routes remain disabled. No hosted operation or production grant change is included. ADR-008 records lock ordering, replay and original-context policy.

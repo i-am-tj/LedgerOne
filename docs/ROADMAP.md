@@ -66,3 +66,7 @@ S06C completed by reviewed merge 3502754 at corrected c22488b; #10/#27 closed. [
 ## Current next step — D-T03 capacity blocker review
 
 S06D planning #28 is accepted/merged; isolated implementation is draft #30. The owner-approved bounded insertion prototype passed standard 220/242/48 regressions but retains capacity FAIL #32. [Current evidence](reports/S06D_BATCHING_PROTOTYPE.md) and [separate proposed SSI investigation](plans/S06D_SSI_FOLLOWUP_PROPOSAL.md) need a new review decision. D-T04/D-T05 do not advance while required local capacity remains red; no hosted/production operation, normal financial writer, S07–S09 or Phase 1 completion. Earlier planning-only checkpoints are historical.
+
+## S07 UI delivery amendment
+
+Within existing story #12/PR #35, S07-UI01–UI04 must deliver real Accounts overview, typed lifecycle, confirmed opening/history and audited reconciliation comparisons. The owner-approved actual desktop/mobile walkthrough is a required P1-E3 closure gate. Backend tests alone cannot close it. S08 remains responsible for typed everyday financial transactions. Hosted and production activation remain separate approvals.

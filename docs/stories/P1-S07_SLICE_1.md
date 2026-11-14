@@ -57,3 +57,7 @@ This is a proposed additive financial contract, not an applied migration or perm
 ## Initial balance-query regression evidence
 
 The first new tests failed at the inclusive boundary when Prisma interpreted a timestamptz value as a different instant on the Asia/Kolkata native fixture. PostgreSQL independently returned `2026-02-01 05:30:00+05:30` and confirmed it equals the requested `2026-02-01T00:00:00Z`. The new balance service now sends an ISO string with explicit timestamptz cast and returns SQL numeric SUM as text before BigInt sign formatting. Fixed schema names are runtime-allowlisted; user identifiers/amounts/instants are parameters. No existing S06 source, migration or timeout changed. Corrected public/private results and full pipeline are recorded on the S07 PR after execution.
+
+## Current approved implementation
+
+The owner approved the opening-audit contract for local implementation and added mandatory UI01–UI04 delivery in the parent story. Source now implements typed create/open/rename/archive/restore and audited reconciliation with Accounts overview/detail. The original first-increment status above is historical. Reconciliation is explicitly comparison only. Final source checks and actual browser evidence are recorded in the PR report before acceptance; this is not a merged-completion claim.

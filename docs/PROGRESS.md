@@ -560,3 +560,13 @@ Local readiness may be reviewed and merged independently of hosted verification 
 ## Confirmed local S06D merge
 
 D-T01–D-T05 locally completed and accepted. PR #30 merged as 88df3950058c997a10cd66b5765d1c99db6d323a after owner approval of c5ae54f. [Actual merge and scoped closure](reports/S06D_LOCAL_CLOSURE.md). Hosted evidence remains NOT RUN, production financial writes disabled, Phase 1 incomplete. S07 local predecessor is satisfied under the accepted scope. Historical failed observations remain preserved.
+
+## S07 local UI implementation in progress
+
+The owner approved the additive OPENING audit contract and mandatory Accounts UI amendment on draft PR #35. Implemented source includes migration008 opening audit, migration009 immutable account command/event history, typed shared-executor account lifecycle/opening/reconciliation and responsive Accounts overview/detail forms. These changes remain unmerged and under verification. Reconciliation is explicitly approved as audited comparison only.
+
+Targeted opening/correction tests passed 23/23. Targeted public/private account/audit tests passed 19/19. First full development run failed 11/276 integration cases, including one canceled-COMMIT backend-presence assertion and two hardcoded migration007 assumptions with cascading attestation failures. The hardcoded restoration/count assumptions were corrected to use the current schema version and actual migration list. Original financial checks remain required. Final full pipeline and browser/screenshots are pending and determine acceptance.
+
+## S07-UI01–UI04 corrected local verification
+
+Typed Accounts overview/lifecycle/opening/history/reconciliation UI is implemented on PR #35. Full corrected local pipeline at source 92f9844 passed 234 unit, 281 integration and 50 browser tests. Both actual desktop/mobile walkthroughs passed, including ₹50,000 opening persistence, retained original name after rename, ₹500 discrepancy versus ₹49,500 and second-user denial. New migration008/009 schema rehearsal and attestation passed. [Evidence and retained development failures](reports/P1-S07.md). Source/accounting review, final publication CI and reviewed merge remain required before S07/P1-E3 closure. Reconciliation is comparison only by owner decision.

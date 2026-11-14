@@ -211,3 +211,11 @@ The authoritative [W01–W15 requirements-to-tests matrix](gates/S06D_REQUIREMEN
 Heavy `verification` campaigns remain separately required and retain failures, canceled/unmeasured samples and NOT PROVEN tails. Fresh author-context probes do not substitute for independent review or owner’s new final decision. D-T04/D-T05 are not advanced by this prototype.
 
 S06D-R04 #33 adds a fifteenth targeted case: actual advisory-gated owned SQL, fixture separation and bounded non-forcing settlement. Maximum fixture retains the prior12-journal/2,208-posting history and mandatory first201; uncertain durable outcomes are audited/replayed only for safety proof, never counted as positive capacity. Corrected local full220/243/48 passes; initial CI87a5a7e failures remain in [the evidence](evidence/s06d/BATCHING_INITIAL_CI_FAILURES.json).
+
+## S07 mandatory UI acceptance
+
+S07 and P1-E3 require S07-UI01–UI04 user-facing completion. `tests/e2e/accounts.spec.ts` drives the real authenticated Next application through create SBI Savings → ₹50,000 opening → refresh → historical opening → rename → ₹49,500 statement → ₹500 discrepancy → archive/restore → second-user denial on desktop/mobile. Screenshots are test artifacts. No API-only demonstration substitutes for this gate.
+
+`opening-audit.test.ts` verifies new OPENING receipts require the exact audit at COMMIT under actual restricted roles. `account-commands.test.ts` covers public/private scopes, signed/zero openings, concurrency/replay, immutable historical responses, ownership denial and atomic rollback. `account-balance.test.ts` retains exact inclusive-time/read precision regressions. Full S05/S06 tests, native generic denial and migration/catalog checks remain required.
+
+Reconciliation is an owner-approved audited comparison only. Expected ledger-minus-statement discrepancy is exact in account native INR units; reconciliation cannot overwrite posted balances.
