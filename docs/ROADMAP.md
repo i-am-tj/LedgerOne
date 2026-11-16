@@ -70,3 +70,7 @@ S06D planning #28 is accepted/merged; isolated implementation is draft #30. The 
 ## S07 UI delivery amendment
 
 Within existing story #12/PR #35, S07-UI01–UI04 must deliver real Accounts overview, typed lifecycle, confirmed opening/history and audited reconciliation comparisons. The owner-approved actual desktop/mobile walkthrough is a required P1-E3 closure gate. Backend tests alone cannot close it. S08 remains responsible for typed everyday financial transactions. Hosted and production activation remain separate approvals.
+
+## 2026-11-14 current delivery checkpoint
+
+S07 PR #35 is merged (`1fd3b936`); original residual requirements and #16/#17 remain tracked. S08-A expense/income UI is in implementation review under #38 (P1-E4 #37), followed by S08-B transfers/card settlement, S08-C FD/loan and S08-D combined history/consumption. S09 then supplies original Phase 1 regression/gate evidence. P1-E3, hosted financial verification and Phase 1 remain incomplete; no production activation is authorized.

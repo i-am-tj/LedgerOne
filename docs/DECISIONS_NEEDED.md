@@ -80,3 +80,7 @@ The historical planning/proposal requests above are superseded by recorded plann
 ## S07 owner decisions resolved
 
 The owner approved the ledger.opened additive contract for isolated local implementation and required user-facing Accounts delivery within the current PR. The owner subsequently selected audited comparison only for S07 reconciliation. No discrepancy adjustment postings are authorized. Implementation source review and reviewed merge remain required. Hosted/production operations remain unauthorized.
+
+## S08-A owner implementation review
+
+No new general planning decision is requested. Owner authorized original S08 A–D scope and local implementation. Expense/income candidate requires owner independent review and explicit merge authorization; no agent/native review approval is implied. Hosted database operations, production grants/activation and generic consumer financial APIs remain separately unauthorized.

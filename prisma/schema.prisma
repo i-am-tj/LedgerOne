@@ -196,22 +196,24 @@ model Currency {
 }
 
 model Account {
-  id           String           @id @default(uuid()) @db.Uuid
-  workspaceId  String           @db.Uuid
-  ownerId      String
-  name         String           @db.VarChar(80)
-  type         AccountClass
-  kind         AccountKind
-  currencyCode String           @db.VarChar(3)
-  archivedAt   DateTime?        @db.Timestamptz(3)
-  createdAt    DateTime         @default(now()) @db.Timestamptz(3)
-  updatedAt    DateTime         @updatedAt @db.Timestamptz(3)
-  workspace    Workspace        @relation(fields: [workspaceId, ownerId], references: [id, ownerId], onDelete: Restrict, onUpdate: Restrict)
-  currency     Currency         @relation(fields: [currencyCode], references: [code], onDelete: Restrict, onUpdate: Restrict)
-  postings     Posting[]
-  commands     AccountCommand[]
-  events       AccountEvent[]
-  opening      OpeningBalance?
+  sourceCaptures   TransactionRecord[] @relation("CaptureAccount")
+  categoryCaptures TransactionRecord[] @relation("CaptureCategory")
+  id               String              @id @default(uuid()) @db.Uuid
+  workspaceId      String              @db.Uuid
+  ownerId          String
+  name             String              @db.VarChar(80)
+  type             AccountClass
+  kind             AccountKind
+  currencyCode     String              @db.VarChar(3)
+  archivedAt       DateTime?           @db.Timestamptz(3)
+  createdAt        DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime            @updatedAt @db.Timestamptz(3)
+  workspace        Workspace           @relation(fields: [workspaceId, ownerId], references: [id, ownerId], onDelete: Restrict, onUpdate: Restrict)
+  currency         Currency            @relation(fields: [currencyCode], references: [code], onDelete: Restrict, onUpdate: Restrict)
+  postings         Posting[]
+  commands         AccountCommand[]
+  events           AccountEvent[]
+  opening          OpeningBalance?
 
   @@unique([id, workspaceId, ownerId])
   @@unique([id, workspaceId, ownerId, currencyCode])
@@ -220,6 +222,7 @@ model Account {
 }
 
 model LedgerOperation {
+  captures       TransactionRecord[]
   id             String              @id @default(uuid()) @db.Uuid
   workspaceId    String              @db.Uuid
   ownerId        String
@@ -358,4 +361,23 @@ model AccountEvent {
 
   @@index([ownerId, accountId, createdAt])
   @@map("account_event")
+}
+
+model TransactionRecord {
+  operationId       String          @id @db.Uuid
+  workspaceId       String          @db.Uuid
+  ownerId           String
+  kind              String          @db.VarChar(12)
+  accountId         String          @db.Uuid
+  categoryAccountId String          @db.Uuid
+  accountName       String          @db.VarChar(80)
+  categoryName      String          @db.VarChar(80)
+  amountMinor       BigInt
+  createdAt         DateTime        @default(now()) @db.Timestamptz(3)
+  operation         LedgerOperation @relation(fields: [operationId, workspaceId, ownerId], references: [id, workspaceId, ownerId], onDelete: Restrict, onUpdate: Restrict)
+  account           Account         @relation("CaptureAccount", fields: [accountId, workspaceId, ownerId], references: [id, workspaceId, ownerId], onDelete: Restrict, onUpdate: Restrict)
+  category          Account         @relation("CaptureCategory", fields: [categoryAccountId, workspaceId, ownerId], references: [id, workspaceId, ownerId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([ownerId, workspaceId, createdAt])
+  @@map("transaction_record")
 }

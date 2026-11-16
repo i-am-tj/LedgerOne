@@ -1,5 +1,17 @@
 import "server-only";
 import {
+  captureHash,
+  isCaptureCommand,
+  type CaptureCommand,
+} from "../../transactions/contract";
+import {
+  captureTemplate,
+  captureResult,
+  saveCapture,
+  type CaptureContext,
+  type CaptureResult,
+} from "../../transactions/template";
+import {
   accountHash,
   isAccountCommand,
   type AccountCommand,
@@ -285,9 +297,19 @@ export class PostExecutor {
     authorize: () => Promise<Actor>,
     workspace: string,
     key: string,
-    command: FinancialCommand | AccountCommand,
+    command: CaptureCommand,
     signal?: AbortSignal,
-  ): Promise<{ result: FinancialResult | AccountResult; replayed: boolean }> {
+  ): Promise<{ result: CaptureResult; replayed: boolean }>;
+  async execute(
+    authorize: () => Promise<Actor>,
+    workspace: string,
+    key: string,
+    command: FinancialCommand | AccountCommand | CaptureCommand,
+    signal?: AbortSignal,
+  ): Promise<{
+    result: FinancialResult | AccountResult | CaptureResult;
+    replayed: boolean;
+  }> {
     return measured(this.metrics, "command.total", async () => {
       throwIfAborted(signal);
       const deadline = performance.now() + 10000;
@@ -348,12 +370,15 @@ export class PostExecutor {
     authorize: () => Promise<Actor>,
     workspace: string,
     key: string,
-    command: FinancialCommand | AccountCommand,
+    command: FinancialCommand | AccountCommand | CaptureCommand,
     attempt: number,
     deadline: number,
     signal?: AbortSignal,
     recoverOriginalConflict = false,
-  ): Promise<{ result: FinancialResult | AccountResult; replayed: boolean }> {
+  ): Promise<{
+    result: FinancialResult | AccountResult | CaptureResult;
+    replayed: boolean;
+  }> {
     throwIfAborted(signal);
     const actor = await measured(
         this.metrics,
@@ -361,9 +386,11 @@ export class PostExecutor {
         () => withinDeadline(authorize(), deadline, undefined, signal),
         attempt,
       ),
-      hash = isAccountCommand(command)
-        ? accountHash(actor.ownerId, workspace, command)
-        : requestHash(actor.ownerId, workspace, command);
+      hash = isCaptureCommand(command)
+        ? captureHash(actor.ownerId, workspace, command)
+        : isAccountCommand(command)
+          ? accountHash(actor.ownerId, workspace, command)
+          : requestHash(actor.ownerId, workspace, command);
     const c = await measured(
       this.metrics,
       "command.connection_wait",
@@ -445,7 +472,7 @@ export class PostExecutor {
       if (
         !(
           await query(
-            isAccountCommand(command)
+            isAccountCommand(command) || isCaptureCommand(command)
               ? 'SELECT id FROM workspace WHERE id=$1 AND "ownerId"=$2 FOR UPDATE'
               : 'SELECT id FROM workspace WHERE id=$1 AND "ownerId"=$2 FOR KEY SHARE',
             [workspace, actor.ownerId],
@@ -511,10 +538,29 @@ export class PostExecutor {
       );
       if (old.rowCount) {
         if (
-          old.rows[0].kind !== command.kind ||
+          old.rows[0].kind !==
+            (isCaptureCommand(command) ? "POST" : command.kind) ||
           old.rows[0].requestHash !== hash
         )
           throw new CommandError(409, "idempotency_conflict");
+        if (isCaptureCommand(command)) {
+          const saved = await captureTemplate(
+            query,
+            actor.ownerId,
+            workspace,
+            command,
+            old.rows[0].id,
+          );
+          const post = await commandOutcome(
+            c,
+            actor,
+            workspace,
+            old.rows[0].id,
+            saved.post,
+          );
+          await commit(true);
+          return { result: captureResult(saved.context, post), replayed: true };
+        }
         const result = await commandOutcome(
           c,
           actor,
@@ -525,15 +571,27 @@ export class PostExecutor {
         await commit(true);
         return { result, replayed: true };
       }
-      if (recoverOriginalConflict && command.kind !== "POST") {
+      let captureContext: CaptureContext | undefined;
+      if (isCaptureCommand(command)) {
+        const prepared = await captureTemplate(
+          query,
+          actor.ownerId,
+          workspace,
+          command,
+        );
+        captureContext = prepared.context;
+        command = prepared.post;
+      }
+      const journalCommand: FinancialCommand = command;
+      if (recoverOriginalConflict && journalCommand.kind !== "POST") {
         const original = await query(
           'SELECT id FROM journal WHERE id=$1 AND "workspaceId"=$2 AND "ownerId"=$3',
-          [command.originalJournalId, workspace, actor.ownerId],
+          [journalCommand.originalJournalId, workspace, actor.ownerId],
         );
         if (!original.rowCount) throw new CommandError(404, "not_found");
         const reversed = await query(
           'SELECT id FROM journal WHERE "reversesJournalId"=$1 AND "workspaceId"=$2 AND "ownerId"=$3',
-          [command.originalJournalId, workspace, actor.ownerId],
+          [journalCommand.originalJournalId, workspace, actor.ownerId],
         );
         if (reversed.rowCount) throw targetUnavailable();
         // A conflict without durable evidence is not a successful replay or
@@ -548,26 +606,29 @@ export class PostExecutor {
         () =>
           query(
             'INSERT INTO ledger_operation(id,"workspaceId","ownerId","idempotencyKey","requestHash",kind) VALUES($1,$2,$3,$4,$5,$6)',
-            [op, workspace, actor.ownerId, key, hash, command.kind],
+            [op, workspace, actor.ownerId, key, hash, journalCommand.kind],
           ),
         attempt,
       );
       await this.probe?.("receipt", c, attempt);
       const legs =
-        command.kind === "POST"
-          ? command.legs
+        journalCommand.kind === "POST"
+          ? journalCommand.legs
           : await originalEvidence(
               query,
               actor.ownerId,
               workspace,
-              command.originalJournalId,
+              journalCommand.originalJournalId,
             );
-      if (command.kind !== "POST") await this.probe?.("discovered", c, attempt);
+      if (journalCommand.kind !== "POST")
+        await this.probe?.("discovered", c, attempt);
       const ids = [
         ...new Set(
           [
             ...legs,
-            ...(command.kind === "CORRECT" ? command.replacement.legs : []),
+            ...(journalCommand.kind === "CORRECT"
+              ? journalCommand.replacement.legs
+              : []),
           ].map((l) => l.accountId),
         ),
       ].sort();
@@ -590,7 +651,7 @@ export class PostExecutor {
       )
         throw new CommandError(409, "account_unavailable");
       await this.probe?.("locked", c, attempt);
-      if (command.kind !== "POST") {
+      if (journalCommand.kind !== "POST") {
         await measured(
           this.metrics,
           "locks.original",
@@ -599,7 +660,7 @@ export class PostExecutor {
               query,
               actor.ownerId,
               workspace,
-              command.originalJournalId,
+              journalCommand.originalJournalId,
               op,
             ),
           attempt,
@@ -614,12 +675,14 @@ export class PostExecutor {
         workspace,
         op,
         journal,
-        command.effectiveAt,
-        command.description,
+        journalCommand.effectiveAt,
+        journalCommand.description,
         legs,
-        command.kind === "POST" ? null : command.originalJournalId,
+        journalCommand.kind === "POST"
+          ? null
+          : journalCommand.originalJournalId,
       );
-      if (command.kind === "CORRECT")
+      if (journalCommand.kind === "CORRECT")
         await this.writeJournal(
           query,
           c,
@@ -628,9 +691,9 @@ export class PostExecutor {
           workspace,
           op,
           randomUUID(),
-          command.replacement.effectiveAt,
-          command.replacement.description,
-          command.replacement.legs,
+          journalCommand.replacement.effectiveAt,
+          journalCommand.replacement.description,
+          journalCommand.replacement.legs,
           null,
         );
       await measured(
@@ -644,20 +707,33 @@ export class PostExecutor {
               workspace,
               actor.ownerId,
               actor.requestId,
-              command.kind === "POST"
+              journalCommand.kind === "POST"
                 ? "ledger.posted"
-                : command.kind === "REVERSE"
+                : journalCommand.kind === "REVERSE"
                   ? "ledger.reversed"
                   : "ledger.corrected",
               op,
-              command.kind === "POST" ? journal : command.originalJournalId,
-              command.reason,
+              journalCommand.kind === "POST"
+                ? journal
+                : journalCommand.originalJournalId,
+              journalCommand.reason,
             ],
           ),
         attempt,
       );
       await this.probe?.("audit", c, attempt);
-      const result = await commandOutcome(c, actor, workspace, op, command);
+      const postResult = await commandOutcome(
+        c,
+        actor,
+        workspace,
+        op,
+        journalCommand,
+      );
+      if (captureContext)
+        await saveCapture(query, actor.ownerId, workspace, op, captureContext);
+      const result = captureContext
+        ? captureResult(captureContext, postResult)
+        : postResult;
       await this.probe?.("beforeCommit", c, attempt);
       await commit(false);
       await this.probe?.("committed", c, attempt);
