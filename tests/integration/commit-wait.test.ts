@@ -53,6 +53,8 @@ it.each([
     const attempts: number[] = [];
     const pids: number[] = [];
     let resumes: ReturnType<typeof setTimeout> | undefined;
+    let clientEnded = false;
+    let removeEndListener = () => {};
     let waitMs = 0,
       sent = 0,
       ackMs = 0,
@@ -67,6 +69,13 @@ it.each([
         );
       }
       if (stage !== "beforeCommit") return;
+      const onEnd = () => {
+        clientEnded = true;
+      };
+      c.once("end", onEnd);
+      removeEndListener = () => {
+        c.removeListener("end", onEnd);
+      };
       const query = c.query.bind(c),
         release = c.release.bind(c);
       c.release = (discard) => {
@@ -167,14 +176,26 @@ it.each([
             expect(elapsed).toBeLessThan(10500);
             await delay(250);
           }
-          expect(
-            (
+          // pg-pool removes the discarded checkout synchronously, then ends
+          // its client asynchronously. Do not equate release(true) with an
+          // instantaneous observation in another PostgreSQL backend (#34).
+          // Retain bounded server disappearance AND physical client end; this
+          // observation is after the response, not a command-budget extension.
+          const closeDeadline = performance.now() + 5000; // existing fixture cleanup bound
+          let remainingBackend = 1;
+          do {
+            remainingBackend = (
               await h.admin.query(
                 "SELECT count(*)::int n FROM pg_stat_activity WHERE pid=$1 AND datname=current_database()",
                 [pids[0]],
               )
-            ).rows[0].n,
-          ).toBe(0);
+            ).rows[0].n;
+            if (remainingBackend === 0 && clientEnded) break;
+            if (performance.now() >= closeDeadline) break;
+            await delay(5);
+          } while (performance.now() < closeDeadline);
+          expect(clientEnded).toBe(true);
+          expect(remainingBackend).toBe(0);
         }
         expect(await outcome(key)).toEqual({
           receipts: 1,
@@ -183,9 +204,11 @@ it.each([
           audits: 1,
         });
       }
-      let replayBudget = 0;
+      let replayBudget = 0,
+        replayPid = 0;
       h.setProbe(async (stage, c) => {
         if (stage !== "connected") return;
+        replayPid = (await c.query("SELECT pg_backend_pid() pid")).rows[0].pid;
         const query = c.query.bind(c);
         c.query = (async (...args: unknown[]) => {
           if (queryText(args[0]) === "COMMIT") {
@@ -198,6 +221,7 @@ it.each([
       const replay = await h.api(0, key, body);
       h.setProbe(undefined);
       expect(replay.status).toBe(200);
+      if (destroyed) expect(replayPid).not.toBe(pids[0]);
       expect(replayBudget).toBeGreaterThan(0);
       expect(replayBudget).toBeLessThanOrEqual(3000);
       expect(
@@ -214,6 +238,7 @@ it.each([
       );
     } finally {
       if (resumes) clearTimeout(resumes);
+      removeEndListener();
       h.setProbe(undefined);
     }
   },
