@@ -102,6 +102,7 @@ export function AccountPicker({
           name={h.institution ?? h.name}
           institutionKey={h.institutionKey}
           icon={categoryOf(h).icon}
+          kinds={categoryOf(h).institutionKinds}
           size={compact ? 26 : 30}
         />
         <span className="min-w-0 flex-1 text-left">

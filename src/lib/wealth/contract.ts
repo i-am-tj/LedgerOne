@@ -142,10 +142,18 @@ export function validateProfile(
     ["notes", data.notes],
   ] as const)
     if (label?.includes("\0")) errors[key] = "Remove unsupported characters.";
-  if (data.institutionKey && !institutionByKey(data.institutionKey))
-    errors.institution = "Unknown institution.";
-  if (data.platformKey && !institutionByKey(data.platformKey))
-    errors.platform = "Unknown platform.";
+  if (data.institutionKey) {
+    const known = institutionByKey(data.institutionKey);
+    if (!known) errors.institution = "Unknown institution.";
+    else if (!category.institutionKinds.includes(known.kind))
+      errors.institution = `${known.name} isn’t a valid ${category.institutionLabel.toLowerCase()} for this type.`;
+  }
+  if (data.platformKey) {
+    const known = institutionByKey(data.platformKey);
+    if (!known) errors.platform = "Unknown platform.";
+    else if (!category.platformKinds?.includes(known.kind))
+      errors.platform = `${known.name} isn’t a valid app or platform for this type.`;
+  }
   if (!category.platformLabel && clean(data.platform))
     errors.platform = "This type has no platform.";
   if (!category.fundingLabel && data.fundingAccountId)

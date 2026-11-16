@@ -19,7 +19,6 @@ import {
   validateProfile,
   type ProfileInput,
 } from "@/lib/wealth/contract";
-import { institutions } from "@/lib/wealth/institutions";
 import type { Holding } from "@/lib/wealth/types";
 import { cn } from "@/lib/utils";
 import {
@@ -33,6 +32,7 @@ import {
   useWealth,
 } from "./client";
 import { AccountPicker } from "./account-picker";
+import { InstitutionInput } from "./institution-input";
 import { InstitutionLogo, resolveInstitution } from "./institution-logo";
 
 const field = "grid gap-2 text-sm font-medium";
@@ -259,8 +259,14 @@ export function HoldingForm({
       (!h.archived || h.id === holding?.fundingAccountId) &&
       (!workspaceId || h.workspaceId === workspaceId),
   );
-  const institutionMatch = resolveInstitution(institution);
-  const platformMatch = resolveInstitution(platform);
+  const institutionMatch = resolveInstitution(
+    institution,
+    undefined,
+    category.institutionKinds,
+  );
+  const platformMatch = category.platformKinds
+    ? resolveInstitution(platform, undefined, category.platformKinds)
+    : undefined;
   const suggestedName = useMemo(() => {
     const who = institutionMatch?.name ?? institution.trim();
     return who ? `${who} ${category.singular}`.slice(0, 80) : category.singular;
@@ -506,6 +512,7 @@ export function HoldingForm({
           name={institution || name}
           institutionKey={institutionMatch?.key}
           icon={category.icon}
+          kinds={category.institutionKinds}
           size={52}
         />
         <div>
@@ -561,17 +568,20 @@ export function HoldingForm({
                   name={institution}
                   institutionKey={institutionMatch?.key}
                   icon={category.icon}
+                  kinds={category.institutionKinds}
                   size={40}
                 />
-                <Input
+                <InstitutionInput
                   id="input-institution"
-                  list="institution-options"
-                  maxLength={120}
-                  autoComplete="off"
+                  kinds={category.institutionKinds}
                   placeholder={category.institutionHint}
                   value={institution}
-                  aria-invalid={errors.institution ? true : undefined}
-                  onChange={(e) => setInstitution(e.target.value)}
+                  selectedKey={institutionMatch?.key}
+                  invalid={!!errors.institution}
+                  onChange={(v) => {
+                    setInstitution(v);
+                    setErrors((e) => ({ ...e, institution: "" }));
+                  }}
                 />
               </div>
               {institutionMatch && (
@@ -593,21 +603,30 @@ export function HoldingForm({
                     name={platform}
                     institutionKey={platformMatch?.key}
                     icon="sparkles"
+                    kinds={category.platformKinds ?? []}
                     size={40}
                   />
-                  <Input
+                  <InstitutionInput
                     id="input-platform"
-                    list="institution-options"
-                    maxLength={120}
-                    autoComplete="off"
+                    kinds={category.platformKinds ?? []}
                     placeholder="Stable Money, Zerodha, Groww… or Direct"
                     value={platform}
-                    onChange={(e) => setPlatform(e.target.value)}
+                    selectedKey={platformMatch?.key}
+                    invalid={!!errors.platform}
+                    onChange={(v) => {
+                      setPlatform(v);
+                      setErrors((e) => ({ ...e, platform: "" }));
+                    }}
                   />
                 </div>
                 {platformMatch && (
                   <span className="text-xs font-normal text-muted-foreground">
                     Recognised: {platformMatch.name}
+                  </span>
+                )}
+                {errors.platform && (
+                  <span className="text-xs font-normal text-destructive">
+                    {errors.platform}
                   </span>
                 )}
               </div>
@@ -676,11 +695,6 @@ export function HoldingForm({
               </div>
             )}
           </div>
-          <datalist id="institution-options">
-            {institutions.map((i) => (
-              <option key={i.key} value={i.name} />
-            ))}
-          </datalist>
         </Card>
 
         {!editing && (

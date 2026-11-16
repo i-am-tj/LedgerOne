@@ -5,6 +5,7 @@ import {
   generatedMark,
   institutionByKey,
   matchInstitution,
+  type InstitutionKind,
 } from "@/lib/wealth/institutions";
 import { cn } from "@/lib/utils";
 import { wealthIcon } from "./icons";
@@ -12,8 +13,9 @@ import { wealthIcon } from "./icons";
 export function resolveInstitution(
   name: string | null | undefined,
   key?: string | null,
+  kinds?: readonly InstitutionKind[],
 ) {
-  return institutionByKey(key) ?? matchInstitution(name);
+  return institutionByKey(key) ?? matchInstitution(name, kinds);
 }
 
 const logos: Record<string, string> = logoManifest;
@@ -30,14 +32,17 @@ export function InstitutionLogo({
   icon,
   size = 44,
   className,
+  kinds,
 }: {
   name?: string | null;
   institutionKey?: string | null;
+  /** Restricts free-text matching to the kinds valid for the field. */
+  kinds?: readonly InstitutionKind[];
   icon: string;
   size?: number;
   className?: string;
 }) {
-  const known = resolveInstitution(name, institutionKey);
+  const known = resolveInstitution(name, institutionKey, kinds);
   const [broken, setBroken] = useState<string | null>(null);
   const style = { width: size, height: size, fontSize: size * 0.34 };
   const logo = known ? logos[known.key] : undefined;

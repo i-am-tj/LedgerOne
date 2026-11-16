@@ -144,6 +144,7 @@ export function HoldingCard({ holding }: { holding: Holding }) {
           name={holding.institution ?? holding.name}
           institutionKey={holding.institutionKey}
           icon={c.icon}
+          kinds={c.institutionKinds}
         />
         <div className="min-w-0 flex-1">
           <p className="holding-name">{holding.name}</p>
@@ -184,6 +185,7 @@ export function HoldingRow({ holding }: { holding: Holding }) {
           name={holding.institution ?? holding.name}
           institutionKey={holding.institutionKey}
           icon={c.icon}
+          kinds={c.institutionKinds}
           size={40}
         />
         <div className="min-w-0 flex-1">

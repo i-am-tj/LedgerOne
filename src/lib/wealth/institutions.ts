@@ -4,9 +4,16 @@
 export type InstitutionKind =
   | "bank"
   | "small-finance-bank"
+  | "neobank"
+  | "post-office"
+  | "nbfc"
+  | "card-issuer"
   | "platform"
   | "broker"
   | "amc"
+  | "pension"
+  | "bullion"
+  | "payments"
   | "government"
   | "issuer";
 
@@ -58,7 +65,7 @@ export const institutions: readonly Institution[] = [
   b("hsbc", "HSBC", "HS", "#DB0011", []),
   b("standard-chartered", "Standard Chartered", "SC", "#0473EA", ["stanchart"]),
   b("citi", "Citibank", "Ci", "#056DAE", ["citi"]),
-  b("amex", "American Express", "AX", "#016FD0", ["amex"]),
+  b("amex", "American Express", "AX", "#016FD0", ["amex"], "card-issuer"),
   // Small finance banks (popular FD destinations)
   b(
     "suryoday-sfb",
@@ -140,15 +147,8 @@ export const institutions: readonly Institution[] = [
     ["slice", "north east sfb"],
     "small-finance-bank",
   ),
-  b("bajaj-finance", "Bajaj Finance", "BF", "#005BAC", ["bajaj"], "issuer"),
-  b(
-    "shriram-finance",
-    "Shriram Finance",
-    "SF",
-    "#00447C",
-    ["shriram"],
-    "issuer",
-  ),
+  b("bajaj-finance", "Bajaj Finance", "BF", "#005BAC", ["bajaj"], "nbfc"),
+  b("shriram-finance", "Shriram Finance", "SF", "#00447C", ["shriram"], "nbfc"),
   // Government
   b(
     "india-post",
@@ -156,7 +156,7 @@ export const institutions: readonly Institution[] = [
     "IP",
     "#C8102E",
     ["post office", "indiapost", "post"],
-    "government",
+    "post-office",
   ),
   b(
     "rbi-retail-direct",
@@ -178,11 +178,11 @@ export const institutions: readonly Institution[] = [
   b("epfo", "EPFO", "EPF", "#1E3A8A", ["provident fund"], "government"),
   b(
     "protean-nps",
-    "NPS (Protean CRA)",
+    "National Pension System",
     "NPS",
     "#004B8D",
     ["nps", "protean", "cra"],
-    "government",
+    "pension",
   ),
   // Apps / platforms / brokers
   b(
@@ -225,12 +225,12 @@ export const institutions: readonly Institution[] = [
   b("goldenpi", "GoldenPi", "GP", "#B8860B", [], "platform"),
   b("fixerra", "Fixerra", "Fx", "#0E7490", [], "platform"),
   b("jar", "Jar", "Jar", "#3D1C78", [], "platform"),
-  b("mmtc-pamp", "MMTC-PAMP", "MP", "#8C6D1F", ["mmtc"], "issuer"),
-  b("jupiter", "Jupiter", "Ju", "#F2683C", [], "platform"),
-  b("fi-money", "Fi Money", "Fi", "#00B899", ["fi"], "platform"),
-  b("onecard", "OneCard", "1", "#111111", [], "issuer"),
-  b("scapia", "Scapia", "Sp", "#7C3AED", [], "issuer"),
-  b("cred", "CRED", "CR", "#1B1B1B", [], "platform"),
+  b("mmtc-pamp", "MMTC-PAMP", "MP", "#8C6D1F", ["mmtc"], "bullion"),
+  b("jupiter", "Jupiter", "Ju", "#F2683C", [], "neobank"),
+  b("fi-money", "Fi Money", "Fi", "#00B899", ["fi"], "neobank"),
+  b("onecard", "OneCard", "1", "#111111", [], "card-issuer"),
+  b("scapia", "Scapia", "Sp", "#7C3AED", [], "card-issuer"),
+  b("cred", "CRED", "CR", "#1B1B1B", [], "payments"),
   // Mutual fund houses
   b(
     "ppfas-mf",
@@ -324,17 +324,27 @@ export function institutionByKey(key: string | null | undefined) {
 }
 
 /** Best effort match from free text ("hdfc", "Stable money app"…). */
-export function matchInstitution(name: string | null | undefined) {
+/**
+ * Best effort match from free text ("hdfc", "Stable Money app"…), limited to
+ * the institution kinds valid for the field when given.
+ */
+export function matchInstitution(
+  name: string | null | undefined,
+  kinds?: readonly InstitutionKind[],
+) {
   const n = normal(name ?? "");
   if (!n) return undefined;
-  const exact = institutions.find(
+  const pool = kinds
+    ? institutions.filter((i) => kinds.includes(i.kind))
+    : institutions;
+  const exact = pool.find(
     (i) => normal(i.name) === n || i.aliases?.some((a) => normal(a) === n),
   );
   if (exact) return exact;
   // Longest alias contained in the text wins ("idfc first bank savings" → IDFC).
   let best: Institution | undefined;
   let length = 0;
-  for (const i of institutions)
+  for (const i of pool)
     for (const alias of [i.name, ...(i.aliases ?? [])]) {
       const a = normal(alias);
       if (a.length >= 3 && a.length > length && ` ${n} `.includes(` ${a} `)) {
@@ -342,7 +352,31 @@ export function matchInstitution(name: string | null | undefined) {
         length = a.length;
       }
     }
-  return best;
+  if (best) return best;
+  // Typed prefix of a single name within the allowed kinds ("hdfc" → HDFC MF).
+  if (kinds && n.length >= 3) {
+    const prefixed = pool.filter((i) =>
+      [i.name, ...(i.aliases ?? [])].some((a) => normal(a).startsWith(n)),
+    );
+    if (prefixed.length === 1) return prefixed[0];
+  }
+  return undefined;
+}
+
+/** Suggestions for a field, filtered by kind and by the typed text. */
+export function institutionSuggestions(
+  kinds: readonly InstitutionKind[],
+  query = "",
+) {
+  const q = normal(query);
+  return institutions.filter(
+    (i) =>
+      kinds.includes(i.kind) &&
+      (!q ||
+        [i.name, ...(i.aliases ?? [])].some((a) =>
+          ` ${normal(a)}`.includes(` ${q}`),
+        )),
+  );
 }
 
 const palette = [
@@ -365,10 +399,4 @@ export function generatedMark(name: string) {
   let hash = 0;
   for (const ch of name) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
   return { mark, background: palette[hash % palette.length]! };
-}
-
-export function institutionSuggestions(kinds?: readonly InstitutionKind[]) {
-  return kinds
-    ? institutions.filter((i) => kinds.includes(i.kind))
-    : institutions;
 }

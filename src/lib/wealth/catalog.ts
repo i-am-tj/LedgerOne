@@ -2,6 +2,7 @@
 // The ledger stays the source of truth for balances; this catalog describes the
 // descriptive profile each holding type can carry (bank, terms, identifiers…).
 import type { accountKinds } from "../accounts/shared";
+import type { InstitutionKind } from "./institutions";
 
 export type LedgerKind = (typeof accountKinds)[number];
 
@@ -42,6 +43,10 @@ export type CategoryDef = Readonly<{
   icon: string;
   institutionLabel: string;
   institutionHint: string;
+  /** Registry kinds suggested for (and accepted as) the institution. */
+  institutionKinds: readonly InstitutionKind[];
+  /** Registry kinds suggested for the app / platform field. */
+  platformKinds?: readonly InstitutionKind[];
   /** e.g. Stable Money, Zerodha, Groww. */
   platformLabel?: string;
   /** Account the money came from (stored on the profile). */
@@ -182,6 +187,7 @@ export const categories: readonly CategoryDef[] = [
     icon: "landmark",
     institutionLabel: "Bank",
     institutionHint: "HDFC Bank, IDFC FIRST Bank…",
+    institutionKinds: ["bank", "small-finance-bank", "neobank", "post-office"],
     openingLabel: "Opening balance",
     openingHelp:
       "The balance on the opening date. Later statements can be reconciled against it.",
@@ -205,6 +211,7 @@ export const categories: readonly CategoryDef[] = [
     icon: "building",
     institutionLabel: "Bank",
     institutionHint: "SBI, ICICI Bank…",
+    institutionKinds: ["bank", "small-finance-bank", "neobank"],
     openingLabel: "Opening balance",
     openingHelp: "The balance on the opening date.",
     fields: [
@@ -227,6 +234,8 @@ export const categories: readonly CategoryDef[] = [
     icon: "vault",
     institutionLabel: "Deposit bank",
     institutionHint: "Suryoday Small Finance Bank…",
+    institutionKinds: ["bank", "small-finance-bank", "nbfc", "post-office"],
+    platformKinds: ["platform", "broker"],
     platformLabel: "Booked via (app / platform)",
     fundingLabel: "Funded from",
     ledgerFunding: true,
@@ -307,6 +316,8 @@ export const categories: readonly CategoryDef[] = [
     icon: "repeat",
     institutionLabel: "Deposit bank",
     institutionHint: "India Post, SBI…",
+    institutionKinds: ["bank", "small-finance-bank", "post-office"],
+    platformKinds: ["platform", "broker"],
     platformLabel: "Booked via (app / platform)",
     fundingLabel: "Instalments debited from",
     openingLabel: "Deposited so far",
@@ -351,6 +362,7 @@ export const categories: readonly CategoryDef[] = [
     icon: "wallet",
     institutionLabel: "Held at",
     institutionHint: "Home, travel wallet…",
+    institutionKinds: [],
     openingLabel: "Cash on hand",
     openingHelp: "Cash held on the opening date.",
     fields: [],
@@ -365,6 +377,8 @@ export const categories: readonly CategoryDef[] = [
     icon: "pie",
     institutionLabel: "Fund house (AMC)",
     institutionHint: "Parag Parikh, Mirae Asset…",
+    institutionKinds: ["amc"],
+    platformKinds: ["platform", "broker"],
     platformLabel: "Invested via",
     fundingLabel: "Paid from",
     openingLabel: "Amount invested",
@@ -472,6 +486,8 @@ export const categories: readonly CategoryDef[] = [
     icon: "trending",
     institutionLabel: "Company / issuer",
     institutionHint: "Tata Consultancy Services…",
+    institutionKinds: [],
+    platformKinds: ["broker"],
     platformLabel: "Broker",
     fundingLabel: "Paid from",
     openingLabel: "Amount invested",
@@ -554,6 +570,8 @@ export const categories: readonly CategoryDef[] = [
     icon: "scroll",
     institutionLabel: "Issuer",
     institutionHint: "Government of India, REC Ltd…",
+    institutionKinds: ["government", "nbfc", "bank"],
+    platformKinds: ["platform", "broker", "government"],
     platformLabel: "Bought via",
     fundingLabel: "Paid from",
     openingLabel: "Amount invested",
@@ -638,6 +656,7 @@ export const categories: readonly CategoryDef[] = [
     icon: "stamp",
     institutionLabel: "Post office",
     institutionHint: "India Post, head post office…",
+    institutionKinds: ["post-office"],
     fundingLabel: "Paid from",
     openingLabel: "Amount invested",
     openingHelp: "Certificate purchase amount.",
@@ -701,6 +720,7 @@ export const categories: readonly CategoryDef[] = [
     icon: "shield",
     institutionLabel: "Bank / post office",
     institutionHint: "SBI, India Post…",
+    institutionKinds: ["bank", "post-office"],
     fundingLabel: "Contributions from",
     openingLabel: "Balance",
     openingHelp: "PPF balance on the opening date.",
@@ -751,6 +771,8 @@ export const categories: readonly CategoryDef[] = [
     icon: "umbrella",
     institutionLabel: "Pension fund manager",
     institutionHint: "SBI Pension Funds…",
+    institutionKinds: ["pension"],
+    platformKinds: ["platform", "broker"],
     platformLabel: "Managed via",
     fundingLabel: "Contributions from",
     openingLabel: "Amount invested",
@@ -793,6 +815,8 @@ export const categories: readonly CategoryDef[] = [
     icon: "gem",
     institutionLabel: "Provider",
     institutionHint: "MMTC-PAMP, jeweller…",
+    institutionKinds: ["bullion"],
+    platformKinds: ["platform", "broker"],
     platformLabel: "Bought via",
     fundingLabel: "Paid from",
     openingLabel: "Amount invested",
@@ -833,6 +857,8 @@ export const categories: readonly CategoryDef[] = [
     icon: "sparkles",
     institutionLabel: "Provider",
     institutionHint: "Platform or issuer",
+    institutionKinds: ["amc", "nbfc", "government", "bullion", "pension"],
+    platformKinds: ["platform", "broker"],
     platformLabel: "Invested via",
     fundingLabel: "Paid from",
     openingLabel: "Amount invested",
@@ -856,6 +882,7 @@ export const categories: readonly CategoryDef[] = [
     icon: "home",
     institutionLabel: "Developer / seller",
     institutionHint: "Optional",
+    institutionKinds: [],
     openingLabel: "Purchase value",
     openingHelp: "Book value on the opening date.",
     fields: [
@@ -898,6 +925,7 @@ export const categories: readonly CategoryDef[] = [
     icon: "car",
     institutionLabel: "Make",
     institutionHint: "Maruti Suzuki, Honda…",
+    institutionKinds: [],
     openingLabel: "Purchase value",
     openingHelp: "Book value on the opening date.",
     fields: [
@@ -939,6 +967,7 @@ export const categories: readonly CategoryDef[] = [
     icon: "handshake",
     institutionLabel: "Owed by",
     institutionHint: "Person or organisation",
+    institutionKinds: [],
     openingLabel: "Amount owed to you",
     openingHelp: "Outstanding amount on the opening date.",
     fields: [
@@ -955,6 +984,7 @@ export const categories: readonly CategoryDef[] = [
     icon: "box",
     institutionLabel: "Provider",
     institutionHint: "Optional",
+    institutionKinds: [],
     openingLabel: "Value",
     openingHelp: "Book value on the opening date.",
     fields: [
@@ -976,6 +1006,7 @@ export const categories: readonly CategoryDef[] = [
     icon: "card",
     institutionLabel: "Issuer",
     institutionHint: "HDFC Bank, American Express…",
+    institutionKinds: ["bank", "small-finance-bank", "card-issuer"],
     openingLabel: "Outstanding",
     openingHelp:
       "Amount owed on the opening date. Use a negative amount for a credit balance.",
@@ -1039,6 +1070,7 @@ export const categories: readonly CategoryDef[] = [
     icon: "receipt",
     institutionLabel: "Lender",
     institutionHint: "SBI, Bajaj Finance…",
+    institutionKinds: ["bank", "small-finance-bank", "nbfc"],
     fundingLabel: "EMI paid from",
     openingLabel: "Outstanding principal",
     openingHelp: "Principal owed on the opening date.",
@@ -1098,6 +1130,7 @@ export const categories: readonly CategoryDef[] = [
     icon: "scale",
     institutionLabel: "Owed to",
     institutionHint: "Person or organisation",
+    institutionKinds: [],
     openingLabel: "Outstanding",
     openingHelp: "Amount owed on the opening date.",
     fields: [{ key: "dueDate", label: "Due by", type: "date", group: "terms" }],

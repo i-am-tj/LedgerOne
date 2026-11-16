@@ -359,9 +359,11 @@ async function capture(
         await page
           .getByLabel("Deposit bank", { exact: true })
           .fill("Suryoday Small Finance Bank");
+        await page.keyboard.press("Escape");
         await page
           .getByLabel("Booked via (app / platform)")
           .fill("Stable Money");
+        await page.keyboard.press("Escape");
         await page.getByLabel("Funded from").click();
         await page.getByRole("option", { name: /IDFC FIRST Savings/ }).click();
         await page.getByText("Paid from one of my accounts").click();
@@ -384,6 +386,21 @@ async function capture(
       });
       await page.waitForTimeout(400);
       console.log("captured", name, mobile ? "mobile" : "desktop");
+      if (name === "savings-new") {
+        await page.getByLabel("Bank", { exact: true }).focus();
+        await page.getByRole("listbox").waitFor();
+        await page.screenshot({
+          path: join(
+            dir,
+            `bank-suggestions-${mobile ? "mobile" : "desktop"}.png`,
+          ),
+          animations: "disabled",
+        });
+        await page.keyboard.press("Escape");
+        await page.evaluate(() =>
+          (document.activeElement as HTMLElement | null)?.blur(),
+        );
+      }
       if (name === "fd-new") {
         await page.getByLabel("Funded from").click();
         await page.getByRole("listbox").scrollIntoViewIfNeeded();

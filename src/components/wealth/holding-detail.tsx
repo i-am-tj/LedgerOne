@@ -201,6 +201,7 @@ export function HoldingDetail({ holdingId }: { holdingId: string }) {
             name={holding.institution ?? holding.name}
             institutionKey={holding.institutionKey}
             icon={c.icon}
+            kinds={c.institutionKinds}
             size={56}
           />
           <div className="min-w-0">
@@ -336,6 +337,7 @@ export function HoldingDetail({ holdingId }: { holdingId: string }) {
                         name={holding.institution}
                         institutionKey={holding.institutionKey}
                         icon={c.icon}
+                        kinds={c.institutionKinds}
                         size={22}
                       />
                       {holding.institution}
@@ -355,6 +357,7 @@ export function HoldingDetail({ holdingId }: { holdingId: string }) {
                           name={holding.platform}
                           institutionKey={holding.platformKey}
                           icon="sparkles"
+                          kinds={c.platformKinds ?? []}
                           size={22}
                         />
                         {holding.platform}

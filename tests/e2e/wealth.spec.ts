@@ -57,6 +57,18 @@ test("Wealth: bank account with identifiers, FD funded via platform, edit, archi
     .getByRole("link", { name: "Savings account", exact: true })
     .click();
   await expect(page).toHaveURL(/\/wealth\/liquid\/savings\/new$/);
+  // Bank suggestions are limited to banks (no fund houses or apps).
+  await page.getByLabel("Bank", { exact: true }).fill("HDFC");
+  const suggestions = page.getByRole("listbox");
+  await expect(
+    suggestions.getByRole("option", { name: /HDFC Bank/ }),
+  ).toBeVisible();
+  await expect(
+    suggestions.getByRole("option", { name: /Mutual Fund/ }),
+  ).toHaveCount(0);
+  await expect(
+    suggestions.getByRole("option", { name: /Securities/ }),
+  ).toHaveCount(0);
   await page.getByLabel("Bank", { exact: true }).fill("IDFC First Bank");
   await expect(page.getByText("Recognised: IDFC FIRST Bank")).toBeVisible();
   await page.getByLabel("Opening balance (₹)").fill("9,00,000");

@@ -12,7 +12,12 @@ import { addTenure, depositMaturityEstimate, marketValue } from "./compute";
 import { maskSecret, validateProfile } from "./contract";
 import { existsSync, readFileSync } from "node:fs";
 import { institutionApps, institutionDomains } from "./institution-domains";
-import { generatedMark, institutions, matchInstitution } from "./institutions";
+import {
+  generatedMark,
+  institutionSuggestions,
+  institutions,
+  matchInstitution,
+} from "./institutions";
 import logoManifest from "./logo-manifest.json";
 import { openSecrets, sealSecrets, VaultUnavailable } from "./vault";
 
@@ -213,6 +218,94 @@ describe("Institution marks", () => {
       generatedMark("Some local co-op"),
     );
     expect(generatedMark("Some local co-op").mark).toBe("SL");
+  });
+});
+
+describe("Institution categorisation", () => {
+  it("suggests only banks for bank accounts", () => {
+    const savings = findCategory("savings")!;
+    const kinds = new Set(
+      institutionSuggestions(savings.institutionKinds).map((i) => i.kind),
+    );
+    expect([...kinds].sort()).toEqual([
+      "bank",
+      "neobank",
+      "post-office",
+      "small-finance-bank",
+    ]);
+    const names = institutionSuggestions(savings.institutionKinds).map(
+      (i) => i.name,
+    );
+    expect(names).toContain("HDFC Bank");
+    expect(names).not.toContain("HDFC Mutual Fund");
+    expect(names).not.toContain("Stable Money");
+    expect(names).not.toContain("Zerodha");
+  });
+  it("keeps every type's kinds meaningful", () => {
+    const expectKinds = (
+      id: string,
+      field: "institutionKinds" | "platformKinds",
+    ) =>
+      new Set(
+        institutionSuggestions(findCategory(id)![field] ?? []).map(
+          (i) => i.kind,
+        ),
+      );
+    expect(expectKinds("mutual-funds", "institutionKinds")).toEqual(
+      new Set(["amc"]),
+    );
+    expect(expectKinds("stocks", "platformKinds")).toEqual(new Set(["broker"]));
+    expect(expectKinds("fixed-deposits", "platformKinds")).toEqual(
+      new Set(["platform", "broker"]),
+    );
+    expect(expectKinds("credit-cards", "institutionKinds").has("amc")).toBe(
+      false,
+    );
+    expect(expectKinds("nsc", "institutionKinds")).toEqual(
+      new Set(["post-office"]),
+    );
+    for (const c of categories)
+      if (c.platformLabel)
+        expect(c.platformKinds?.length, c.id).toBeGreaterThan(0);
+  });
+  it("matches free text within the field's kinds", () => {
+    const amc = findCategory("mutual-funds")!.institutionKinds;
+    const banks = findCategory("savings")!.institutionKinds;
+    expect(matchInstitution("HDFC", amc)?.key).toBe("hdfc-mf");
+    expect(matchInstitution("HDFC", banks)?.key).toBe("hdfc-bank");
+    expect(matchInstitution("Stable Money", banks)).toBeUndefined();
+    expect(institutionSuggestions(banks, "idfc").map((i) => i.key)).toEqual([
+      "idfc-first-bank",
+    ]);
+  });
+  it("rejects an institution of the wrong kind on save", () => {
+    const base = {
+      ...fd,
+      category: "savings",
+      platform: null,
+      platformKey: null,
+      fundingAccountId: null,
+      details: {},
+      secrets: {},
+    };
+    const wrong = validateProfile(
+      { ...base, institution: "PPFAS Mutual Fund", institutionKey: "ppfas-mf" },
+      "BANK",
+    );
+    expect(wrong.ok).toBe(false);
+    if (!wrong.ok)
+      expect(wrong.errors.institution).toMatch(/isn’t a valid bank/);
+    const app = validateProfile(
+      { ...fd, platform: "HDFC Bank", platformKey: "hdfc-bank" },
+      "FIXED_DEPOSIT",
+    );
+    expect(app.ok).toBe(false);
+    expect(
+      validateProfile(
+        { ...base, institution: "HDFC Bank", institutionKey: "hdfc-bank" },
+        "BANK",
+      ).ok,
+    ).toBe(true);
   });
 });
 
