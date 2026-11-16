@@ -189,17 +189,10 @@ test("S08-D isolated authenticated all-operation history, totals and reversal wa
                 kind: "REVERSE",
               },
             });
-            await tx.journal.create({
-              data: {
-                id: journal,
-                workspaceId: workspace,
-                ownerId: ownerSession.userId,
-                kind: "REVERSAL",
-                reversesJournalId: original.id,
-                effectiveAt: new Date("2026-01-16T00:00:00+05:30"),
-                description: "Controlled local reversal",
-              },
-            });
+            // Preserve the explicit instant across adapter/session timezones,
+            // just as the shared SQL executor does for real commands.
+            await tx.$executeRaw`INSERT INTO journal(id,"workspaceId","ownerId",kind,"reversesJournalId","effectiveAt",description)
+              VALUES(${journal}::uuid,${workspace}::uuid,${ownerSession.userId},'REVERSAL',${original.id}::uuid,${"2026-01-16T00:00:00+05:30"}::timestamptz,'Controlled local reversal')`;
             for (const p of original.postings)
               await tx.posting.create({
                 data: {
@@ -216,10 +209,7 @@ test("S08-D isolated authenticated all-operation history, totals and reversal wa
                   fxRateId: p.fxRateId,
                 },
               });
-            await tx.journal.update({
-              where: { id: journal },
-              data: { status: "POSTED", postedAt: new Date(), operationId: op },
-            });
+            await tx.$executeRaw`UPDATE journal SET status='POSTED',"postedAt"=clock_timestamp(),"operationId"=${op}::uuid WHERE id=${journal}::uuid`;
             await tx.auditEvent.create({
               data: {
                 ownerId: ownerSession.userId,
@@ -268,6 +258,17 @@ test("S08-D isolated authenticated all-operation history, totals and reversal wa
   await originalRow.getByText("Reversal details", { exact: true }).click();
   await expect(originalRow).toContainText(reversalId!);
   await expect(originalRow).toContainText("Included in these ledger totals.");
+  const persisted = await page.request.get(
+    "/api/transactions?workspace=" + workspace,
+  );
+  expect(persisted.status()).toBe(200);
+  const persistedOriginal = (await persisted.json()).transactions.find(
+    (row: { operationId: string }) =>
+      row.operationId === expense.post.operationId,
+  );
+  expect(persistedOriginal.journal.reversal.effectiveAt).toBe(
+    "2026-01-15T18:30:00.000Z",
+  );
   await expect(page.getByTestId("transaction-row")).toHaveCount(9);
   await post({
     kind: "INCOME",
