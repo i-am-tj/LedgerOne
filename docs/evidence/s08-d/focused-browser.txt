@@ -1,0 +1,122 @@
+
+> ledgerone@0.1.0 db:generate
+> prisma generate
+
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+
+✔ Generated Prisma Client (7.10.1) to ./src/generated/prisma in 108ms
+
+
+> ledgerone@0.1.0 db:migrate:test
+> tsx scripts/migrate-test-db.ts
+
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "ledgerone_controls_f21f7ae1b1b02701_test", schema "public" at "127.0.0.1:55454"
+
+12 migrations found in prisma/migrations
+
+
+No pending migrations to apply.
+
+> ledgerone@0.1.0 typecheck
+> prisma generate && next typegen && tsc --noEmit
+
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+
+✔ Generated Prisma Client (7.10.1) to ./src/generated/prisma in 113ms
+
+Generating route types...
+✓ Types generated successfully
+
+> ledgerone@0.1.0 build
+> prisma generate && next build --webpack
+
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+
+✔ Generated Prisma Client (7.10.1) to ./src/generated/prisma in 137ms
+
+▲ Next.js 16.4.6 (webpack)
+- Environments: .env
+⚠ Warning: Next.js ignored package-lock.json in /Users/iamtj because it is outside the current Git repository (<repository>).
+ To use this directory, set `outputFileTracingRoot` in your Next.js config.
+
+✓ Running next.config.ts took 17ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 2.1s
+  Running TypeScript ...
+  Finished TypeScript in 1729ms ...
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/4) ...
+  Generating static pages using 7 workers (1/4) 
+  Generating static pages using 7 workers (2/4) 
+  Generating static pages using 7 workers (3/4) 
+✓ Generating static pages using 7 workers (4/4) in 231ms
+  Finalizing page optimization ...
+  Collecting build traces ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /accounts
+├ ƒ /accounts/[id]
+├ ƒ /api/accounts
+├ ƒ /api/audit
+├ ƒ /api/auth/[...all]
+├ ƒ /api/health/live
+├ ƒ /api/health/ready
+├ ƒ /api/session
+├ ƒ /api/transactions
+├ ƒ /api/workspaces
+├ ƒ /api/workspaces/[id]
+├ ƒ /api/workspaces/[id]/ledger/commands
+├ ƒ /design-system
+├ ƒ /home
+├ ƒ /login
+├ ƒ /settings/appearance
+└ ƒ /transactions
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+[WebServer] (node:1387) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1388) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1392) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] ⚠ Warning: Next.js ignored package-lock.json in /Users/iamtj because it is outside the current Git repository (<repository>).
+[WebServer]  To use this directory, set `outputFileTracingRoot` in your Next.js config.
+[WebServer] 
+
+Running 10 tests using 2 workers
+
+(node:1400) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:1401) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [desktop-chromium] › tests/e2e/transaction-movements.spec.ts:207:3 › S08-B TRANSFER browser lost response recovers one result and rejects unsafe submissions (2.0s)
+  ✓   3 [desktop-chromium] › tests/e2e/transaction-movements.spec.ts:207:3 › S08-B CARD_SETTLEMENT browser lost response recovers one result and rejects unsafe submissions (1.2s)
+  ✓   2 [desktop-chromium] › tests/e2e/transaction-movements.spec.ts:79:1 › S08-B transfer and card payment real UI preserve balances, net worth and purchase history (3.2s)
+  ✓   4 [desktop-chromium] › tests/e2e/transaction-movements.spec.ts:392:1 › B-R01 backdated payment shows later-date rejection and retains posted balances (700ms)
+(node:1509) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   5 [desktop-chromium] › tests/e2e/transaction-reporting.spec.ts:17:1 › S08-D isolated authenticated all-operation history, totals and reversal walkthrough (2.2s)
+(node:1523) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   7 [mobile-chromium] › tests/e2e/transaction-movements.spec.ts:207:3 › S08-B TRANSFER browser lost response recovers one result and rejects unsafe submissions (1.2s)
+  ✓   6 [mobile-chromium] › tests/e2e/transaction-movements.spec.ts:79:1 › S08-B transfer and card payment real UI preserve balances, net worth and purchase history (2.7s)
+  ✓   9 [mobile-chromium] › tests/e2e/transaction-movements.spec.ts:392:1 › B-R01 backdated payment shows later-date rejection and retains posted balances (664ms)
+  ✓   8 [mobile-chromium] › tests/e2e/transaction-movements.spec.ts:207:3 › S08-B CARD_SETTLEMENT browser lost response recovers one result and rejects unsafe submissions (1.0s)
+  ✓  10 [mobile-chromium] › tests/e2e/transaction-reporting.spec.ts:17:1 › S08-D isolated authenticated all-operation history, totals and reversal walkthrough (1.8s)
+
+  10 passed (12.3s)

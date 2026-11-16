@@ -269,3 +269,18 @@ No repeated capacity campaign; this slice retains the existing financial limits,
 | Responsive FD funding/return, loan live total/history, refresh, accessibility, safe recovery     | transaction-capital.spec.ts desktop/mobile8 cases and screenshots              |
 
 No capacity campaign or generalized agent review. Normal complete pipeline and exact-head CI remain required before owner implementation review; posted historical quantities never derive from mock responses.
+
+## S08-D integrated traceability
+
+| Requirement                                                                                                         | Evidence                                                                                                                                                |
+| ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| All8 operation families, exact consumption/income/balances/net worth                                                | transaction-reporting.test.ts canonical restricted-role scenario                                                                                        |
+| Original850 expense reversed, bank restored and original row retained; income reversal/CORRECT do not duplicate     | Same suite and isolated desktop/mobile reporting walkthrough                                                                                            |
+| Inclusive India milliseconds, future reversal flags and explicit UTC representation                                 | Same suite boundary assertions                                                                                                                          |
+| Draft and future postings excluded from cutoff totals; backdated changes included                                   | Same suite                                                                                                                                              |
+| Original names after rename/archive, owner/workspace isolation, repeated read immutability, actual SELECT-only role | Same suite; old negative assertions retained with corrected own-workspace helper URLs                                                                   |
+| Equal recording timestamps across3 families and deterministic UUID tie order                                        | Same suite, actual guarded SQL context fixtures                                                                                                         |
+| Complete totals past latest100 and exact values beyond JS safe integers/per-leg maximum                             | Same suite                                                                                                                                              |
+| Coherent responsive UI, effective versus recorded dates, labels, refresh/reversal/future states                     | transaction-reporting.spec.ts isolated verified identities, real native typed handlers and guarded persisted reversal fixture; axe/overflow/screenshots |
+
+Existing A/B/C mutation, idempotency, principal admission, recovery and auth suites remain release-blocking. No new financial mutation interface is introduced. Full original S08 acceptance matrix is in reports/P1-S08-D.md; story remains open until reviewed incorporation, and S09 remains separate.

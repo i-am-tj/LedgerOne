@@ -1,0 +1,21 @@
+{
+  "implementationCommit": "f2c8f0157d9e2b3722728147fd611631949202b9",
+  "baseCommit": "cfc9e5e785d2a11c49cab863b9e2f6e790618406",
+  "sha256": {
+    "playwright.config.ts": "fd6331ff6924258d5f10a535386bf8800b66cd5dccaad7eec2acf2da7fa13893",
+    "prisma/schema.prisma": "7243b3669dc2a8abc6a16dc12c7242d4a1cd539b1df016673e4a1635abecfc7a",
+    "scripts/account-app-server.ts": "3b0a74d723e4578258217276a7fb6bcfed4f65d04ca0b7ef63ce48638c37e770",
+    "src/components/transactions/transactions.tsx": "9c34bd33a8bc12e7ba43d9379a96cd88c1af38d9ac7144ec044284b7c152ff38",
+    "src/lib/ledger/commands/executor.ts": "698df3a27e176c4cfd59b9397793f8d1075b9ce62aeecdc4c233d63d307bff76",
+    "src/lib/schema-version.ts": "1cae344df166c8b2676431c527867d863000c05d6246928a025e8fbcef210af0",
+    "src/lib/transactions/http.ts": "bc35aa940e2d0ccf241d4985e7a69825c2c2e2e9489a8fa225ea6e1838db30eb",
+    "src/lib/transactions/read.ts": "3e81443b302fb6adc1afa96ce17a76f34baeed537637d6656d47aa4052655a5f",
+    "tests/e2e/fixtures.ts": "2c097922a7443157d4f94ed3522e6069bb96aa10fb3e6964220be33034cbf21f",
+    "tests/e2e/transaction-movements.spec.ts": "ce25d67e10c6d3aed756acfaf147920d971809ad2b6ebd5aa79349cc37ee8746",
+    "tests/e2e/transaction-reporting.spec.ts": "75e06f1b9061c198124b15b7ba63effe465051769f9f167b3c851fe5db0a6106",
+    "tests/integration/transaction-capture.test.ts": "d9c0eb4e07c41e23766a01e4b853860c215e28b7a37572a561e4f5c55745cd73",
+    "tests/integration/transaction-movements.test.ts": "a6ddc8e5fd5e8d683c78583162554ac6dd8cf5f7cfc665930d5aa210b699a5eb",
+    "tests/integration/transaction-reporting.test.ts": "8e94147da239cb89bd8ed57469dac261df9b2f86240460451272fb0f1e62fbd2",
+    "tests/support/post-harness.ts": "e715a3b912f12d567b20a9d2fe3da993ddd8689e0203dd854ac33b350a676af0"
+  }
+}

@@ -94,3 +94,7 @@ B-R01 owner clarification is explicit: new backdated settlements must not cause 
 ## S08-C bounded principal defaults resolved
 
 Owner approved rejecting FD returns/loan principal payments above available principal at the effective instant or a later posted boundary. Principal is positive; interest may be zero or positive; interest-only payments stay outside the slice. Interest is explicitly entered, never inferred from a schedule. No further general planning approval is requested. Final implementation review/manual merge and any hosted/production operation remain separately gated.
+
+## S08-D reporting defaults and review
+
+Documented read defaults: newest recording timestamp first with operation-ID tie break; latest100 with an honest hasMore indication; all posted ledger activity determines totals at one inclusive effective cutoff; optional asOf/workspace API scope, explicit effective versus recorded labels. These preserve financial rules and need no new accounting command approval. Owner independent final review/manual merge remains required; no generalized agent review or production/hosted activation authorized.

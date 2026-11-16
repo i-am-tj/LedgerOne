@@ -1,0 +1,13 @@
+
+> ledgerone@0.1.0 test:integration
+> vitest run --project integration tests/integration/transaction-reporting.test.ts
+
+
+ RUN  v5.1.0 <repository>
+
+
+ Test Files  1 passed (1)
+      Tests  16 passed (16)
+   Start at  16:59:44
+   Duration  6.17s (tests 94%, import 4%, transform 1%, setup 1%)
+
