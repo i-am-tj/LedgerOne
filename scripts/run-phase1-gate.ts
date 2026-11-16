@@ -15,6 +15,7 @@ import pg from "pg";
 import { loadProfile } from "./load-env";
 import { withFreshLedgerDatabase } from "./lib/fresh-ledger-database";
 import { databaseSettings } from "../src/lib/profile";
+import { gateLogName } from "./lib/gate-log-name";
 
 async function main() {
   if (process.argv.length !== 3)
@@ -106,7 +107,7 @@ async function main() {
     env: NodeJS.ProcessEnv,
   ) {
     verifySource();
-    const name = `${String(manifest.stages.length + 1).padStart(2, "0")}-${command}-${args.join("-").replaceAll(":", "-")}.txt`;
+    const name = gateLogName(manifest.stages.length + 1, command, args);
     const chunks: string[] = [];
     let pending = "";
     const redact = (s: string) =>
