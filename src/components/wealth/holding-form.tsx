@@ -32,11 +32,11 @@ import {
   send,
   useWealth,
 } from "./client";
+import { AccountPicker } from "./account-picker";
 import { InstitutionLogo, resolveInstitution } from "./institution-logo";
 
 const field = "grid gap-2 text-sm font-medium";
-const select =
-  "h-11 w-full rounded-lg border border-border bg-background px-3 text-base";
+const select = "form-select";
 const groups: { id: FieldDef["group"]; title: string; hint?: string }[] = [
   { id: "identity", title: "Identification" },
   { id: "terms", title: "Terms" },
@@ -636,21 +636,26 @@ export function HoldingForm({
                 <label htmlFor="input-fundingAccountId">
                   {category.fundingLabel}
                 </label>
-                <select
+                <AccountPicker
                   id="input-fundingAccountId"
-                  className={select}
+                  accounts={fundingOptions}
                   value={funding}
-                  aria-invalid={errors.fundingAccountId ? true : undefined}
-                  onChange={(e) => setFunding(e.target.value)}
-                >
-                  <option value="">Not recorded</option>
-                  {fundingOptions.map((h) => (
-                    <option key={h.id} value={h.id}>
-                      {h.name}
-                      {h.archived ? " (archived)" : ""}
-                    </option>
-                  ))}
-                </select>
+                  invalid={!!errors.fundingAccountId}
+                  describedBy="funding-help"
+                  onChange={(id) => {
+                    setFunding(id);
+                    setErrors((e) => ({ ...e, fundingAccountId: "" }));
+                  }}
+                />
+                {editing && deposit && holding?.fundingAccountId && (
+                  <span
+                    id="funding-help"
+                    className="text-xs font-normal text-muted-foreground"
+                  >
+                    Updates the record only — a transfer already posted from
+                    this account stays in the ledger.
+                  </span>
+                )}
                 {!fundingOptions.length && (
                   <span className="text-xs font-normal text-muted-foreground">
                     Add a{" "}

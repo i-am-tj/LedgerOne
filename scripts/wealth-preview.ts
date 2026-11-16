@@ -362,9 +362,8 @@ async function capture(
         await page
           .getByLabel("Booked via (app / platform)")
           .fill("Stable Money");
-        await page
-          .getByLabel("Funded from")
-          .selectOption({ label: "IDFC FIRST Savings" });
+        await page.getByLabel("Funded from").click();
+        await page.getByRole("option", { name: /IDFC FIRST Savings/ }).click();
         await page.getByText("Paid from one of my accounts").click();
         await page.getByLabel("Principal (₹)").fill("5,00,000");
         await page.getByLabel("Start date", { exact: true }).fill("2026-06-10");
@@ -385,6 +384,19 @@ async function capture(
       });
       await page.waitForTimeout(400);
       console.log("captured", name, mobile ? "mobile" : "desktop");
+      if (name === "fd-new") {
+        await page.getByLabel("Funded from").click();
+        await page.getByRole("listbox").scrollIntoViewIfNeeded();
+        await page.screenshot({
+          path: join(
+            dir,
+            `funding-picker-${mobile ? "mobile" : "desktop"}.png`,
+          ),
+          animations: "disabled",
+        });
+        await page.keyboard.press("Escape");
+        await page.evaluate(() => window.scrollTo(0, 0));
+      }
       await page.screenshot({
         path: join(dir, `${name}-${mobile ? "mobile" : "desktop"}.png`),
         fullPage: true,

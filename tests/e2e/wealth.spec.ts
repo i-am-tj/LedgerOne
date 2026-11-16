@@ -91,9 +91,20 @@ test("Wealth: bank account with identifiers, FD funded via platform, edit, archi
     .fill("Suryoday Small Finance Bank");
   await page.getByLabel("Booked via (app / platform)").fill("Stable Money");
   await expect(page.getByText("Recognised: Stable Money")).toBeVisible();
-  await page
-    .getByLabel("Funded from")
-    .selectOption({ label: "IDFC FIRST Bank Savings account" });
+  // Custom account picker: keyboard opens it, options show logo + balance.
+  const funding = page.getByLabel("Funded from");
+  await funding.focus();
+  await page.keyboard.press("ArrowDown");
+  await expect(page.getByRole("listbox")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("listbox")).toHaveCount(0);
+  await funding.click();
+  const idfc = page.getByRole("option", {
+    name: /IDFC FIRST Bank Savings account/,
+  });
+  await expect(idfc).toContainText("₹9,00,000");
+  await idfc.click();
+  await expect(funding).toContainText("IDFC FIRST Bank Savings account");
   await page.getByText("Paid from one of my accounts").click();
   await page.getByLabel("Principal (₹)").fill("5,00,000");
   await page.getByLabel("Start date", { exact: true }).fill("2026-06-10");
