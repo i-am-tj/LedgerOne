@@ -132,7 +132,7 @@ export function Transactions() {
         response.status === 503
           ? "The outcome is unconfirmed. Recover the pending transaction safely."
           : result.error === "card_payment_exceeds_liability"
-            ? "Payment exceeds the card liability at the selected date. Overpayments are not supported."
+            ? "Payment exceeds the card liability at the selected date or a later posted date. Overpayments are not supported."
             : "Could not save. Check the account, category and amount.",
       );
     }

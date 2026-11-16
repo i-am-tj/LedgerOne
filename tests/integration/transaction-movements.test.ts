@@ -75,7 +75,7 @@ describe.each(["public", "ledgerone"] as const)(
       effectiveAt: date,
       description: "Move savings",
     });
-    async function cardSetup() {
+    async function cardSetup(effectiveAt = date) {
       const bank = await account("SBI Savings", "50000"),
         card = await account("Card", "0", "CREDIT_CARD");
       expect(
@@ -85,7 +85,7 @@ describe.each(["public", "ledgerone"] as const)(
             accountId: card,
             amount: "1200",
             category: "Groceries",
-            effectiveAt: date,
+            effectiveAt,
             description: "Original card purchase",
           })
         ).status,
@@ -216,6 +216,231 @@ describe.each(["public", "ledgerone"] as const)(
       ]);
       expect(results.map((r) => r.status).sort()).toEqual([201, 409]);
       expect(minor(await balances(), card)).toBe("40000");
+    });
+    // B-R01: admission must preserve every later posted card boundary, not
+    // merely today's/final balance or the balance at the requested instant.
+    const january = (day: string) => `2026-01-${day}T00:00:00+05:30`;
+    const financialCounts = async () => ({
+      operations: await h.database.ledgerOperation.count(),
+      journals: await h.database.journal.count(),
+      postings: await h.database.posting.count(),
+      audits: await h.database.auditEvent.count(),
+      movements: await h.database.transactionMovement.count(),
+    });
+    async function liabilityAt(card: string, effectiveAt: string) {
+      return (
+        await h.admin.query(
+          `SELECT coalesce(sum(CASE p.side WHEN 'CREDIT' THEN p."nativeMinor"::numeric ELSE -p."nativeMinor"::numeric END),0)::text AS minor FROM posting p JOIN journal j ON j.id=p."journalId" WHERE p."accountId"=$1 AND j.status='POSTED' AND j."effectiveAt"<=$2::timestamptz`,
+          [card, effectiveAt],
+        )
+      ).rows[0].minor;
+    }
+    async function januarySetup() {
+      const setup = await cardSetup(january("01"));
+      expect(
+        (
+          await api({
+            ...setup.command,
+            amount: "1000",
+            effectiveAt: january("10"),
+          })
+        ).status,
+      ).toBe(201);
+      return setup;
+    }
+    it.each(["typed", "direct SQL"] as const)(
+      "B-R01 %s rejects January5 ₹500 after January10 ₹1000, atomically",
+      async (mode) => {
+        const { bank, card, command } = await januarySetup();
+        const before = await financialCounts(),
+          key = randomUUID();
+        let response: Response;
+        if (mode === "typed")
+          response = await api(
+            { ...command, amount: "500", effectiveAt: january("05") },
+            key,
+          );
+        else {
+          h.setProbe(async (stage, client) => {
+            if (stage === "beforeCommit")
+              await client.query(
+                'INSERT INTO transaction_movement("operationId","workspaceId","ownerId",kind,"sourceAccountId","destinationAccountId","sourceAccountName","destinationAccountName","amountMinor") SELECT id,$2,$3,\'CARD_SETTLEMENT\',$4,$5,\'SBI Savings\',\'Card\',50000 FROM ledger_operation WHERE "idempotencyKey"=$1 AND "workspaceId"=$2 AND "ownerId"=$3',
+                [key, h.users[0]!.workspace, h.users[0]!.id, bank, card],
+              );
+          });
+          try {
+            response = await h.api(0, key, {
+              ...h.payload(),
+              effectiveAt: january("05"),
+              legs: [
+                {
+                  accountId: card,
+                  side: "DEBIT",
+                  currency: "INR",
+                  amount: "500",
+                },
+                {
+                  accountId: bank,
+                  side: "CREDIT",
+                  currency: "INR",
+                  amount: "500",
+                },
+              ],
+            });
+          } finally {
+            h.setProbe(undefined);
+          }
+        }
+        expect(response.status).toBe(mode === "typed" ? 409 : 503);
+        if (mode === "typed")
+          expect(await response.json()).toEqual({
+            error: "card_payment_exceeds_liability",
+          });
+        expect(await financialCounts()).toEqual(before);
+        expect(await liabilityAt(card, january("05"))).toBe("120000");
+        expect(await liabilityAt(card, january("10"))).toBe("20000");
+      },
+    );
+    it("B-R01 January5 ₹200 succeeds, leaves January10 zero and replays after metadata changes", async () => {
+      const { bank, card, command } = await januarySetup(),
+        key = randomUUID();
+      const accepted = {
+        ...command,
+        amount: "200",
+        effectiveAt: january("05"),
+      };
+      const first = await api(accepted, key);
+      expect(first.status).toBe(201);
+      const result = await first.json();
+      expect(await liabilityAt(card, january("05"))).toBe("100000");
+      expect(await liabilityAt(card, january("10"))).toBe("0");
+      await h.admin.query(
+        "UPDATE ledger_account SET name='Later name',\"archivedAt\"=now() WHERE id=ANY($1::uuid[])",
+        [[bank, card]],
+      );
+      const before = await financialCounts(),
+        replay = await api({ ...accepted, amount: "200.00" }, key);
+      expect(replay.status).toBe(200);
+      expect(await replay.json()).toEqual(result);
+      expect(await financialCounts()).toEqual(before);
+    });
+    it("B-R01 rejects an intermediate negative boundary even when a later purchase restores the final balance", async () => {
+      const { card, command } = await januarySetup();
+      expect(
+        (
+          await api({
+            kind: "EXPENSE",
+            accountId: card,
+            amount: "1000",
+            category: "Groceries",
+            effectiveAt: january("20"),
+          })
+        ).status,
+      ).toBe(201);
+      const before = await financialCounts();
+      expect(
+        (await api({ ...command, amount: "500", effectiveAt: january("05") }))
+          .status,
+      ).toBe(409);
+      expect(await financialCounts()).toEqual(before);
+      expect(await liabilityAt(card, january("10"))).toBe("20000");
+      expect(await liabilityAt(card, january("20"))).toBe("120000");
+    });
+    it("B-R01 competing distinct-key/different-date settlements cannot overpay at any boundary", async () => {
+      const { card, command } = await cardSetup(january("01"));
+      let arrivals = 0;
+      let release!: () => void;
+      const ready = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      h.setProbe(async (stage, _client, attempt) => {
+        if (stage === "begin" && attempt === 1) {
+          if (++arrivals === 2) release();
+          await ready;
+        }
+      });
+      let results: Response[];
+      try {
+        results = await Promise.all([
+          api({ ...command, amount: "1000", effectiveAt: january("10") }),
+          api({ ...command, amount: "500", effectiveAt: january("05") }),
+        ]);
+      } finally {
+        release();
+        h.setProbe(undefined);
+      }
+      expect(arrivals).toBe(2);
+      expect(results.map((r) => r.status).sort()).toEqual([201, 409]);
+      for (const day of ["01", "05", "10", "31"])
+        expect(
+          BigInt(await liabilityAt(card, january(day))),
+        ).toBeGreaterThanOrEqual(0n);
+      expect(
+        await h.database.transactionMovement.count({
+          where: { destinationAccountId: card },
+        }),
+      ).toBe(1);
+    });
+    it("B-R01 groups all postings at the same effective instant into one boundary", async () => {
+      const { card, command } = await januarySetup();
+      expect(
+        (
+          await api({
+            kind: "EXPENSE",
+            accountId: card,
+            amount: "400",
+            category: "Groceries",
+            effectiveAt: january("10"),
+          })
+        ).status,
+      ).toBe(201);
+      expect(
+        (await api({ ...command, amount: "500", effectiveAt: january("05") }))
+          .status,
+      ).toBe(201);
+      expect(await liabilityAt(card, january("10"))).toBe("10000");
+    });
+    it("B-R01 admission does not impose a global invariant on unrelated earlier correction history", async () => {
+      const { bank, card, command } = await cardSetup(january("01"));
+      expect(
+        (
+          await h.api(0, randomUUID(), {
+            ...h.payload(),
+            effectiveAt: january("02"),
+            legs: [
+              {
+                accountId: card,
+                side: "DEBIT",
+                currency: "INR",
+                amount: "1500",
+              },
+              {
+                accountId: bank,
+                side: "CREDIT",
+                currency: "INR",
+                amount: "1500",
+              },
+            ],
+          })
+        ).status,
+      ).toBe(201);
+      expect(
+        (
+          await api({
+            kind: "EXPENSE",
+            accountId: card,
+            amount: "1000",
+            category: "Groceries",
+            effectiveAt: january("03"),
+          })
+        ).status,
+      ).toBe(201);
+      expect(
+        (await api({ ...command, amount: "200", effectiveAt: january("05") }))
+          .status,
+      ).toBe(201);
+      expect(await liabilityAt(card, january("02"))).toBe("-30000");
+      expect(await liabilityAt(card, january("05"))).toBe("50000");
     });
     it("rejects self, wrong-owner/cross-workspace, archive, currency, kind and forged requests without effects", async () => {
       const bank = await account("Allowed bank", "50000"),

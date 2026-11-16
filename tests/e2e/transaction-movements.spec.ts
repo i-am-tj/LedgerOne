@@ -386,3 +386,70 @@ for (const kind of ["TRANSFER", "CARD_SETTLEMENT"] as const)
       await verify.$disconnect();
     }
   });
+
+// B-R01: surface the actual later-boundary admission failure, without changing
+// the already reviewed successful transfer/card-payment walkthroughs.
+test("B-R01 backdated payment shows later-date rejection and retains posted balances", async ({
+  page,
+}) => {
+  const bank = await account(page, "Backdated SBI", "50000"),
+    card = await account(page, "Backdated card", "0", "CREDIT_CARD");
+  expect(
+    (
+      await post(page, bank.workspaceId, {
+        kind: "EXPENSE",
+        accountId: card.accountId,
+        amount: "1200",
+        category: "Groceries",
+        effectiveAt: "2026-01-01T00:00:00+05:30",
+      })
+    ).status(),
+  ).toBe(201);
+  expect(
+    (
+      await post(page, bank.workspaceId, {
+        kind: "CARD_SETTLEMENT",
+        sourceAccountId: bank.accountId,
+        destinationAccountId: card.accountId,
+        amount: "1000",
+        effectiveAt: "2026-01-10T00:00:00+05:30",
+      })
+    ).status(),
+  ).toBe(201);
+  await page.goto("/transactions");
+  await choose(page, "CARD_SETTLEMENT", bank.accountId, card.accountId);
+  await page.getByLabel("Transaction date (India)").fill("2026-01-05");
+  await page.getByLabel("Amount (INR)").fill("500");
+  const response = page.waitForResponse(
+    (r) =>
+      r.request().method() === "POST" && r.url().includes("/api/transactions?"),
+  );
+  await page
+    .getByRole("button", { name: "Pay credit-card bill", exact: true })
+    .click();
+  expect((await response).status()).toBe(409);
+  await expect(
+    page.getByRole("alert").filter({ hasText: "or a later posted date" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Recover pending transaction" }),
+  ).toHaveCount(0);
+  await page.reload();
+  await choose(page, "CARD_SETTLEMENT", bank.accountId, card.accountId);
+  await expect(page.getByTestId("selected-account-balance")).toHaveText(
+    "₹49,000.00",
+  );
+  await expect(page.getByTestId("destination-account-balance")).toHaveText(
+    "₹200.00",
+  );
+  const db = testDatabase();
+  try {
+    expect(
+      await db.transactionMovement.count({
+        where: { destinationAccountId: card.accountId },
+      }),
+    ).toBe(1);
+  } finally {
+    await db.$disconnect();
+  }
+});

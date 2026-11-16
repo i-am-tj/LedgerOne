@@ -28,10 +28,23 @@ BEGIN
  AND s.side='CREDIT' AND d.side='DEBIT' AND a.type='ASSET' AND a.kind IN ('BANK','CASH')
  AND ((NEW.kind='TRANSFER' AND b.type='ASSET' AND b.kind IN ('BANK','CASH'))
    OR (NEW.kind='CARD_SETTLEMENT' AND b.type='LIABILITY' AND b.kind='CREDIT_CARD'
-       AND (SELECT coalesce(sum(CASE p.side WHEN 'CREDIT' THEN p."nativeMinor"::numeric ELSE -p."nativeMinor"::numeric END),0)
-            FROM posting p JOIN journal prior ON prior.id=p."journalId"
-            WHERE p."accountId"=b.id AND p."ownerId"=NEW."ownerId" AND p."workspaceId"=NEW."workspaceId"
-            AND prior.status='POSTED' AND prior."effectiveAt"<=j."effectiveAt" AND prior.id<>j.id)>=NEW."amountMinor"));
+       -- B-R01: the proposed debit must fit at its instant AND every later
+       -- posted boundary. Exclude its journal, then compare the pre-payment
+       -- minimum with its amount, exactly as the typed admission check does.
+       AND (WITH deltas AS (
+              SELECT prior."effectiveAt" AS effective_at,
+                     sum(CASE p.side WHEN 'CREDIT' THEN p."nativeMinor"::numeric ELSE -p."nativeMinor"::numeric END) AS delta
+              FROM posting p JOIN journal prior ON prior.id=p."journalId" AND prior."ownerId"=p."ownerId" AND prior."workspaceId"=p."workspaceId"
+              WHERE p."accountId"=b.id AND p."ownerId"=NEW."ownerId" AND p."workspaceId"=NEW."workspaceId"
+                AND prior.status='POSTED' AND prior.id<>j.id
+              GROUP BY prior."effectiveAt"
+            ), timeline AS (
+              SELECT effective_at, sum(delta) OVER (ORDER BY effective_at ROWS UNBOUNDED PRECEDING) AS balance FROM deltas
+            ), relevant AS (
+              SELECT coalesce(sum(delta),0) AS balance FROM deltas WHERE effective_at<=j."effectiveAt"
+              UNION ALL
+              SELECT balance FROM timeline WHERE effective_at>j."effectiveAt"
+            ) SELECT min(balance) FROM relevant)>=NEW."amountMinor"));
  IF matches<>1 THEN RAISE EXCEPTION 'Movement must match scoped audited postings and supported account/payment rules' USING ERRCODE='23514'; END IF;
  RETURN NULL;
 END; $$;

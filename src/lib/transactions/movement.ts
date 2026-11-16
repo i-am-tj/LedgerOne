@@ -144,9 +144,24 @@ export async function validateMovementBalance(
   effectiveAt: string,
 ) {
   if (context.kind !== "CARD_SETTLEMENT") return;
+  // Subtracting this payment shifts the balance at its instant and every
+  // later boundary equally. Group equal effective instants before accumulation;
+  // individual posting/insertion order is not a financial boundary.
   const row = (
     await query(
-      `SELECT coalesce(sum(CASE p.side WHEN 'CREDIT' THEN p."nativeMinor"::numeric ELSE -p."nativeMinor"::numeric END),0)::text AS minor FROM posting p JOIN journal j ON j.id=p."journalId" AND j."ownerId"=p."ownerId" AND j."workspaceId"=p."workspaceId" WHERE p."ownerId"=$1 AND p."workspaceId"=$2 AND p."accountId"=$3 AND j.status='POSTED' AND j."effectiveAt"<=$4::timestamptz`,
+      `WITH deltas AS (
+         SELECT j."effectiveAt" AS effective_at,
+                sum(CASE p.side WHEN 'CREDIT' THEN p."nativeMinor"::numeric ELSE -p."nativeMinor"::numeric END) AS delta
+         FROM posting p JOIN journal j ON j.id=p."journalId" AND j."ownerId"=p."ownerId" AND j."workspaceId"=p."workspaceId"
+         WHERE p."ownerId"=$1 AND p."workspaceId"=$2 AND p."accountId"=$3 AND j.status='POSTED'
+         GROUP BY j."effectiveAt"
+       ), timeline AS (
+         SELECT effective_at, sum(delta) OVER (ORDER BY effective_at ROWS UNBOUNDED PRECEDING) AS balance FROM deltas
+       ), relevant AS (
+         SELECT coalesce(sum(delta),0) AS balance FROM deltas WHERE effective_at<=$4::timestamptz
+         UNION ALL
+         SELECT balance FROM timeline WHERE effective_at>$4::timestamptz
+       ) SELECT min(balance)::text AS minor FROM relevant`,
       [owner, workspace, context.destinationAccountId, effectiveAt],
     )
   ).rows[0];
