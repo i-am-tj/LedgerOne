@@ -44,7 +44,8 @@ export default defineConfig({
       GOOGLE_CLIENT_SECRET: "e2e-google-placeholder",
       GITHUB_CLIENT_ID: "e2e-github-placeholder",
       GITHUB_CLIENT_SECRET: "e2e-github-placeholder",
-      AUTH_ALLOWED_EMAILS: "e2e-owner@ledgerone.test,e2e-other@ledgerone.test",
+      AUTH_ALLOWED_EMAILS:
+        "e2e-owner@ledgerone.test,e2e-other@ledgerone.test,e2e-report-desktop@ledgerone.test,e2e-report-mobile@ledgerone.test",
       NEXT_TELEMETRY_DISABLED: "1",
     },
   },

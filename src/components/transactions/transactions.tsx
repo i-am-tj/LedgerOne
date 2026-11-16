@@ -30,21 +30,50 @@ type Row = {
   destinationAccountName?: string;
   principalMinor?: string;
   interestMinor?: string;
+  accountKind: string | null;
+  recordedAt: string;
+  futureEffective: boolean;
   amountMinor: string;
   journal: {
     effectiveAt: string;
     description: string;
-    reversal: { id: string } | null;
+    reversal: {
+      id: string;
+      kind: string;
+      effectiveAt: string;
+      postedAt: string;
+      affectsSummary: boolean;
+      followUp: { id: string; effectiveAt: string } | null;
+      replacement: {
+        id: string;
+        effectiveAt: string;
+        description: string;
+      } | null;
+    } | null;
   } | null;
 };
 type Data = {
   accounts: Account[];
   transactions: Row[];
   summary: { expenseMinor: string; incomeMinor: string };
+  asOf: string;
+  totals: {
+    assetsMinor: string;
+    liabilitiesMinor: string;
+    netWorthMinor: string;
+  };
+  history: { limit: number; hasMore: boolean };
 };
 function money(s: string) {
   const [whole, fraction] = formatAmount(BigInt(s), "INR").split(".");
   return "₹" + whole!.replace(/\B(?=(\d{3})+(?!\d))/g, ",") + "." + fraction;
+}
+function indiaTime(iso: string) {
+  return new Date(iso).toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
 }
 function today() {
   return new Intl.DateTimeFormat("en-CA", {
@@ -76,6 +105,7 @@ export function Transactions() {
     [date, setDate] = useState(today),
     [description, setDescription] = useState(""),
     [busy, setBusy] = useState(false),
+    [refreshing, setRefreshing] = useState(false),
     [error, setError] = useState(""),
     [success, setSuccess] = useState("");
   const pending = useRef<{
@@ -84,9 +114,14 @@ export function Transactions() {
     workspace: string;
   } | null>(null);
   const reload = useCallback(async () => {
-    const r = await fetch("/api/transactions", { cache: "no-store" });
-    if (!r.ok) throw Error("Could not load your transactions.");
-    setData(await r.json());
+    setRefreshing(true);
+    try {
+      const r = await fetch("/api/transactions", { cache: "no-store" });
+      if (!r.ok) throw Error("Could not load your transactions.");
+      setData(await r.json());
+    } finally {
+      setRefreshing(false);
+    }
   }, []);
   useEffect(() => {
     reload().catch((e) => setError(e.message));
@@ -230,6 +265,24 @@ export function Transactions() {
           </p>
         </div>
       </div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-muted-foreground">
+          {data
+            ? `Balances and totals through ${indiaTime(data.asOf)} (India).`
+            : "Ledger-derived INR balances and totals."}
+        </p>
+        <Button
+          variant="outline"
+          disabled={refreshing || busy}
+          onClick={() =>
+            reload()
+              .then(() => setError(""))
+              .catch((e) => setError(e.message))
+          }
+        >
+          {refreshing ? "Refreshing…" : "Refresh transactions"}
+        </Button>
+      </div>
       {error && (
         <div role="alert" className="rounded-xl border border-destructive p-4">
           {error}
@@ -287,6 +340,44 @@ export function Transactions() {
               </p>
             </Card>
           </div>
+          <Card>
+            <dl
+              className="grid gap-3 sm:grid-cols-3"
+              aria-label="INR account totals"
+            >
+              <div className="flex flex-wrap items-baseline justify-between gap-2 sm:block">
+                <dt className="text-sm text-muted-foreground">Assets · INR</dt>
+                <dd
+                  className="text-lg font-semibold tabular-nums [overflow-wrap:anywhere]"
+                  data-testid="assets-total"
+                >
+                  {money(data.totals.assetsMinor)}
+                </dd>
+              </div>
+              <div className="flex flex-wrap items-baseline justify-between gap-2 sm:block">
+                <dt className="text-sm text-muted-foreground">
+                  Liabilities · INR
+                </dt>
+                <dd
+                  className="text-lg font-semibold tabular-nums [overflow-wrap:anywhere]"
+                  data-testid="liabilities-total"
+                >
+                  {money(data.totals.liabilitiesMinor)}
+                </dd>
+              </div>
+              <div className="flex flex-wrap items-baseline justify-between gap-2 sm:block">
+                <dt className="text-sm text-muted-foreground">
+                  Net worth · INR
+                </dt>
+                <dd
+                  className="text-lg font-semibold tabular-nums [overflow-wrap:anywhere]"
+                  data-testid="net-worth-total"
+                >
+                  {money(data.totals.netWorthMinor)}
+                </dd>
+              </div>
+            </dl>
+          </Card>
           <Card>
             <h2 className="text-xl font-semibold">Record a transaction</h2>
             {!accounts.length ? (
@@ -550,8 +641,13 @@ export function Transactions() {
           <Card>
             <h2 className="text-xl font-semibold">Transaction history</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Up to 100 recent committed transactions. Summary totals use posted
-              income and expense classifications through today.
+              Latest {data.history.limit} business transactions, ordered by
+              recording time (newest first). Effective dates determine balances
+              and totals. Totals include all posted activity through the cutoff
+              above, not just these rows.
+              {data.history.hasMore
+                ? " Older transactions exist beyond this visible list."
+                : " All recorded business transactions are shown."}
             </p>
             {!data.transactions.length ? (
               <p className="mt-5 text-muted-foreground">
@@ -563,6 +659,17 @@ export function Transactions() {
                   <li
                     key={t.operationId}
                     className="flex flex-wrap items-start justify-between gap-3 py-4"
+                    aria-label={
+                      t.kind === "EXPENSE"
+                        ? t.accountKind === "CREDIT_CARD"
+                          ? "Credit-card purchase"
+                          : "Expense"
+                        : t.kind === "INCOME"
+                          ? "Income"
+                          : t.kind === "LOAN_REPAYMENT"
+                            ? "Loan repayment"
+                            : "Internal movement"
+                    }
                     data-testid="transaction-row"
                     data-operation-id={t.operationId}
                   >
@@ -581,17 +688,40 @@ export function Transactions() {
                         ) : (
                           <>
                             {t.categoryName} ·{" "}
-                            {t.kind === "EXPENSE" ? "Expense" : "Income"}
+                            {t.kind === "EXPENSE"
+                              ? t.accountKind === "CREDIT_CARD"
+                                ? "Credit-card purchase"
+                                : "Expense"
+                              : "Income"}
                           </>
                         )}
-                        {t.journal?.reversal ? " · Reversed" : ""}
+                        {t.journal?.reversal
+                          ? t.journal.reversal.followUp
+                            ? " · Further reversal history"
+                            : !t.journal.reversal.affectsSummary
+                              ? t.journal.reversal.kind === "CORRECT"
+                                ? " · Correction not effective yet"
+                                : " · Reversal not effective yet"
+                              : t.journal.reversal.kind === "CORRECT"
+                                ? " · Corrected"
+                                : " · Reversed"
+                          : ""}
+                      </p>
+                      <p className="mt-1 text-xs font-medium text-muted-foreground">
+                        {t.kind === "EXPENSE"
+                          ? "Consumption"
+                          : t.kind === "INCOME"
+                            ? "Income"
+                            : t.kind === "LOAN_REPAYMENT"
+                              ? "Principal is not consumption; interest is expense"
+                              : "Internal principal movement · not consumption or income"}
                       </p>
                       <p className="mt-1 text-sm text-muted-foreground">
                         {t.accountName}
                         {t.destinationAccountName
                           ? " → " + t.destinationAccountName
                           : ""}{" "}
-                        ·{" "}
+                        · Effective{" "}
                         {t.journal
                           ? new Date(t.journal.effectiveAt).toLocaleDateString(
                               "en-IN",
@@ -599,6 +729,62 @@ export function Transactions() {
                             )
                           : "Unavailable journal"}
                       </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        <time dateTime={t.recordedAt}>
+                          Recorded {indiaTime(t.recordedAt)} (India)
+                        </time>
+                      </p>
+                      {t.futureEffective && (
+                        <p className="mt-2 rounded bg-muted px-2 py-1 text-sm">
+                          Future effective date · excluded from current totals
+                          and balances
+                        </p>
+                      )}
+                      {t.journal?.reversal && (
+                        <details className="mt-2 text-sm">
+                          <summary className="cursor-pointer font-medium">
+                            {t.journal.reversal.kind === "CORRECT"
+                              ? "Correction"
+                              : "Reversal"}{" "}
+                            details
+                          </summary>
+                          <p>
+                            Effective{" "}
+                            {indiaTime(t.journal.reversal.effectiveAt)} (India).{" "}
+                            {t.journal.reversal.affectsSummary
+                              ? "Included in these ledger totals."
+                              : "Not effective in these totals yet."}
+                          </p>
+                          <p className="break-all text-xs">
+                            Reversal journal {t.journal.reversal.id}
+                          </p>
+                          {t.journal.reversal.followUp && (
+                            <p className="break-all">
+                              Later reversal journal{" "}
+                              {t.journal.reversal.followUp.id} · effective{" "}
+                              {indiaTime(
+                                t.journal.reversal.followUp.effectiveAt,
+                              )}{" "}
+                              (India). Further reversal history exists; totals
+                              use all posted entries.
+                            </p>
+                          )}
+                          {t.journal.reversal.replacement && (
+                            <p className="break-all">
+                              Replacement journal{" "}
+                              {t.journal.reversal.replacement.id} · effective{" "}
+                              {indiaTime(
+                                t.journal.reversal.replacement.effectiveAt,
+                              )}{" "}
+                              (India)
+                              {t.journal.reversal.replacement.description
+                                ? " · " +
+                                  t.journal.reversal.replacement.description
+                                : ""}
+                            </p>
+                          )}
+                        </details>
+                      )}
                       {t.kind === "LOAN_REPAYMENT" &&
                         t.principalMinor !== undefined &&
                         t.interestMinor !== undefined && (
@@ -613,6 +799,13 @@ export function Transactions() {
                       )}
                     </div>
                     <p className="font-semibold tabular-nums [overflow-wrap:anywhere]">
+                      {t.journal?.reversal
+                        ? "Original "
+                        : t.kind === "INCOME"
+                          ? "+ "
+                          : t.kind === "EXPENSE"
+                            ? "− "
+                            : ""}
                       {money(t.amountMinor)}
                     </p>
                   </li>

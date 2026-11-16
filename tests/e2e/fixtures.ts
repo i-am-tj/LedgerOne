@@ -5,13 +5,15 @@ import { ensureE2EOwner } from "../support/e2e-owner";
 
 export const test = base.extend<{
   ownerSession: { id: string; userId: string };
+  ownerEmail: string;
 }>({
+  ownerEmail: ["e2e-owner@ledgerone.test", { option: true }],
   ownerSession: [
-    async ({ context }, use) => {
+    async ({ context, ownerEmail }, use) => {
       const database = testDatabase();
       let sessionId: string | undefined;
       try {
-        const user = await ensureE2EOwner(database);
+        const user = await ensureE2EOwner(database, ownerEmail);
         const token = randomBytes(32).toString("hex");
         const session = await database.authSession.create({
           data: {
