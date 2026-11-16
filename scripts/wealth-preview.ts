@@ -436,16 +436,30 @@ async function main() {
         },
       },
     );
-    // Signal the whole group so the Next server never outlives the preview.
-    const stop = () => {
+    // Signal the whole group so the Next server never outlives the preview,
+    // including when the preview is interrupted before it is ready.
+    const signal = (name: NodeJS.Signals) => {
       try {
-        process.kill(-child.pid!, "SIGTERM");
+        process.kill(-child.pid!, name);
       } catch {
-        child.kill("SIGTERM");
+        child.kill(name);
       }
     };
+    const stop = () => signal("SIGTERM");
+    let interrupted: () => void = () => {};
+    const interrupt = new Promise<void>((resolve) => (interrupted = resolve));
+    const onSignal = () => interrupted();
+    process.on("SIGINT", onSignal);
+    process.on("SIGTERM", onSignal);
+    process.on("SIGHUP", onSignal);
+    process.once("exit", () => signal("SIGKILL"));
     try {
-      await waitFor(base + "/api/health/live", child);
+      await Promise.race([
+        waitFor(base + "/api/health/live", child),
+        interrupt.then(() => {
+          throw Error("Interrupted before the preview was ready");
+        }),
+      ]);
       const cookie = await signIn(url);
       const seeded = flag("--seed") ? await seed(cookie) : undefined;
       const browser = await chromium.launch({
@@ -491,17 +505,27 @@ async function main() {
       console.log(
         "Close the browser window or press Ctrl+C to stop. The database is discarded on exit.\n",
       );
-      await new Promise<void>((resolve) => {
-        browser.on("disconnected", () => resolve());
-        process.once("SIGINT", () => resolve());
-        process.once("SIGTERM", () => resolve());
-      });
+      // On macOS closing the last window leaves Chromium running, so the
+      // page/context closing ends the preview too.
+      await Promise.race([
+        interrupt,
+        new Promise<void>((resolve) => {
+          browser.on("disconnected", () => resolve());
+          page.on("close", () => resolve());
+          page.context().on("close", () => resolve());
+        }),
+      ]);
       await browser.close().catch(() => {});
     } finally {
       stop();
+      const escalate = setTimeout(() => signal("SIGKILL"), 10_000);
       await new Promise((r) =>
         child.exitCode !== null ? r(null) : child.once("exit", r),
       );
+      clearTimeout(escalate);
+      process.off("SIGINT", onSignal);
+      process.off("SIGTERM", onSignal);
+      process.off("SIGHUP", onSignal);
     }
   });
 }
