@@ -159,76 +159,97 @@ test("S08-D isolated authenticated all-operation history, totals and reversal wa
   const db = testDatabase();
   let reversalId: string;
   try {
-    reversalId = await db.$transaction(
-      async (tx) => {
-        const original = await tx.journal.findFirstOrThrow({
-          where: {
-            id: expense.post.journalId,
-            ownerId: ownerSession.userId,
-            workspaceId: workspace,
-            status: "POSTED",
+    // Fixture setup only: retry a definitively rolled-back PostgreSQL conflict,
+    // never an unknown transport/COMMIT outcome. No app capability is added.
+    const deadline = performance.now() + 10000;
+    for (let attempt = 1; ; attempt++) {
+      const budget = Math.floor(deadline - performance.now());
+      if (budget <= 0) throw Error("Reversal fixture deadline expired");
+      try {
+        reversalId = await db.$transaction(
+          async (tx) => {
+            const original = await tx.journal.findFirstOrThrow({
+              where: {
+                id: expense.post.journalId,
+                ownerId: ownerSession.userId,
+                workspaceId: workspace,
+                status: "POSTED",
+              },
+              include: { postings: true },
+            });
+            const op = randomUUID(),
+              journal = randomUUID();
+            await tx.ledgerOperation.create({
+              data: {
+                id: op,
+                workspaceId: workspace,
+                ownerId: ownerSession.userId,
+                idempotencyKey: randomUUID(),
+                requestHash: "b".repeat(64),
+                kind: "REVERSE",
+              },
+            });
+            await tx.journal.create({
+              data: {
+                id: journal,
+                workspaceId: workspace,
+                ownerId: ownerSession.userId,
+                kind: "REVERSAL",
+                reversesJournalId: original.id,
+                effectiveAt: new Date("2026-01-16T00:00:00+05:30"),
+                description: "Controlled local reversal",
+              },
+            });
+            for (const p of original.postings)
+              await tx.posting.create({
+                data: {
+                  id: randomUUID(),
+                  journalId: journal,
+                  workspaceId: workspace,
+                  ownerId: ownerSession.userId,
+                  accountId: p.accountId,
+                  currencyCode: p.currencyCode,
+                  functionalCurrencyCode: p.functionalCurrencyCode,
+                  side: p.side === "DEBIT" ? "CREDIT" : "DEBIT",
+                  nativeMinor: p.nativeMinor,
+                  functionalMinor: p.functionalMinor,
+                  fxRateId: p.fxRateId,
+                },
+              });
+            await tx.journal.update({
+              where: { id: journal },
+              data: { status: "POSTED", postedAt: new Date(), operationId: op },
+            });
+            await tx.auditEvent.create({
+              data: {
+                ownerId: ownerSession.userId,
+                actorId: ownerSession.userId,
+                workspaceId: workspace,
+                requestId: randomUUID(),
+                action: "ledger.reversed",
+                operationId: op,
+                targetJournalId: original.id,
+                reason: "Controlled isolated browser reversal",
+              },
+            });
+            return journal;
           },
-          include: { postings: true },
+          { isolationLevel: "Serializable", timeout: budget },
+        );
+        break;
+      } catch (error) {
+        const cause = error instanceof Error ? error.cause : null;
+        const code =
+          cause && typeof cause === "object" && "originalCode" in cause
+            ? cause.originalCode
+            : null;
+        if ((code !== "40001" && code !== "40P01") || attempt >= 3) throw error;
+        info.annotations.push({
+          type: "fixture-rollback-retry",
+          description: `Reversal setup attempt ${attempt}: PostgreSQL ${code}`,
         });
-        const op = randomUUID(),
-          journal = randomUUID();
-        await tx.ledgerOperation.create({
-          data: {
-            id: op,
-            workspaceId: workspace,
-            ownerId: ownerSession.userId,
-            idempotencyKey: randomUUID(),
-            requestHash: "b".repeat(64),
-            kind: "REVERSE",
-          },
-        });
-        await tx.journal.create({
-          data: {
-            id: journal,
-            workspaceId: workspace,
-            ownerId: ownerSession.userId,
-            kind: "REVERSAL",
-            reversesJournalId: original.id,
-            effectiveAt: new Date("2026-01-16T00:00:00+05:30"),
-            description: "Controlled local reversal",
-          },
-        });
-        for (const p of original.postings)
-          await tx.posting.create({
-            data: {
-              id: randomUUID(),
-              journalId: journal,
-              workspaceId: workspace,
-              ownerId: ownerSession.userId,
-              accountId: p.accountId,
-              currencyCode: p.currencyCode,
-              functionalCurrencyCode: p.functionalCurrencyCode,
-              side: p.side === "DEBIT" ? "CREDIT" : "DEBIT",
-              nativeMinor: p.nativeMinor,
-              functionalMinor: p.functionalMinor,
-              fxRateId: p.fxRateId,
-            },
-          });
-        await tx.journal.update({
-          where: { id: journal },
-          data: { status: "POSTED", postedAt: new Date(), operationId: op },
-        });
-        await tx.auditEvent.create({
-          data: {
-            ownerId: ownerSession.userId,
-            actorId: ownerSession.userId,
-            workspaceId: workspace,
-            requestId: randomUUID(),
-            action: "ledger.reversed",
-            operationId: op,
-            targetJournalId: original.id,
-            reason: "Controlled isolated browser reversal",
-          },
-        });
-        return journal;
-      },
-      { isolationLevel: "Serializable" },
-    );
+      }
+    }
   } finally {
     await db.$disconnect();
   }
