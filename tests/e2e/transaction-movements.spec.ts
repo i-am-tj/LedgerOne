@@ -159,7 +159,7 @@ test("S08-B transfer and card payment real UI preserve balances, net worth and p
   ).toContainText("Credit-card payment");
   await expect(
     page.locator('[data-operation-id="' + bought.post.operationId + '"]'),
-  ).toContainText("Groceries · Expense");
+  ).toContainText("Groceries · Credit-card purchase");
   await page.reload();
   await choose(page, "CARD_SETTLEMENT", paying.accountId, card.accountId);
   await expect(page.getByTestId("destination-account-balance")).toHaveText(

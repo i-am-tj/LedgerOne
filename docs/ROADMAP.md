@@ -84,3 +84,7 @@ S08-B review follow-up: owner CHANGES REQUIRED at239fd16 for B-R01. Correct only
 ## 2026-11-16 S08-C progression
 
 S08-B PR40 reviewed/merged at e4348ea; B-R01 #41 closed with evidence. S08-C FD principal and loan principal/interest UI/services have local pipeline PASS278/391/72 and await owner review on feat/p1-s08c-fd-loan-transactions. #38/#37 stay open; S08-D and S09 remain required. No P1-E3/Phase1/hosted completion. Future branches use feat/fix/docs/refactor/test purpose prefixes, never agent prefixes.
+
+## 2026-11-16 S08-D final functional slice
+
+S08-C PR42 reviewed/merged at cfc9e5e. S08-D read/query/UI consolidation is under implementation verification on feat/p1-s08d-transaction-history-reporting. It adds no financial services or migration. After required checks and owner-reviewed manual merge, verify original S08 acceptance before closing #38. P1-E4 #37 and Phase1 stay incomplete until S09 and the published gate pass. No hosted/production activation.

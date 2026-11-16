@@ -24,6 +24,7 @@ export async function postHarness(
     schema?: "public" | "ledgerone";
     upgrade?: boolean;
     accounts?: boolean;
+    reader?: boolean;
   } = {},
 ) {
   const schema = options.schema ?? "public";
@@ -51,6 +52,10 @@ export async function postHarness(
   const verifierRole = `post_verifier_${randomBytes(6).toString("hex")}`;
   const authRole = `post_auth_${randomBytes(6).toString("hex")}`;
   const privateRoles = schema === "ledgerone" ? [verifierRole, authRole] : [];
+  const readerRole = options.reader
+    ? `post_reader_${randomBytes(6).toString("hex")}`
+    : undefined;
+  let readerDatabase: PrismaClient | undefined;
   const scope = {
     schema,
     roles: {
@@ -92,6 +97,7 @@ export async function postHarness(
   const runtime = { config, auth: createAuth(config, database) };
   async function cleanup() {
     await executor?.close();
+    await readerDatabase?.$disconnect();
     if (authDatabase !== database) await authDatabase.$disconnect();
     await database.$disconnect();
     await admin.end();
@@ -99,7 +105,11 @@ export async function postHarness(
     const source = new pg.Client({ connectionString: testDatabaseURL() });
     await source.connect();
     try {
-      for (const name of [role, ...privateRoles])
+      for (const name of [
+        role,
+        ...privateRoles,
+        ...(readerRole ? [readerRole] : []),
+      ])
         await source.query(`DROP ROLE IF EXISTS "${name}"`);
     } finally {
       await source.end();
@@ -142,6 +152,23 @@ export async function postHarness(
         ),
       });
       runtime.auth = createAuth(config, authDatabase);
+    }
+    if (readerRole) {
+      await admin.query(
+        `CREATE ROLE "${readerRole}" LOGIN PASSWORD '${password}' NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS`,
+      );
+      await admin.query(
+        `GRANT CONNECT ON DATABASE "${new URL(lease.url).pathname.slice(1)}" TO "${readerRole}"; GRANT USAGE ON SCHEMA "${schema}" TO "${readerRole}"; GRANT SELECT ON workspace,ledger_account,journal,posting,ledger_operation,transaction_record,transaction_movement,transaction_capital TO "${readerRole}"`,
+      );
+      const readerURL = new URL(lease.url);
+      readerURL.username = readerRole;
+      readerURL.password = password;
+      readerDatabase = new PrismaClient({
+        adapter: new PrismaPg(
+          { connectionString: readerURL.toString() },
+          { schema },
+        ),
+      });
     }
     const c = await admin.connect();
     let expected;
@@ -233,6 +260,8 @@ export async function postHarness(
     return {
       admin,
       database,
+      readerDatabase,
+      readerRole,
       executor,
       users,
       runtime,

@@ -31,7 +31,7 @@ describe.each(["public", "ledgerone"] as const)(
         new Request(
           h.runtime.config.baseURL +
             "/api/transactions?workspace=" +
-            h.users[0]!.workspace,
+            h.users[data === undefined ? (user ?? 0) : 0]!.workspace,
           {
             method: data === undefined ? "GET" : "POST",
             headers: {
