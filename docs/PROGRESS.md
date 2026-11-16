@@ -1,6 +1,6 @@
 # Progress and evidence
 
-> Current status (2026-11-16): S08-A PR #39 reviewed/merged `1c74eeaf`. S08-B PR #40 owner review of `239fd16`: CHANGES REQUIRED, medium merge-blocking B-R01 (backdated payment can overpay at a later boundary). Narrow correction and focused regressions implemented; final local pipeline PASS (260 unit /349 integration /64 browser); current-head CI and owner final review pending. PR remains draft/unmerged. Original local260/335/62 and CI PASS are historical test results, not approval. #38/#37 and original residual S07/#16/#17 remain open; C/D/S09 required. P1-E3/Phase1 incomplete; hosted NOT RUN; production/default/raw financial writes disabled.
+> Current status (2026-11-16): S08-A and S08-B reviewed/merged; PR40 merge `e4348ea96bb222ce5be51d200be02b39f2baa489` verified; B-R01 #41 closed with merged evidence. S08-C FD/loan UI and typed commands implemented on `feat/p1-s08c-fd-loan-transactions`, local pipeline PASS (278 unit /391 integration /72 browser), pending owner review and merge. #38/#37 stay open; S08-D and S09 required. Original S07/#16/#17 remain tracked. P1-E3/Phase1 incomplete; hosted NOT RUN; production/default/generic financial writes disabled. Historical review/test evidence retained.
 
 ## 2026-11-11 — P1-S01 Docker Compose and outage verification
 
@@ -598,3 +598,9 @@ Verified PR #39 MERGED at `1c74eeaf61e228aa61d6ceb9a0c332d1ed742909`, fetched ma
 ## 2026-11-16 — S08-B owner finding B-R01
 
 Owner reviewed239fd16 and required changes. Reproduced six failures in42 tests against that implementation (typed and database acceptance of invalid backdating across public/private fixtures). Correction validates the new settlement against each existing later posted boundary, keeps equal-effective-time entries grouped and preserves immutable replay/the shared executor. Focused corrected tests including010→011 upgrades:44 PASS; complete corrected local pipeline260 unit /349 integration /64 browser PASS. Existing successful UI/screenshots retained; only rejection wording clarified and a browser rejection regression added. Full correction evidence: [B-R01](reports/P1-S08-B_B-R01.md).011 has been applied only to generated disposable local/CI fixtures in recorded project execution; corrected the unmerged011 candidate and rebuild fresh, without touching001–010 or resetting any persistent checksum. No hosted/persistent migration operation performed. Final review/merge remains the owner's decision.
+
+## 2026-11-16 — S08-B merge verified; S08-C usable principal transactions
+
+Verified PR40 MERGED at `e4348ea96bb222ce5be51d200be02b39f2baa489`; closed #41 only with its incorporated correction/regression evidence. Branched updated main as exactly `feat/p1-s08c-fd-loan-transactions`. Repository-wide purpose prefixes are persisted in AGENTS.md; review fixes remain on the existing feature branch.
+
+Implemented typed FD funding/new principal return and loan principal-interest repayment, immutable context via additive012, existing shared executor, real transaction UI/history/affected balances and exact live total. Owner approved principal-return/repayment limits at the effective instant and all existing later posted boundaries, positive principal with zero/positive interest, and interest-only payments outside this slice. Focused44 integration/upgrade and8 browser tests PASS. [S08-C report](reports/P1-S08-C.md). Full local pipeline PASS278/391/72; current-head CI and owner independent implementation review remain required; no merge or production activation authorized.

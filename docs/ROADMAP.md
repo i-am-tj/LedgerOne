@@ -80,3 +80,7 @@ S07 PR #35 is merged (`1fd3b936`); original residual requirements and #16/#17 re
 S08-A PR39 reviewed/merged at1c74eeaf. S08-B working transfer/card-payment implementation is local pipeline PASS and pending owner review under #38/#37. S08-C FD/loan and D consolidated-history/consumption remain required, followed by S09. No scope reduction or early Phase1/P1-E3 completion.
 
 S08-B review follow-up: owner CHANGES REQUIRED at239fd16 for B-R01. Correct only new-settlement admission across later posted boundaries; retain accepted UI and existing future scope. PR40 remains draft until corrected evidence and owner final review. No next-slice implementation or merge authorized here.
+
+## 2026-11-16 S08-C progression
+
+S08-B PR40 reviewed/merged at e4348ea; B-R01 #41 closed with evidence. S08-C FD principal and loan principal/interest UI/services have local pipeline PASS278/391/72 and await owner review on feat/p1-s08c-fd-loan-transactions. #38/#37 stay open; S08-D and S09 remain required. No P1-E3/Phase1/hosted completion. Future branches use feat/fix/docs/refactor/test purpose prefixes, never agent prefixes.

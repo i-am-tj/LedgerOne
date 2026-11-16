@@ -1,5 +1,18 @@
 import "server-only";
 import {
+  capitalHash,
+  isCapitalCommand,
+  type CapitalCommand,
+} from "../../transactions/capital-contract";
+import {
+  capitalTemplate,
+  capitalResult,
+  saveCapital,
+  validateCapitalBalance,
+  type CapitalContext,
+  type CapitalResult,
+} from "../../transactions/capital";
+import {
   movementHash,
   isMovementCommand,
   type MovementCommand,
@@ -324,11 +337,27 @@ export class PostExecutor {
     authorize: () => Promise<Actor>,
     workspace: string,
     key: string,
+    command: CapitalCommand,
+    signal?: AbortSignal,
+  ): Promise<{ result: CapitalResult; replayed: boolean }>;
+  async execute(
+    authorize: () => Promise<Actor>,
+    workspace: string,
+    key: string,
     command:
-      FinancialCommand | AccountCommand | CaptureCommand | MovementCommand,
+      | FinancialCommand
+      | AccountCommand
+      | CaptureCommand
+      | MovementCommand
+      | CapitalCommand,
     signal?: AbortSignal,
   ): Promise<{
-    result: FinancialResult | AccountResult | CaptureResult | MovementResult;
+    result:
+      | FinancialResult
+      | AccountResult
+      | CaptureResult
+      | MovementResult
+      | CapitalResult;
     replayed: boolean;
   }> {
     return measured(this.metrics, "command.total", async () => {
@@ -392,13 +421,22 @@ export class PostExecutor {
     workspace: string,
     key: string,
     command:
-      FinancialCommand | AccountCommand | CaptureCommand | MovementCommand,
+      | FinancialCommand
+      | AccountCommand
+      | CaptureCommand
+      | MovementCommand
+      | CapitalCommand,
     attempt: number,
     deadline: number,
     signal?: AbortSignal,
     recoverOriginalConflict = false,
   ): Promise<{
-    result: FinancialResult | AccountResult | CaptureResult | MovementResult;
+    result:
+      | FinancialResult
+      | AccountResult
+      | CaptureResult
+      | MovementResult
+      | CapitalResult;
     replayed: boolean;
   }> {
     throwIfAborted(signal);
@@ -408,13 +446,15 @@ export class PostExecutor {
         () => withinDeadline(authorize(), deadline, undefined, signal),
         attempt,
       ),
-      hash = isMovementCommand(command)
-        ? movementHash(actor.ownerId, workspace, command)
-        : isCaptureCommand(command)
-          ? captureHash(actor.ownerId, workspace, command)
-          : isAccountCommand(command)
-            ? accountHash(actor.ownerId, workspace, command)
-            : requestHash(actor.ownerId, workspace, command);
+      hash = isCapitalCommand(command)
+        ? capitalHash(actor.ownerId, workspace, command)
+        : isMovementCommand(command)
+          ? movementHash(actor.ownerId, workspace, command)
+          : isCaptureCommand(command)
+            ? captureHash(actor.ownerId, workspace, command)
+            : isAccountCommand(command)
+              ? accountHash(actor.ownerId, workspace, command)
+              : requestHash(actor.ownerId, workspace, command);
     const c = await measured(
       this.metrics,
       "command.connection_wait",
@@ -496,7 +536,9 @@ export class PostExecutor {
       if (
         !(
           await query(
-            isAccountCommand(command) || isCaptureCommand(command)
+            isAccountCommand(command) ||
+              isCaptureCommand(command) ||
+              (isCapitalCommand(command) && command.kind === "LOAN_REPAYMENT")
               ? 'SELECT id FROM workspace WHERE id=$1 AND "ownerId"=$2 FOR UPDATE'
               : 'SELECT id FROM workspace WHERE id=$1 AND "ownerId"=$2 FOR KEY SHARE',
             [workspace, actor.ownerId],
@@ -563,12 +605,32 @@ export class PostExecutor {
       if (old.rowCount) {
         if (
           old.rows[0].kind !==
-            (isCaptureCommand(command) || isMovementCommand(command)
+            (isCaptureCommand(command) ||
+            isMovementCommand(command) ||
+            isCapitalCommand(command)
               ? "POST"
               : command.kind) ||
           old.rows[0].requestHash !== hash
         )
           throw new CommandError(409, "idempotency_conflict");
+        if (isCapitalCommand(command)) {
+          const saved = await capitalTemplate(
+            query,
+            actor.ownerId,
+            workspace,
+            command,
+            old.rows[0].id,
+          );
+          const post = await commandOutcome(
+            c,
+            actor,
+            workspace,
+            old.rows[0].id,
+            saved.post,
+          );
+          await commit(true);
+          return { result: capitalResult(saved.context, post), replayed: true };
+        }
         if (isMovementCommand(command)) {
           const saved = await movementTemplate(
             query,
@@ -617,6 +679,17 @@ export class PostExecutor {
         );
         await commit(true);
         return { result, replayed: true };
+      }
+      let capitalContext: CapitalContext | undefined;
+      if (isCapitalCommand(command)) {
+        const prepared = await capitalTemplate(
+          query,
+          actor.ownerId,
+          workspace,
+          command,
+        );
+        capitalContext = prepared.context;
+        command = prepared.post;
       }
       let captureContext: CaptureContext | undefined;
       let movementContext: MovementContext | undefined;
@@ -709,6 +782,14 @@ export class PostExecutor {
       )
         throw new CommandError(409, "account_unavailable");
       await this.probe?.("locked", c, attempt);
+      if (capitalContext)
+        await validateCapitalBalance(
+          query,
+          actor.ownerId,
+          workspace,
+          capitalContext,
+          journalCommand.effectiveAt,
+        );
       if (movementContext)
         await validateMovementBalance(
           query,
@@ -805,11 +886,15 @@ export class PostExecutor {
           op,
           movementContext,
         );
-      const result = movementContext
-        ? movementResult(movementContext, postResult)
-        : captureContext
-          ? captureResult(captureContext, postResult)
-          : postResult;
+      if (capitalContext)
+        await saveCapital(query, actor.ownerId, workspace, op, capitalContext);
+      const result = capitalContext
+        ? capitalResult(capitalContext, postResult)
+        : movementContext
+          ? movementResult(movementContext, postResult)
+          : captureContext
+            ? captureResult(captureContext, postResult)
+            : postResult;
       await this.probe?.("beforeCommit", c, attempt);
       await commit(false);
       await this.probe?.("committed", c, attempt);

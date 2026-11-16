@@ -1,3 +1,4 @@
+import { SCHEMA_VERSION } from "../../src/lib/schema-version";
 import { randomUUID } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import pg from "pg";
@@ -97,7 +98,7 @@ it.each(["public", "ledgerone"] as const)(
             "SELECT value FROM app_metadata WHERE key='schema_version'",
           )
         ).rows[0].value,
-      ).toBe("11");
+      ).toBe(SCHEMA_VERSION);
       expect(
         (
           await c.query(
