@@ -10,7 +10,10 @@ import {
 } from "./catalog";
 import { addTenure, depositMaturityEstimate, marketValue } from "./compute";
 import { maskSecret, validateProfile } from "./contract";
+import { existsSync, readFileSync } from "node:fs";
+import { institutionApps, institutionDomains } from "./institution-domains";
 import { generatedMark, institutions, matchInstitution } from "./institutions";
+import logoManifest from "./logo-manifest.json";
 import { openSecrets, sealSecrets, VaultUnavailable } from "./vault";
 
 const fd = {
@@ -210,6 +213,35 @@ describe("Institution marks", () => {
       generatedMark("Some local co-op"),
     );
     expect(generatedMark("Some local co-op").mark).toBe("SL");
+  });
+});
+
+describe("Official logos", () => {
+  const manifest: Record<string, string> = logoManifest;
+  it("has a source for every institution", () => {
+    for (const i of institutions)
+      expect(
+        institutionDomains[i.key] ?? institutionApps[i.key],
+        i.key,
+      ).toBeTruthy();
+  });
+  it("maps only registry keys to existing verified raster files", () => {
+    const keys = new Set(institutions.map((i) => i.key));
+    expect(Object.keys(manifest).length).toBeGreaterThan(70);
+    for (const [key, path] of Object.entries(manifest)) {
+      expect(keys.has(key), key).toBe(true);
+      expect(path).toMatch(
+        new RegExp(`^/institutions/${key}\\.(png|jpg|webp|ico|gif)$`),
+      );
+      const file = "public" + path;
+      expect(existsSync(file), file).toBe(true);
+      const head = readFileSync(file).subarray(0, 4).toString("hex");
+      expect(
+        ["89504e47", "00000100", "47494638", "52494646"].includes(head) ||
+          head.startsWith("ffd8ff"),
+        file,
+      ).toBe(true);
+    }
   });
 });
 

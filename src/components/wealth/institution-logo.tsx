@@ -1,3 +1,6 @@
+"use client";
+import { useState } from "react";
+import logoManifest from "@/lib/wealth/logo-manifest.json";
 import {
   generatedMark,
   institutionByKey,
@@ -13,10 +16,13 @@ export function resolveInstitution(
   return institutionByKey(key) ?? matchInstitution(name);
 }
 
+const logos: Record<string, string> = logoManifest;
+
 /**
- * Static app/institution mark. Known banks, apps and fund houses render their
- * brand-coloured monogram; unknown names get a deterministic generated mark;
- * with no name the category icon is used. Nothing is fetched remotely.
+ * Institution / app mark. Known brands render their official icon from
+ * public/institutions (see `npm run logos:fetch`), falling back to a
+ * brand-coloured monogram if the file is missing or fails to load; unknown
+ * names get a generated mark; with no name the category icon is used.
  */
 export function InstitutionLogo({
   name,
@@ -32,7 +38,25 @@ export function InstitutionLogo({
   className?: string;
 }) {
   const known = resolveInstitution(name, institutionKey);
+  const [broken, setBroken] = useState<string | null>(null);
   const style = { width: size, height: size, fontSize: size * 0.34 };
+  const logo = known ? logos[known.key] : undefined;
+  if (known && logo && broken !== logo)
+    return (
+      <span
+        className={cn(
+          "institution-logo institution-logo-image",
+          logo.endsWith(".jpg") && "institution-logo-cover",
+          className,
+        )}
+        style={style}
+        title={known.name}
+        aria-hidden="true"
+      >
+        {/* Local static asset; next/image adds nothing for tiny icons. */}
+        <img src={logo} alt="" loading="lazy" onError={() => setBroken(logo)} />
+      </span>
+    );
   if (known)
     return (
       <span

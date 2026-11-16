@@ -1,6 +1,6 @@
-// Static institution / app marks. Each known bank, platform, AMC or issuer gets
-// a brand-coloured monogram rendered locally (no network fetches, no third-party
-// logo files). Unknown names still get a deterministic generated mark.
+// Known banks, apps, AMCs and issuers. Each has an official icon in
+// public/institutions (fetched once by `npm run logos:fetch`, served locally)
+// and a brand-coloured monogram fallback. Unknown names get a generated mark.
 export type InstitutionKind =
   | "bank"
   | "small-finance-bank"
