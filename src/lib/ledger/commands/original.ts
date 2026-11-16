@@ -14,6 +14,7 @@ export async function originalEvidence(
   owner: string,
   workspace: string,
   id: string,
+  allowOpening = false,
 ): Promise<readonly Leg[]> {
   let node: string | null = id;
   const visited = new Set<string>();
@@ -50,9 +51,21 @@ export async function originalEvidence(
         throw new CommandError(404, "not_found");
       throw targetUnavailable();
     }
-    if (row.status !== "POSTED" || row.kind === "OPENING")
-      throw targetUnavailable();
-    if (row.kind === "REVERSAL") {
+    if (row.status !== "POSTED") throw targetUnavailable();
+    if (row.kind === "OPENING") {
+      if (
+        !allowOpening ||
+        row.operationKind !== "OPENING" ||
+        !(
+          await query(
+            'SELECT id FROM opening_balance WHERE "journalId"=$1 AND "ownerId"=$2 AND "workspaceId"=$3',
+            [node, owner, workspace],
+          )
+        ).rowCount
+      )
+        throw targetUnavailable();
+      node = null;
+    } else if (row.kind === "REVERSAL") {
       if (!row.reversesJournalId) throw targetUnavailable();
       node = row.reversesJournalId;
     } else if (row.kind === "GENERAL" && row.operationKind === "CORRECT") {
@@ -63,9 +76,13 @@ export async function originalEvidence(
       if (prior.rowCount !== 1 || !prior.rows[0].reversesJournalId)
         throw targetUnavailable();
       node = prior.rows[0].reversesJournalId;
-    } else if (row.kind === "GENERAL" && row.operationKind === "POST")
-      node = null;
-    else throw targetUnavailable();
+    } else if (row.kind === "GENERAL" && row.operationKind === "POST") {
+      const continuation = await query(
+        'SELECT "originalJournalId" FROM account_correction WHERE "operationId"=$1 AND "workspaceId"=$2 AND "ownerId"=$3',
+        [row.operationId, workspace, owner],
+      );
+      node = continuation.rows[0]?.originalJournalId ?? null;
+    } else throw targetUnavailable();
   }
   const rows = await query(
     'SELECT "accountId",side,"currencyCode" AS currency,"nativeMinor"::text,"functionalMinor"::text,"fxRateId" FROM posting WHERE "journalId"=$1 AND "workspaceId"=$2 AND "ownerId"=$3 ORDER BY id',

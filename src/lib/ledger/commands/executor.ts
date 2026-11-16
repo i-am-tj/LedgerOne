@@ -1,5 +1,11 @@
 import "server-only";
 import {
+  isAccountCorrection,
+  accountCorrectionHash,
+  type AccountCorrectionCommand,
+} from "../../accounts/correction-contract";
+import { prepareAccountCorrection } from "../../accounts/correction";
+import {
   capitalHash,
   isCapitalCommand,
   type CapitalCommand,
@@ -278,6 +284,7 @@ export class PostExecutor {
               "posting",
               "ledger_operation",
               "opening_balance",
+              "account_correction",
               "fx_rate",
             ],
           ],
@@ -296,6 +303,13 @@ export class PostExecutor {
   ): Promise<{ result: PostResult; replayed: boolean }> {
     return this.execute(authorize, workspace, key, command, signal);
   }
+  async execute(
+    authorize: () => Promise<Actor>,
+    workspace: string,
+    key: string,
+    command: AccountCorrectionCommand,
+    signal?: AbortSignal,
+  ): Promise<{ result: FinancialResult; replayed: boolean }>;
   // One transaction/authentication/retry lifecycle. C-T02 extends its closed
   // command union; no consumer writer or alternative orchestration is added.
   async execute(
@@ -346,6 +360,7 @@ export class PostExecutor {
     key: string,
     command:
       | FinancialCommand
+      | AccountCorrectionCommand
       | AccountCommand
       | CaptureCommand
       | MovementCommand
@@ -393,7 +408,9 @@ export class PostExecutor {
           );
         } catch (error) {
           const targetConflict =
-            (command.kind === "REVERSE" || command.kind === "CORRECT") &&
+            (command.kind === "REVERSE" ||
+              command.kind === "CORRECT" ||
+              isAccountCorrection(command)) &&
             reversalConflict(error);
           const delay =
             retryable(error) || targetConflict
@@ -422,6 +439,7 @@ export class PostExecutor {
     key: string,
     command:
       | FinancialCommand
+      | AccountCorrectionCommand
       | AccountCommand
       | CaptureCommand
       | MovementCommand
@@ -446,15 +464,17 @@ export class PostExecutor {
         () => withinDeadline(authorize(), deadline, undefined, signal),
         attempt,
       ),
-      hash = isCapitalCommand(command)
-        ? capitalHash(actor.ownerId, workspace, command)
-        : isMovementCommand(command)
-          ? movementHash(actor.ownerId, workspace, command)
-          : isCaptureCommand(command)
-            ? captureHash(actor.ownerId, workspace, command)
-            : isAccountCommand(command)
-              ? accountHash(actor.ownerId, workspace, command)
-              : requestHash(actor.ownerId, workspace, command);
+      hash = isAccountCorrection(command)
+        ? accountCorrectionHash(actor.ownerId, workspace, command)
+        : isCapitalCommand(command)
+          ? capitalHash(actor.ownerId, workspace, command)
+          : isMovementCommand(command)
+            ? movementHash(actor.ownerId, workspace, command)
+            : isCaptureCommand(command)
+              ? captureHash(actor.ownerId, workspace, command)
+              : isAccountCommand(command)
+                ? accountHash(actor.ownerId, workspace, command)
+                : requestHash(actor.ownerId, workspace, command);
     const c = await measured(
       this.metrics,
       "command.connection_wait",
@@ -537,6 +557,7 @@ export class PostExecutor {
         !(
           await query(
             isAccountCommand(command) ||
+              isAccountCorrection(command) ||
               isCaptureCommand(command) ||
               (isCapitalCommand(command) && command.kind === "LOAN_REPAYMENT")
               ? 'SELECT id FROM workspace WHERE id=$1 AND "ownerId"=$2 FOR UPDATE'
@@ -546,6 +567,43 @@ export class PostExecutor {
         ).rowCount
       )
         throw new CommandError(404, "not_found");
+      if (isAccountCorrection(command)) {
+        const prior = await query(
+          'SELECT "requestHash" FROM ledger_operation WHERE "workspaceId"=$1 AND "ownerId"=$2 AND "idempotencyKey"=$3',
+          [workspace, actor.ownerId, key],
+        );
+        if (prior.rowCount && prior.rows[0].requestHash !== hash)
+          throw new CommandError(409, "idempotency_conflict");
+        if (
+          (
+            await query(
+              'SELECT id FROM account_command WHERE "workspaceId"=$1 AND "ownerId"=$2 AND "idempotencyKey"=$3',
+              [workspace, actor.ownerId, key],
+            )
+          ).rowCount
+        )
+          throw new CommandError(409, "idempotency_conflict");
+      }
+      if (
+        isAccountCommand(command) &&
+        (
+          await query(
+            'SELECT o.id FROM ledger_operation o JOIN account_correction c ON c."operationId"=o.id WHERE o."workspaceId"=$1 AND o."ownerId"=$2 AND o."idempotencyKey"=$3',
+            [workspace, actor.ownerId, key],
+          )
+        ).rowCount
+      )
+        throw new CommandError(409, "idempotency_conflict");
+      const accountCorrection = isAccountCorrection(command)
+        ? await prepareAccountCorrection(
+            query,
+            actor.ownerId,
+            workspace,
+            command,
+          )
+        : undefined;
+      if (accountCorrection) command = accountCorrection.command;
+      if (isAccountCorrection(command)) throw unavailable();
       if (isAccountCommand(command)) {
         const outcome = await mutateAccount(
           query,
@@ -670,6 +728,24 @@ export class PostExecutor {
           await commit(true);
           return { result: captureResult(saved.context, post), replayed: true };
         }
+        if (accountCorrection) {
+          const evidence = await query(
+            'SELECT "operationId" FROM account_correction WHERE "operationId"=$1 AND "ownerId"=$2 AND "workspaceId"=$3 AND "accountId"=$4 AND "originalJournalId"=$5 AND "rootJournalId"=$6 AND "commandHash"=$7 AND "amountMinor"=$8::numeric AND "effectiveAt"=$9::timestamptz AND "replacementEffectiveAt"=$10::timestamptz',
+            [
+              old.rows[0].id,
+              actor.ownerId,
+              workspace,
+              accountCorrection.accountId,
+              accountCorrection.original,
+              accountCorrection.root,
+              hash,
+              accountCorrection.amount,
+              accountCorrection.effectiveAt,
+              accountCorrection.replacementEffectiveAt,
+            ],
+          );
+          if (evidence.rowCount !== 1) throw unavailable();
+        }
         const result = await commandOutcome(
           c,
           actor,
@@ -714,6 +790,8 @@ export class PostExecutor {
         command = prepared.post;
       }
       const journalCommand: FinancialCommand = command;
+      if (recoverOriginalConflict && accountCorrection)
+        throw targetUnavailable();
       if (recoverOriginalConflict && journalCommand.kind !== "POST") {
         const original = await query(
           'SELECT id FROM journal WHERE id=$1 AND "workspaceId"=$2 AND "ownerId"=$3',
@@ -730,7 +808,8 @@ export class PostExecutor {
         throw unavailable();
       }
       const op = randomUUID(),
-        journal = randomUUID();
+        journal = randomUUID(),
+        replacementJournal = randomUUID();
       await measured(
         this.metrics,
         "sql.receipt",
@@ -750,6 +829,7 @@ export class PostExecutor {
               actor.ownerId,
               workspace,
               journalCommand.originalJournalId,
+              Boolean(accountCorrection),
             );
       if (journalCommand.kind !== "POST")
         await this.probe?.("discovered", c, attempt);
@@ -777,7 +857,9 @@ export class PostExecutor {
         throw new CommandError(404, "not_found");
       if (
         accounts.rows.some(
-          (a) => a.archivedAt !== null || a.currencyCode !== "INR",
+          (a) =>
+            (!accountCorrection && a.archivedAt !== null) ||
+            a.currencyCode !== "INR",
         )
       )
         throw new CommandError(409, "account_unavailable");
@@ -798,7 +880,7 @@ export class PostExecutor {
           movementContext,
           journalCommand.effectiveAt,
         );
-      if (journalCommand.kind !== "POST") {
+      if (journalCommand.kind !== "POST" || accountCorrection) {
         await measured(
           this.metrics,
           "locks.original",
@@ -807,13 +889,39 @@ export class PostExecutor {
               query,
               actor.ownerId,
               workspace,
-              journalCommand.originalJournalId,
+              accountCorrection?.original ??
+                (journalCommand.kind !== "POST"
+                  ? journalCommand.originalJournalId
+                  : ""),
               op,
             ),
           attempt,
         );
         await this.probe?.("targetLocked", c, attempt);
       }
+      if (accountCorrection)
+        await query(
+          'INSERT INTO account_correction("operationId","workspaceId","ownerId","accountId","originalJournalId","rootJournalId","reversalJournalId","replacementJournalId",mode,"amountMinor","commandHash","effectiveAt","replacementEffectiveAt") VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12::timestamptz,$13::timestamptz)',
+          [
+            op,
+            workspace,
+            actor.ownerId,
+            accountCorrection.accountId,
+            accountCorrection.original,
+            accountCorrection.root,
+            journalCommand.kind === "POST" ? null : journal,
+            journalCommand.kind === "REVERSE"
+              ? null
+              : journalCommand.kind === "POST"
+                ? journal
+                : replacementJournal,
+            accountCorrection.mode,
+            accountCorrection.amount,
+            hash,
+            accountCorrection.effectiveAt,
+            accountCorrection.replacementEffectiveAt,
+          ],
+        );
       await this.writeJournal(
         query,
         c,
@@ -837,7 +945,7 @@ export class PostExecutor {
           actor,
           workspace,
           op,
-          randomUUID(),
+          replacementJournal,
           journalCommand.replacement.effectiveAt,
           journalCommand.replacement.description,
           journalCommand.replacement.legs,

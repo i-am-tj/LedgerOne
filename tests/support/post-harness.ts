@@ -120,12 +120,12 @@ export async function postHarness(
       `CREATE ROLE "${role}" LOGIN PASSWORD '${password}' NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS`,
     );
     await admin.query(`GRANT CONNECT ON DATABASE "${new URL(lease.url).pathname.slice(1)}" TO "${role}"; GRANT USAGE ON SCHEMA "${schema}" TO "${role}";
-      GRANT SELECT ON workspace,ledger_account,ledger_operation,journal,posting,audit_event,currency,opening_balance,fx_rate TO "${role}";
+      GRANT SELECT ON workspace,ledger_account,ledger_operation,journal,posting,audit_event,currency,opening_balance,fx_rate,account_correction TO "${role}";
       GRANT INSERT ON ledger_operation,journal,posting,audit_event TO "${role}";
       GRANT UPDATE(id) ON workspace,ledger_account TO "${role}";
       GRANT UPDATE(status,"postedAt","operationId",revision) ON journal TO "${role}"`);
     if (options.accounts)
-      await admin.query(`GRANT SELECT,INSERT ON account_command,account_event,transaction_record,transaction_movement,transaction_capital TO "${role}";
+      await admin.query(`GRANT SELECT,INSERT ON account_command,account_event,transaction_record,transaction_movement,transaction_capital,account_correction TO "${role}";
         GRANT INSERT ON ledger_account,opening_balance TO "${role}";
         GRANT UPDATE(name,"archivedAt","updatedAt") ON ledger_account TO "${role}"`);
     if (schema === "ledgerone") {
@@ -158,7 +158,7 @@ export async function postHarness(
         `CREATE ROLE "${readerRole}" LOGIN PASSWORD '${password}' NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS`,
       );
       await admin.query(
-        `GRANT CONNECT ON DATABASE "${new URL(lease.url).pathname.slice(1)}" TO "${readerRole}"; GRANT USAGE ON SCHEMA "${schema}" TO "${readerRole}"; GRANT SELECT ON workspace,ledger_account,journal,posting,ledger_operation,transaction_record,transaction_movement,transaction_capital TO "${readerRole}"`,
+        `GRANT CONNECT ON DATABASE "${new URL(lease.url).pathname.slice(1)}" TO "${readerRole}"; GRANT USAGE ON SCHEMA "${schema}" TO "${readerRole}"; GRANT SELECT ON workspace,ledger_account,journal,posting,ledger_operation,transaction_record,transaction_movement,transaction_capital,account_correction TO "${readerRole}"`,
       );
       const readerURL = new URL(lease.url);
       readerURL.username = readerRole;

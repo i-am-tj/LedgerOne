@@ -196,6 +196,7 @@ model Currency {
 }
 
 model Account {
+  corrections         AccountCorrection[]
   capitalSources      TransactionCapital[]  @relation("CapitalSource")
   capitalDestinations TransactionCapital[]  @relation("CapitalDestination")
   capitalInterests    TransactionCapital[]  @relation("CapitalInterest")
@@ -227,19 +228,20 @@ model Account {
 }
 
 model LedgerOperation {
-  capitals       TransactionCapital[]
-  movements      TransactionMovement[]
-  captures       TransactionRecord[]
-  id             String                @id @default(uuid()) @db.Uuid
-  workspaceId    String                @db.Uuid
-  ownerId        String
-  idempotencyKey String                @db.VarChar(128)
-  requestHash    String                @db.Char(64)
-  kind           LedgerOperationKind
-  createdAt      DateTime              @default(now()) @db.Timestamptz(3)
-  workspace      Workspace             @relation(fields: [workspaceId, ownerId], references: [id, ownerId], onDelete: Restrict, onUpdate: Restrict)
-  journals       Journal[]
-  financialAudit AuditEvent?
+  accountCorrection AccountCorrection?
+  capitals          TransactionCapital[]
+  movements         TransactionMovement[]
+  captures          TransactionRecord[]
+  id                String                @id @default(uuid()) @db.Uuid
+  workspaceId       String                @db.Uuid
+  ownerId           String
+  idempotencyKey    String                @db.VarChar(128)
+  requestHash       String                @db.Char(64)
+  kind              LedgerOperationKind
+  createdAt         DateTime              @default(now()) @db.Timestamptz(3)
+  workspace         Workspace             @relation(fields: [workspaceId, ownerId], references: [id, ownerId], onDelete: Restrict, onUpdate: Restrict)
+  journals          Journal[]
+  financialAudit    AuditEvent?
 
   @@unique([id, workspaceId, ownerId])
   @@unique([workspaceId, ownerId, idempotencyKey])
@@ -248,26 +250,28 @@ model LedgerOperation {
 }
 
 model Journal {
-  id                     String           @id @default(uuid()) @db.Uuid
-  workspaceId            String           @db.Uuid
+  correctionOriginals    AccountCorrection[] @relation("CorrectionOriginal")
+  correctionRoots        AccountCorrection[] @relation("CorrectionRoot")
+  id                     String              @id @default(uuid()) @db.Uuid
+  workspaceId            String              @db.Uuid
   ownerId                String
-  functionalCurrencyCode String           @default("INR") @db.VarChar(3)
-  status                 JournalStatus    @default(DRAFT)
-  kind                   JournalKind      @default(GENERAL)
-  description            String           @default("") @db.VarChar(500)
-  effectiveAt            DateTime         @db.Timestamptz(3)
-  createdAt              DateTime         @default(now()) @db.Timestamptz(3)
-  postedAt               DateTime?        @db.Timestamptz(3)
-  revision               Int              @default(0)
-  operationId            String?          @db.Uuid
-  reversesJournalId      String?          @db.Uuid
-  workspace              Workspace        @relation(fields: [workspaceId, ownerId, functionalCurrencyCode], references: [id, ownerId, functionalCurrencyCode], onDelete: Restrict, onUpdate: Restrict)
-  operation              LedgerOperation? @relation(fields: [operationId, workspaceId, ownerId], references: [id, workspaceId, ownerId], onDelete: Restrict, onUpdate: Restrict)
-  reverses               Journal?         @relation("JournalReversal", fields: [reversesJournalId, workspaceId, ownerId], references: [id, workspaceId, ownerId], onDelete: Restrict, onUpdate: Restrict)
-  reversal               Journal?         @relation("JournalReversal")
+  functionalCurrencyCode String              @default("INR") @db.VarChar(3)
+  status                 JournalStatus       @default(DRAFT)
+  kind                   JournalKind         @default(GENERAL)
+  description            String              @default("") @db.VarChar(500)
+  effectiveAt            DateTime            @db.Timestamptz(3)
+  createdAt              DateTime            @default(now()) @db.Timestamptz(3)
+  postedAt               DateTime?           @db.Timestamptz(3)
+  revision               Int                 @default(0)
+  operationId            String?             @db.Uuid
+  reversesJournalId      String?             @db.Uuid
+  workspace              Workspace           @relation(fields: [workspaceId, ownerId, functionalCurrencyCode], references: [id, ownerId, functionalCurrencyCode], onDelete: Restrict, onUpdate: Restrict)
+  operation              LedgerOperation?    @relation(fields: [operationId, workspaceId, ownerId], references: [id, workspaceId, ownerId], onDelete: Restrict, onUpdate: Restrict)
+  reverses               Journal?            @relation("JournalReversal", fields: [reversesJournalId, workspaceId, ownerId], references: [id, workspaceId, ownerId], onDelete: Restrict, onUpdate: Restrict)
+  reversal               Journal?            @relation("JournalReversal")
   postings               Posting[]
   opening                OpeningBalance?
-  targetAudits           AuditEvent[]     @relation("FinancialAuditTarget")
+  targetAudits           AuditEvent[]        @relation("FinancialAuditTarget")
 
   @@unique([id, workspaceId, ownerId])
   @@unique([id, workspaceId, ownerId, functionalCurrencyCode])
@@ -430,4 +434,30 @@ model TransactionCapital {
 
   @@index([ownerId, workspaceId, createdAt])
   @@map("transaction_capital")
+}
+
+model AccountCorrection {
+  operationId            String          @id @db.Uuid
+  workspaceId            String          @db.Uuid
+  ownerId                String
+  accountId              String          @db.Uuid
+  originalJournalId      String          @db.Uuid
+  rootJournalId          String          @db.Uuid
+  reversalJournalId      String?         @db.Uuid
+  replacementJournalId   String?         @db.Uuid
+  mode                   String          @db.VarChar(8)
+  amountMinor            Decimal         @db.Decimal(18, 0)
+  commandHash            String          @db.Char(64)
+  effectiveAt            DateTime        @db.Timestamptz(3)
+  replacementEffectiveAt DateTime        @db.Timestamptz(3)
+  createdAt              DateTime        @default(now()) @db.Timestamptz(3)
+  operation              LedgerOperation @relation(fields: [operationId, workspaceId, ownerId], references: [id, workspaceId, ownerId], onDelete: Restrict, onUpdate: Restrict)
+  account                Account         @relation(fields: [accountId, workspaceId, ownerId], references: [id, workspaceId, ownerId], onDelete: Restrict, onUpdate: Restrict)
+  original               Journal         @relation("CorrectionOriginal", fields: [originalJournalId, workspaceId, ownerId], references: [id, workspaceId, ownerId], onDelete: Restrict, onUpdate: Restrict)
+  root                   Journal         @relation("CorrectionRoot", fields: [rootJournalId, workspaceId, ownerId], references: [id, workspaceId, ownerId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([operationId, workspaceId, ownerId])
+  @@unique([originalJournalId, workspaceId, ownerId])
+  @@index([accountId, workspaceId, ownerId])
+  @@map("account_correction")
 }
