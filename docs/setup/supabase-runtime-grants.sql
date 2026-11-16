@@ -10,6 +10,8 @@ GRANT SELECT, INSERT ON ledgerone.audit_event TO ledgerone_app;
 -- S05 exposes only scoped reads; financial write grants await S06 review.
 GRANT SELECT ON ledgerone.currency, ledgerone.ledger_account, ledgerone.journal,
  ledgerone.posting, ledgerone.opening_balance, ledgerone.fx_rate, ledgerone.ledger_operation, ledgerone.account_correction TO ledgerone_app;
+-- Wealth (schema 14): descriptive holding profiles are app-managed metadata.
+GRANT SELECT, INSERT, UPDATE ON ledgerone.holding_profile TO ledgerone_app;
 REVOKE ALL ON ledgerone._prisma_migrations FROM ledgerone_app;
 -- No schema CREATE, TRUNCATE, ALTER, ownership or role-membership grant.
 COMMIT;
