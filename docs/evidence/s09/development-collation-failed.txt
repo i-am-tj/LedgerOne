@@ -1,0 +1,60 @@
+
+> ledgerone@0.1.0 test:integration
+> vitest run --project integration tests/integration/s09-accounting.test.ts
+
+
+ RUN  v5.1.0 <repository>
+
+ ❯ |integration| tests/integration/s09-accounting.test.ts (12 tests | 2 failed) 6761ms
+   ❯ S09 public independent accounting (6)
+     × T01 fixed canonical steps match independently specified legs, balances, classifications and dates 307ms
+   ❯ S09 ledgerone independent accounting (6)
+     × T01 fixed canonical steps match independently specified legs, balances, classifications and dates 165ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |integration| tests/integration/s09-accounting.test.ts > S09 public independent accounting > T01 fixed canonical steps match independently specified legs, balances, classifications and dates
+ FAIL  |integration| tests/integration/s09-accounting.test.ts > S09 ledgerone independent accounting > T01 fixed canonical steps match independently specified legs, balances, classifications and dates
+AssertionError: expected [ { name: 'SBI Savings', …(4) }, …(1) ] to deeply equal [ { name: 'Salary', …(4) }, …(1) ]
+
+- Expected
++ Received
+
+  [
+    {
+      "amount": "1000000",
+      "currency": "INR",
+      "functional": "1000000",
+-     "name": "Salary",
+-     "side": "CREDIT",
++     "name": "SBI Savings",
++     "side": "DEBIT",
+    },
+    {
+      "amount": "1000000",
+      "currency": "INR",
+      "functional": "1000000",
+-     "name": "SBI Savings",
+-     "side": "DEBIT",
++     "name": "Salary",
++     "side": "CREDIT",
+    },
+  ]
+
+ ❯ legs tests/integration/s09-accounting.test.ts:118:22
+    116|             a.name.localeCompare(b.name) || a.side.localeCompare(b.sid…
+    117|         );
+    118|       expect(actual).toEqual(ordered);
+       |                      ^
+    119|     }
+    120|     async function balanced() {
+ ❯ tests/integration/s09-accounting.test.ts:240:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 10 passed (12)
+   Start at  17:50:54
+   Duration  7.20s (tests 95%, import 3%, transform 1%, setup 1%)
+

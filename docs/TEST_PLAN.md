@@ -61,7 +61,7 @@ Every gate requires baseline formatting/lint/typecheck/unit/relevant integration
 
 `Gate | Date/time/timezone | Commit/PR | Environment/runtime/DB | Commands + exit codes | Scenario evidence | Accounting/security reviewers | Failures/limitations | PASS/FAIL/NOT RUN | Next-phase authorization`
 
-## Current gate register
+## Historical multi-phase gate register (retained)
 
 | Gate | Result  | Evidence                                                   |
 | ---- | ------- | ---------------------------------------------------------- |
@@ -284,3 +284,7 @@ No capacity campaign or generalized agent review. Normal complete pipeline and e
 | Coherent responsive UI, effective versus recorded dates, labels, refresh/reversal/future states                     | transaction-reporting.spec.ts isolated verified identities, real native typed handlers and guarded persisted reversal fixture; axe/overflow/screenshots |
 
 Existing A/B/C mutation, idempotency, principal admission, recovery and auth suites remain release-blocking. No new financial mutation interface is introduced. Full original S08 acceptance matrix is in reports/P1-S08-D.md; story remains open until reviewed incorporation, and S09 remains separate.
+
+## S09 current Phase1 scope and execution
+
+The register above is the original multi-phase planning checkpoint, not a claim that current S01–S08 work is absent. Current Phase1 evidence is evaluated in [PHASE_1](gates/PHASE_1.md). [S09 traceability](gates/S09_TRACEABILITY.md) maps each original requirement to new independent fixed/seeded tests and reused actual handler/role/concurrency/migration/browser evidence. [Reproduction](setup/PHASE_1_GATE.md) uses npm run verify:phase1, with exact source/stage exits/private artifacts and no skip flag. Broad split/investment/FX/refund/tag scenarios in the earlier canonical paragraph are explicitly Phase2+ NOT RUN, not prerequisites to implement during S09. No original Phase1 requirement is removed.

@@ -1,0 +1,37 @@
+
+> ledgerone@0.1.0 test:integration
+> vitest run --project integration
+
+
+ RUN  v5.1.0 <repository>
+
+ ❯ |integration| tests/integration/commit-wait.test.ts (9 tests | 1 failed) 36998ms
+   × 007 COMMIT acknowledgement cancel-after: deadline, single outcome, connection lifecycle 55ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |integration| tests/integration/commit-wait.test.ts > 007 COMMIT acknowledgement cancel-after: deadline, single outcome, connection lifecycle
+AssertionError: expected 1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ tests/integration/commit-wait.test.ts:177:13
+    175|               )
+    176|             ).rows[0].n,
+    177|           ).toBe(0);
+       |             ^
+    178|         }
+    179|         expect(await outcome(key)).toEqual({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 28 passed (29)
+      Tests  1 failed | 418 passed (419)
+   Start at  18:01:30
+   Duration  159.15s (tests 95%, import 3%, setup 1%)
+

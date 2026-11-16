@@ -19,7 +19,13 @@ export default defineConfig({
           fileParallelism: false,
         },
       },
-      { resolve, test: { name: "unit", include: ["src/**/*.test.ts"] } },
+      {
+        resolve,
+        test: {
+          name: "unit",
+          include: ["src/**/*.test.ts", "tests/unit/**/*.test.ts"],
+        },
+      },
       {
         resolve,
         test: {

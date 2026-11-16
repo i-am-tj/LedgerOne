@@ -1,0 +1,16 @@
+
+> ledgerone@0.1.0 test:unit
+> vitest run --project unit
+
+
+ RUN  v5.1.0 <repository>
+
+
+ Test Files  21 passed (21)
+      Tests  283 passed (283)
+   Start at  18:12:58
+   Duration  785ms (import 47%, transform 33%, tests 16%, worker 4%)
+
+    Isolate  21 workers spawned · ~132ms startup each (spawn + environment, per file)
+             at least ~265ms faster with isolate: false — reuses workers across files instead of one per file
+

@@ -1,0 +1,5 @@
+
+> ledgerone@0.1.0 ledger:attest
+> tsx scripts/verify-ledger-invariants.ts
+
+PASS: actual local test schema invariant catalog, enabled triggers, CHECK/function/security/grants, readiness and applied migration history match a fresh reference; all reference resources closed safely. No writes enabled.

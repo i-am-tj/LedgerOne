@@ -1,0 +1,41 @@
+
+> ledgerone@0.1.0 test:integration
+> vitest run --project integration tests/integration/s09-accounting.test.ts
+
+
+ RUN  v5.1.0 <repository>
+
+ ❯ |integration| tests/integration/s09-accounting.test.ts (12 tests | 2 failed) 7172ms
+   ❯ S09 public independent accounting (6)
+     × T03 similar identities and invalid typed inputs cannot leak or leave effects 184ms
+   ❯ S09 ledgerone independent accounting (6)
+     × T03 similar identities and invalid typed inputs cannot leak or leave effects 167ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |integration| tests/integration/s09-accounting.test.ts > S09 public independent accounting > T03 similar identities and invalid typed inputs cannot leak or leave effects
+ FAIL  |integration| tests/integration/s09-accounting.test.ts > S09 ledgerone independent accounting > T03 similar identities and invalid typed inputs cannot leak or leave effects
+AssertionError: expected 401 to be 503 // Object.is equality
+
+- Expected
++ Received
+
+- 503
++ 401
+
+ ❯ tests/integration/s09-accounting.test.ts:678:44
+    676|         });
+    677|         try {
+    678|           expect((await api(body)).status).toBe(503);
+       |                                            ^
+    679|         } finally {
+    680|           h.setProbe(undefined);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 10 passed (12)
+   Start at  17:55:30
+   Duration  7.65s (tests 95%, import 3%, transform 1%, setup 1%)
+

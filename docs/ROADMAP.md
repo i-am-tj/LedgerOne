@@ -88,3 +88,7 @@ S08-B PR40 reviewed/merged at e4348ea; B-R01 #41 closed with evidence. S08-C FD 
 ## 2026-11-16 S08-D final functional slice
 
 S08-C PR42 reviewed/merged at cfc9e5e. S08-D read/query/UI consolidation is under implementation verification on feat/p1-s08d-transaction-history-reporting. It adds no financial services or migration. After required checks and owner-reviewed manual merge, verify original S08 acceptance before closing #38. P1-E4 #37 and Phase1 stay incomplete until S09 and the published gate pass. No hosted/production activation.
+
+## Current Phase1 verification progression
+
+S08-A/B/C/D are owner-reviewed and merged through98908d4; #38 closed. S09 #44 is the remaining P1-E4 verification story on test/p1-s09-accounting-phase1-gate. Canonical/seeded tests and the fresh local runner do not resolve outstanding S07 acceptance/#16/#17 or hosted/release prerequisites. [Current gate](gates/PHASE_1.md) distinguishes implementation/local/release verdicts. No Phase2 advancement authorized.
