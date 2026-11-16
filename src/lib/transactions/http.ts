@@ -13,7 +13,8 @@ import {
   uuid,
 } from "../ledger/commands/contract";
 import { readAccountBalance } from "../ledger/queries";
-import { parseCapture } from "./contract";
+import { isMovementCommand } from "./movement-contract";
+import { parseTransaction } from "./contract";
 import { expenseCategories, incomeCategories } from "./shared";
 export async function handleTransactions(
   request: Request,
@@ -42,6 +43,26 @@ export async function handleTransactions(
     const actor = await authorize();
     if (request.method === "GET") {
       const records = await database.transactionRecord.findMany({
+        where: { ownerId: actor.ownerId },
+        orderBy: [{ createdAt: "desc" }, { operationId: "desc" }],
+        take: 100,
+        include: {
+          operation: {
+            include: {
+              journals: {
+                where: { status: "POSTED", kind: "GENERAL" },
+                select: {
+                  id: true,
+                  effectiveAt: true,
+                  description: true,
+                  reversal: { select: { id: true } },
+                },
+              },
+            },
+          },
+        },
+      });
+      const movements = await database.transactionMovement.findMany({
         where: { ownerId: actor.ownerId },
         orderBy: [{ createdAt: "desc" }, { operationId: "desc" }],
         take: 100,
@@ -105,14 +126,33 @@ export async function handleTransactions(
         expenseCategories,
         incomeCategories,
         summary,
-        transactions: records.map((r) => ({
-          operationId: r.operationId,
-          kind: r.kind,
-          accountName: r.accountName,
-          categoryName: r.categoryName,
-          amountMinor: r.amountMinor.toString(),
-          journal: r.operation.journals[0] ?? null,
-        })),
+        transactions: [
+          ...records.map((r) => ({
+            operationId: r.operationId,
+            kind: r.kind,
+            accountName: r.accountName,
+            categoryName: r.categoryName,
+            amountMinor: r.amountMinor.toString(),
+            journal: r.operation.journals[0] ?? null,
+            createdAt: r.createdAt.toISOString(),
+          })),
+          ...movements.map((r) => ({
+            operationId: r.operationId,
+            kind: r.kind,
+            accountName: r.sourceAccountName,
+            destinationAccountName: r.destinationAccountName,
+            categoryName: null,
+            amountMinor: r.amountMinor.toString(),
+            journal: r.operation.journals[0] ?? null,
+            createdAt: r.createdAt.toISOString(),
+          })),
+        ]
+          .sort(
+            (a, b) =>
+              b.createdAt.localeCompare(a.createdAt) ||
+              b.operationId.localeCompare(a.operationId),
+          )
+          .slice(0, 100),
       });
     }
     if (request.method !== "POST")
@@ -128,14 +168,23 @@ export async function handleTransactions(
     if (!workspace.success) throw new CommandError(404, "not_found");
     if (!executor)
       throw new CommandError(503, "transaction_writes_unavailable");
-    const command = parseCapture(await readCommandBody(request));
-    const result = await executor.execute(
-      authorize,
-      workspace.data,
-      idempotencyKey(request.headers.get("idempotency-key")),
-      command,
-      request.signal,
-    );
+    const command = parseTransaction(await readCommandBody(request));
+    const key = idempotencyKey(request.headers.get("idempotency-key"));
+    const result = isMovementCommand(command)
+      ? await executor.execute(
+          authorize,
+          workspace.data,
+          key,
+          command,
+          request.signal,
+        )
+      : await executor.execute(
+          authorize,
+          workspace.data,
+          key,
+          command,
+          request.signal,
+        );
     return respond(result.result, result.replayed ? 200 : 201);
   } catch (error) {
     return error instanceof CommandError

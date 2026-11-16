@@ -196,24 +196,26 @@ model Currency {
 }
 
 model Account {
-  sourceCaptures   TransactionRecord[] @relation("CaptureAccount")
-  categoryCaptures TransactionRecord[] @relation("CaptureCategory")
-  id               String              @id @default(uuid()) @db.Uuid
-  workspaceId      String              @db.Uuid
-  ownerId          String
-  name             String              @db.VarChar(80)
-  type             AccountClass
-  kind             AccountKind
-  currencyCode     String              @db.VarChar(3)
-  archivedAt       DateTime?           @db.Timestamptz(3)
-  createdAt        DateTime            @default(now()) @db.Timestamptz(3)
-  updatedAt        DateTime            @updatedAt @db.Timestamptz(3)
-  workspace        Workspace           @relation(fields: [workspaceId, ownerId], references: [id, ownerId], onDelete: Restrict, onUpdate: Restrict)
-  currency         Currency            @relation(fields: [currencyCode], references: [code], onDelete: Restrict, onUpdate: Restrict)
-  postings         Posting[]
-  commands         AccountCommand[]
-  events           AccountEvent[]
-  opening          OpeningBalance?
+  outgoingMovements TransactionMovement[] @relation("MovementSource")
+  incomingMovements TransactionMovement[] @relation("MovementDestination")
+  sourceCaptures    TransactionRecord[]   @relation("CaptureAccount")
+  categoryCaptures  TransactionRecord[]   @relation("CaptureCategory")
+  id                String                @id @default(uuid()) @db.Uuid
+  workspaceId       String                @db.Uuid
+  ownerId           String
+  name              String                @db.VarChar(80)
+  type              AccountClass
+  kind              AccountKind
+  currencyCode      String                @db.VarChar(3)
+  archivedAt        DateTime?             @db.Timestamptz(3)
+  createdAt         DateTime              @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime              @updatedAt @db.Timestamptz(3)
+  workspace         Workspace             @relation(fields: [workspaceId, ownerId], references: [id, ownerId], onDelete: Restrict, onUpdate: Restrict)
+  currency          Currency              @relation(fields: [currencyCode], references: [code], onDelete: Restrict, onUpdate: Restrict)
+  postings          Posting[]
+  commands          AccountCommand[]
+  events            AccountEvent[]
+  opening           OpeningBalance?
 
   @@unique([id, workspaceId, ownerId])
   @@unique([id, workspaceId, ownerId, currencyCode])
@@ -222,15 +224,16 @@ model Account {
 }
 
 model LedgerOperation {
+  movements      TransactionMovement[]
   captures       TransactionRecord[]
-  id             String              @id @default(uuid()) @db.Uuid
-  workspaceId    String              @db.Uuid
+  id             String                @id @default(uuid()) @db.Uuid
+  workspaceId    String                @db.Uuid
   ownerId        String
-  idempotencyKey String              @db.VarChar(128)
-  requestHash    String              @db.Char(64)
+  idempotencyKey String                @db.VarChar(128)
+  requestHash    String                @db.Char(64)
   kind           LedgerOperationKind
-  createdAt      DateTime            @default(now()) @db.Timestamptz(3)
-  workspace      Workspace           @relation(fields: [workspaceId, ownerId], references: [id, ownerId], onDelete: Restrict, onUpdate: Restrict)
+  createdAt      DateTime              @default(now()) @db.Timestamptz(3)
+  workspace      Workspace             @relation(fields: [workspaceId, ownerId], references: [id, ownerId], onDelete: Restrict, onUpdate: Restrict)
   journals       Journal[]
   financialAudit AuditEvent?
 
@@ -380,4 +383,23 @@ model TransactionRecord {
 
   @@index([ownerId, workspaceId, createdAt])
   @@map("transaction_record")
+}
+
+model TransactionMovement {
+  operationId            String          @id @db.Uuid
+  workspaceId            String          @db.Uuid
+  ownerId                String
+  kind                   String          @db.VarChar(20)
+  sourceAccountId        String          @db.Uuid
+  destinationAccountId   String          @db.Uuid
+  sourceAccountName      String          @db.VarChar(80)
+  destinationAccountName String          @db.VarChar(80)
+  amountMinor            BigInt
+  createdAt              DateTime        @default(now()) @db.Timestamptz(3)
+  operation              LedgerOperation @relation(fields: [operationId, workspaceId, ownerId], references: [id, workspaceId, ownerId], onDelete: Restrict, onUpdate: Restrict)
+  source                 Account         @relation("MovementSource", fields: [sourceAccountId, workspaceId, ownerId], references: [id, workspaceId, ownerId], onDelete: Restrict, onUpdate: Restrict)
+  destination            Account         @relation("MovementDestination", fields: [destinationAccountId, workspaceId, ownerId], references: [id, workspaceId, ownerId], onDelete: Restrict, onUpdate: Restrict, map: "movement_destination_scope_fkey")
+
+  @@index([ownerId, workspaceId, createdAt])
+  @@map("transaction_movement")
 }

@@ -1,3 +1,4 @@
+import { parseMovement } from "./movement-contract";
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import { invalid, instant, uuid } from "../ledger/commands/contract";
@@ -54,4 +55,16 @@ export function captureHash(
       ]),
     )
     .digest("hex");
+}
+
+// Route-level union; each economic command retains its strict own contract.
+export function parseTransaction(value: unknown) {
+  if (
+    value &&
+    typeof value === "object" &&
+    "kind" in value &&
+    (value.kind === "TRANSFER" || value.kind === "CARD_SETTLEMENT")
+  )
+    return parseMovement(value);
+  return parseCapture(value);
 }

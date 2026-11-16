@@ -1,5 +1,18 @@
 import "server-only";
 import {
+  movementHash,
+  isMovementCommand,
+  type MovementCommand,
+} from "../../transactions/movement-contract";
+import {
+  movementTemplate,
+  movementResult,
+  saveMovement,
+  validateMovementBalance,
+  type MovementContext,
+  type MovementResult,
+} from "../../transactions/movement";
+import {
   captureHash,
   isCaptureCommand,
   type CaptureCommand,
@@ -304,10 +317,18 @@ export class PostExecutor {
     authorize: () => Promise<Actor>,
     workspace: string,
     key: string,
-    command: FinancialCommand | AccountCommand | CaptureCommand,
+    command: MovementCommand,
+    signal?: AbortSignal,
+  ): Promise<{ result: MovementResult; replayed: boolean }>;
+  async execute(
+    authorize: () => Promise<Actor>,
+    workspace: string,
+    key: string,
+    command:
+      FinancialCommand | AccountCommand | CaptureCommand | MovementCommand,
     signal?: AbortSignal,
   ): Promise<{
-    result: FinancialResult | AccountResult | CaptureResult;
+    result: FinancialResult | AccountResult | CaptureResult | MovementResult;
     replayed: boolean;
   }> {
     return measured(this.metrics, "command.total", async () => {
@@ -370,13 +391,14 @@ export class PostExecutor {
     authorize: () => Promise<Actor>,
     workspace: string,
     key: string,
-    command: FinancialCommand | AccountCommand | CaptureCommand,
+    command:
+      FinancialCommand | AccountCommand | CaptureCommand | MovementCommand,
     attempt: number,
     deadline: number,
     signal?: AbortSignal,
     recoverOriginalConflict = false,
   ): Promise<{
-    result: FinancialResult | AccountResult | CaptureResult;
+    result: FinancialResult | AccountResult | CaptureResult | MovementResult;
     replayed: boolean;
   }> {
     throwIfAborted(signal);
@@ -386,11 +408,13 @@ export class PostExecutor {
         () => withinDeadline(authorize(), deadline, undefined, signal),
         attempt,
       ),
-      hash = isCaptureCommand(command)
-        ? captureHash(actor.ownerId, workspace, command)
-        : isAccountCommand(command)
-          ? accountHash(actor.ownerId, workspace, command)
-          : requestHash(actor.ownerId, workspace, command);
+      hash = isMovementCommand(command)
+        ? movementHash(actor.ownerId, workspace, command)
+        : isCaptureCommand(command)
+          ? captureHash(actor.ownerId, workspace, command)
+          : isAccountCommand(command)
+            ? accountHash(actor.ownerId, workspace, command)
+            : requestHash(actor.ownerId, workspace, command);
     const c = await measured(
       this.metrics,
       "command.connection_wait",
@@ -539,10 +563,33 @@ export class PostExecutor {
       if (old.rowCount) {
         if (
           old.rows[0].kind !==
-            (isCaptureCommand(command) ? "POST" : command.kind) ||
+            (isCaptureCommand(command) || isMovementCommand(command)
+              ? "POST"
+              : command.kind) ||
           old.rows[0].requestHash !== hash
         )
           throw new CommandError(409, "idempotency_conflict");
+        if (isMovementCommand(command)) {
+          const saved = await movementTemplate(
+            query,
+            actor.ownerId,
+            workspace,
+            command,
+            old.rows[0].id,
+          );
+          const post = await commandOutcome(
+            c,
+            actor,
+            workspace,
+            old.rows[0].id,
+            saved.post,
+          );
+          await commit(true);
+          return {
+            result: movementResult(saved.context, post),
+            replayed: true,
+          };
+        }
         if (isCaptureCommand(command)) {
           const saved = await captureTemplate(
             query,
@@ -572,6 +619,17 @@ export class PostExecutor {
         return { result, replayed: true };
       }
       let captureContext: CaptureContext | undefined;
+      let movementContext: MovementContext | undefined;
+      if (isMovementCommand(command)) {
+        const prepared = await movementTemplate(
+          query,
+          actor.ownerId,
+          workspace,
+          command,
+        );
+        movementContext = prepared.context;
+        command = prepared.post;
+      }
       if (isCaptureCommand(command)) {
         const prepared = await captureTemplate(
           query,
@@ -651,6 +709,14 @@ export class PostExecutor {
       )
         throw new CommandError(409, "account_unavailable");
       await this.probe?.("locked", c, attempt);
+      if (movementContext)
+        await validateMovementBalance(
+          query,
+          actor.ownerId,
+          workspace,
+          movementContext,
+          journalCommand.effectiveAt,
+        );
       if (journalCommand.kind !== "POST") {
         await measured(
           this.metrics,
@@ -731,9 +797,19 @@ export class PostExecutor {
       );
       if (captureContext)
         await saveCapture(query, actor.ownerId, workspace, op, captureContext);
-      const result = captureContext
-        ? captureResult(captureContext, postResult)
-        : postResult;
+      if (movementContext)
+        await saveMovement(
+          query,
+          actor.ownerId,
+          workspace,
+          op,
+          movementContext,
+        );
+      const result = movementContext
+        ? movementResult(movementContext, postResult)
+        : captureContext
+          ? captureResult(captureContext, postResult)
+          : postResult;
       await this.probe?.("beforeCommit", c, attempt);
       await commit(false);
       await this.probe?.("committed", c, attempt);

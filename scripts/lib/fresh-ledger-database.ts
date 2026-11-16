@@ -53,11 +53,19 @@ export async function createLocalPrivateLedgerDatabase(
 export async function createLegacyOpeningDatabase(source: string) {
   return createLocalLedgerDatabase(source, "public", true, true);
 }
+// S08-B predecessor rehearsal: exact published schema010 before additive011.
+export async function createLegacyCaptureDatabase(
+  source: string,
+  schema: "public" | "ledgerone",
+) {
+  return createLocalLedgerDatabase(source, schema, true, true, 10);
+}
 async function createLocalLedgerDatabase(
   source: string,
   schema: "public" | "ledgerone",
   upgrade = false,
   legacyOnly = false,
+  legacyVersion: 7 | 10 = 7,
 ) {
   databaseSettings({ LEDGERONE_ENV: "test", DATABASE_URL: source });
   const input = new URL(source);
@@ -123,10 +131,14 @@ async function createLocalLedgerDatabase(
         );
         const names = readdirSync("prisma/migrations")
           .filter((n) =>
-            (legacyOnly ? /^20261111000[1-7]_/ : /^20261111000[1-6]_/).test(n),
+            legacyOnly && legacyVersion === 10
+              ? /^\d{12}_/.test(n) && n.slice(0, 12) <= "202611140010"
+              : (legacyOnly ? /^20261111000[1-7]_/ : /^20261111000[1-6]_/).test(
+                  n,
+                ),
           )
           .sort();
-        if (names.length !== (legacyOnly ? 7 : 6))
+        if (names.length !== (legacyOnly ? legacyVersion : 6))
           throw new Error("Unexpected predecessor migration set");
         for (const name of names)
           cpSync(join("prisma/migrations", name), join(migrations, name), {
@@ -165,11 +177,12 @@ async function createLocalLedgerDatabase(
             `SELECT count(*)::int AS count FROM "${schema}"._prisma_migrations WHERE finished_at IS NOT NULL`,
           );
           if (
-            version.rows[0]?.value !== (legacyOnly ? "7" : "6") ||
-            history.rows[0]?.count !== (legacyOnly ? 7 : 6)
+            version.rows[0]?.value !==
+              (legacyOnly ? String(legacyVersion) : "6") ||
+            history.rows[0]?.count !== (legacyOnly ? legacyVersion : 6)
           )
             throw new Error("Private predecessor history mismatch");
-          upgradeFrom = legacyOnly ? "7" : "6";
+          upgradeFrom = legacyOnly ? String(legacyVersion) : "6";
         } finally {
           await inspector.end();
         }
