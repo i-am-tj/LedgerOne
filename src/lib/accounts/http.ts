@@ -1,4 +1,11 @@
 import "server-only";
+import {
+  parseAccountCorrection,
+  isAccountCorrection,
+} from "./correction-contract";
+import { correctionHead, entryCorrectionChoices } from "./correction";
+import type { CommandQuery } from "../ledger/commands/original";
+import type { QueryResultRow } from "pg";
 import { randomUUID } from "node:crypto";
 import { getAuthRuntime } from "../auth/server";
 import { getOwnerSession, authJSON } from "../auth/requests";
@@ -109,13 +116,81 @@ export async function accountRequest(request: Request) {
               },
             },
           });
+          const openingMarker = await database.openingBalance.findFirst({
+            where: {
+              accountId: account.id,
+              ownerId: actor.ownerId,
+              workspaceId: account.workspaceId,
+            },
+            select: { journalId: true },
+          });
+          const query: CommandQuery = async (sql, values = []) => {
+            const rows = await database.$queryRawUnsafe<QueryResultRow[]>(
+              sql,
+              ...values,
+            );
+            return {
+              rows,
+              rowCount: rows.length,
+              command: "SELECT",
+              oid: 0,
+              fields: [],
+            };
+          };
+          const openingCorrection = openingMarker
+            ? await correctionHead(
+                query,
+                actor.ownerId,
+                account.workspaceId,
+                openingMarker.journalId,
+                account.id,
+              )
+            : null;
+          const correctionRows = activity.length
+            ? (
+                await query(
+                  'SELECT c.mode,c."originalJournalId",c."reversalJournalId",c."replacementJournalId",a.reason FROM account_correction c JOIN audit_event a ON a."operationId"=c."operationId" AND a."ownerId"=c."ownerId" AND a."workspaceId"=c."workspaceId" WHERE c."accountId"=$1 AND c."ownerId"=$2 AND c."workspaceId"=$3 AND (c."reversalJournalId"=ANY($4::uuid[]) OR c."replacementJournalId"=ANY($4::uuid[]))',
+                  [
+                    account.id,
+                    actor.ownerId,
+                    account.workspaceId,
+                    activity.map((p) => p.journal.id),
+                  ],
+                )
+              ).rows
+            : [];
           return {
             ...account,
+            openingCorrection,
+            entryCorrections: await entryCorrectionChoices(
+              query,
+              actor.ownerId,
+              account.workspaceId,
+              account.id,
+            ),
             balanceMinor: balance.balanceMinor,
             events,
             activity: activity.map((p) => ({
               ...p,
               nativeMinor: p.nativeMinor.toString(),
+              correction: (() => {
+                const c = correctionRows.find(
+                  (row) =>
+                    row.reversalJournalId === p.journal.id ||
+                    row.replacementJournalId === p.journal.id,
+                );
+                return c
+                  ? {
+                      mode: c.mode,
+                      role:
+                        c.reversalJournalId === p.journal.id
+                          ? "Reversal"
+                          : "Replacement",
+                      reason: c.reason,
+                      originalJournalId: c.originalJournalId,
+                    }
+                  : null;
+              })(),
             })),
           };
         }),
@@ -145,14 +220,29 @@ export async function accountRequest(request: Request) {
     const key = idempotencyKey(request.headers.get("idempotency-key"));
     const executor = await getAccountExecutor();
     if (!executor) throw new CommandError(503, "account_writes_unavailable");
-    const command = parseAccountCommand(await readCommandBody(request));
-    const outcome = await executor.execute(
-      authorize,
-      workspace.data,
-      key,
-      command,
-      request.signal,
-    );
+    const body = await readCommandBody(request);
+    const command =
+      typeof body === "object" &&
+      body !== null &&
+      "kind" in body &&
+      isAccountCorrection({ kind: String(body.kind) })
+        ? parseAccountCorrection(body)
+        : parseAccountCommand(body);
+    const outcome = isAccountCorrection(command)
+      ? await executor.execute(
+          authorize,
+          workspace.data,
+          key,
+          command,
+          request.signal,
+        )
+      : await executor.execute(
+          authorize,
+          workspace.data,
+          key,
+          command,
+          request.signal,
+        );
     return respond(outcome.result, outcome.replayed ? 200 : 201);
   } catch (error) {
     if (error instanceof CommandError)

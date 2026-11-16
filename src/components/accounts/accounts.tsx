@@ -21,7 +21,20 @@ function signedMinor(value: string) {
 }
 import type { AccountCommand, AccountResult } from "@/lib/accounts/contract";
 
+import type { AccountCorrectionCommand } from "@/lib/accounts/correction-contract";
+import type { FinancialResult } from "@/lib/ledger/commands/executor";
+type CorrectionChoice = {
+  originalJournalId: string;
+  amountMinor: string;
+  effectiveAt: string;
+  description: string;
+  kind?: string;
+  categoryName?: string;
+  accountName?: string;
+};
 type Account = {
+  openingCorrection: CorrectionChoice | null;
+  entryCorrections: CorrectionChoice[];
   id: string;
   workspaceId: string;
   name: string;
@@ -38,6 +51,12 @@ type Account = {
     effectiveAt: string;
   }[];
   activity: {
+    correction: {
+      mode: string;
+      role: string;
+      reason: string;
+      originalJournalId: string;
+    } | null;
     id: string;
     side: string;
     nativeMinor: string;
@@ -115,7 +134,15 @@ export function Accounts({ accountId }: { accountId?: string }) {
       live = false;
     };
   }, [reload]);
-  async function command(body: AccountCommand, scope: string) {
+  function command(body: AccountCommand, scope: string): Promise<AccountResult>;
+  function command(
+    body: AccountCorrectionCommand,
+    scope: string,
+  ): Promise<FinancialResult>;
+  async function command(
+    body: AccountCommand | AccountCorrectionCommand,
+    scope: string,
+  ): Promise<AccountResult | FinancialResult> {
     const serialized = JSON.stringify(body);
     const hadPending = retry.current !== null;
     if (
@@ -155,7 +182,7 @@ export function Accounts({ accountId }: { accountId?: string }) {
         "Saved successfully, but the updated view could not load. Refresh to see it.",
       );
     }
-    return result as AccountResult;
+    return result as AccountResult | FinancialResult;
   }
   async function act(body: AccountCommand, scope: string) {
     setBusy(true);
@@ -574,6 +601,34 @@ export function Accounts({ accountId }: { accountId?: string }) {
               {account.archivedAt ? "Restore account" : "Archive account"}
             </Button>
           </Card>
+          {(account.openingCorrection ||
+            account.entryCorrections?.length > 0) && (
+            <CorrectionForm
+              account={account}
+              busy={busy}
+              save={async (body) => {
+                setBusy(true);
+                setError("");
+                setSuccess("");
+                try {
+                  await command(body, account.workspaceId);
+                  setSuccess(
+                    "Historical correction saved. Original history retained.",
+                  );
+                  return true;
+                } catch (e) {
+                  setError(
+                    e instanceof Error
+                      ? e.message
+                      : "Could not save correction.",
+                  );
+                  return false;
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            />
+          )}
           <Card>
             <h2 className="text-xl font-semibold">Recent account activity</h2>
             <p
@@ -596,6 +651,15 @@ export function Accounts({ accountId }: { accountId?: string }) {
                   >
                     <div>
                       <p className="font-medium">{p.journal.description}</p>
+                      {p.correction && (
+                        <p className="mt-1 text-sm">
+                          {p.correction.role} for historical{" "}
+                          {p.correction.mode === "OPENING"
+                            ? "opening balance"
+                            : "expense/income"}{" "}
+                          correction · {p.correction.reason}
+                        </p>
+                      )}
                       <p className="mt-1 text-sm text-muted-foreground">
                         {label(p.journal.kind)} ·{" "}
                         {new Date(p.journal.effectiveAt).toLocaleDateString(
@@ -711,5 +775,222 @@ export function Accounts({ accountId }: { accountId?: string }) {
         </>
       )}
     </div>
+  );
+}
+
+function CorrectionForm({
+  account,
+  busy,
+  save,
+}: {
+  account: Account;
+  busy: boolean;
+  save: (body: AccountCorrectionCommand) => Promise<boolean>;
+}) {
+  const [mode, setMode] = useState<"CORRECT_OPENING" | "CORRECT_ACCOUNT_ENTRY">(
+    account.openingCorrection ? "CORRECT_OPENING" : "CORRECT_ACCOUNT_ENTRY",
+  );
+  const [entry, setEntry] = useState("");
+  const target =
+    mode === "CORRECT_OPENING"
+      ? account.openingCorrection
+      : account.entryCorrections.find((e) => e.originalJournalId === entry);
+  const [value, setValue] = useState(""),
+    [reason, setReason] = useState(""),
+    [reverseDate, setReverseDate] = useState(""),
+    [replacementDate, setReplacementDate] = useState(""),
+    [confirmation, setConfirmation] = useState<AccountCorrectionCommand | null>(
+      null,
+    ),
+    [error, setError] = useState("");
+  useEffect(() => {
+    setConfirmation(null);
+    setError("");
+    if (target) {
+      setValue(formatAmount(BigInt(target.amountMinor), "INR"));
+      const date = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Kolkata",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(new Date(target.effectiveAt));
+      setReverseDate(date);
+      setReplacementDate(date);
+    }
+  }, [target?.originalJournalId, target]);
+  return (
+    <Card>
+      <details>
+        <summary className="cursor-pointer text-xl font-semibold">
+          Correct historical entry
+        </summary>
+        <p className="mt-3 text-sm text-muted-foreground">
+          Preserves the original entry, opening marker and audit. Accounts and
+          classification stay fixed. Archived accounts remain archived. A zero
+          amount reverses the current entry.
+        </p>
+        <form
+          className="mt-4 grid gap-4"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            setError("");
+            try {
+              if (!target) throw Error("Choose an eligible entry.");
+              const minor = signedMinor(value);
+              if (mode === "CORRECT_ACCOUNT_ENTRY" && minor < 0n)
+                throw Error("Expense/income amounts cannot be negative.");
+              if (!reason.trim()) throw Error("Enter a correction reason.");
+              const body: AccountCorrectionCommand = {
+                kind: mode,
+                accountId: account.id,
+                originalJournalId: target.originalJournalId,
+                amount: value,
+                effectiveAt: reverseDate + "T00:00:00+05:30",
+                replacementEffectiveAt: replacementDate + "T00:00:00+05:30",
+                reason,
+              };
+              if (!confirmation) {
+                setConfirmation(body);
+                return;
+              }
+              if (JSON.stringify(body) !== JSON.stringify(confirmation))
+                throw Error("Review changed details before confirming.");
+              if (await save(body)) {
+                setConfirmation(null);
+                setReason("");
+              }
+            } catch (error) {
+              setError(
+                error instanceof Error
+                  ? error.message
+                  : "Check correction details.",
+              );
+            }
+          }}
+        >
+          <label className={field}>
+            Correction type
+            <select
+              className={select}
+              value={mode}
+              onChange={(e) => {
+                setMode(e.target.value as typeof mode);
+                setConfirmation(null);
+              }}
+            >
+              <option
+                value="CORRECT_OPENING"
+                disabled={!account.openingCorrection}
+              >
+                Opening balance
+              </option>
+              <option
+                value="CORRECT_ACCOUNT_ENTRY"
+                disabled={!account.entryCorrections.length}
+              >
+                Expense or income
+              </option>
+            </select>
+          </label>
+          {mode === "CORRECT_ACCOUNT_ENTRY" && (
+            <label className={field}>
+              Original expense or income
+              <select
+                required
+                className={select}
+                value={entry}
+                onChange={(e) => {
+                  setEntry(e.target.value);
+                  setConfirmation(null);
+                }}
+              >
+                <option value="">Choose an entry</option>
+                {account.entryCorrections.map((t) => (
+                  <option key={t.originalJournalId} value={t.originalJournalId}>
+                    {t.categoryName} · {t.accountName} · {money(t.amountMinor)}{" "}
+                    ·{" "}
+                    {new Date(t.effectiveAt).toLocaleDateString("en-IN", {
+                      timeZone: "Asia/Kolkata",
+                    })}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          {target && (
+            <p className="text-sm">
+              Current recorded amount: {money(target.amountMinor)}.{" "}
+              {target.description}
+            </p>
+          )}
+          <label className={field}>
+            Corrected amount (INR)
+            <Input
+              required
+              inputMode="decimal"
+              value={value}
+              onChange={(e) => {
+                setValue(e.target.value);
+                setConfirmation(null);
+              }}
+            />
+          </label>
+          <label className={field}>
+            Reversal effective date (India)
+            <Input
+              required
+              type="date"
+              value={reverseDate}
+              onChange={(e) => {
+                setReverseDate(e.target.value);
+                setConfirmation(null);
+              }}
+            />
+          </label>
+          <label className={field}>
+            Replacement effective date (India)
+            <Input
+              required
+              type="date"
+              value={replacementDate}
+              onChange={(e) => {
+                setReplacementDate(e.target.value);
+                setConfirmation(null);
+              }}
+            />
+          </label>
+          <p className="text-sm text-muted-foreground">
+            Dates affect historical reports independently. At zero there is no
+            replacement journal; resuming a recorded zero uses only the
+            replacement date. Statement comparisons remain snapshots.
+          </p>
+          <label className={field}>
+            Correction reason
+            <Input
+              required
+              maxLength={500}
+              value={reason}
+              onChange={(e) => {
+                setReason(e.target.value);
+                setConfirmation(null);
+              }}
+            />
+          </label>
+          {confirmation && (
+            <p role="status">
+              Confirm {money(signedMinor(value).toString())} with reversal date{" "}
+              {reverseDate} and replacement date {replacementDate}. Reason:{" "}
+              {reason}
+            </p>
+          )}
+          {error && <p role="alert">{error}</p>}
+          <Button disabled={busy || !target} type="submit">
+            {confirmation
+              ? "Confirm historical correction"
+              : "Review correction"}
+          </Button>
+        </form>
+      </details>
+    </Card>
   );
 }
