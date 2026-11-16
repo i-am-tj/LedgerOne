@@ -67,6 +67,26 @@ Use `npm run start:local` after a successful build to serve the built app with t
 
 See [progress](docs/PROGRESS.md), [current backlog](docs/BACKLOG.md), [roadmap](docs/ROADMAP.md), [accounting contract](docs/ACCOUNTING.md) and [Phase 1 gate](docs/gates/PHASE_1.md). No public deployment, paid service or bank connection is authorized. Local checks do not substitute for accounting/security review and reviewed merge.
 
+## Wealth hub (schema 14)
+
+The workspace uses a three-level layout: **primary nav** in the header (Feed · Wealth · Cashflow · Hub; a bottom tab bar on mobile), a **contextual sidebar** for the active section (chips on mobile), and the **page content**. Wealth is organised as Liquid (savings, current/checking, FDs, RDs, cash), Markets (mutual funds, stocks, bonds, NSC, PPF, NPS, gold, other), Assets and Liabilities. Each type has its own list (`/wealth/<section>/<type>`), create (`…/new`), detail (`…/<id>`) and edit (`…/<id>/edit`) views.
+
+- Balances stay ledger-derived: creating a holding runs the existing `CREATE_ACCOUNT` command with its opening balance and date. An FD can instead be **paid from one of your bank accounts**, which posts an `FD_FUNDING` movement on the start date (e.g. ₹5L via Stable Money from IDFC FIRST to Suryoday SFB at 8.1% for 1y 6m).
+- Everything else — institution, app/platform, funding account, typed terms (rate, tenure, compounding, payout, maturity, units, NAV, folio…), notes — lives in `holding_profile` and is editable any time with optimistic concurrency. Archive/restore is the delete path; ledger history is never removed.
+- Identifiers (account number, customer/consumer ID, net-banking user ID, FD/folio/PRAN numbers) are AES-256-GCM encrypted with `LEDGERONE_VAULT_KEY`, bound to the owner and account, masked in lists and revealed only on request (audited). Passwords, PINs, CVVs and OTPs are never collected.
+- Institution and app marks are static, locally rendered brand-colour monograms from `src/lib/wealth/institutions.ts`; unknown names get a generated mark. No logos are fetched remotely.
+- Market current value, FD maturity and interest are display estimates; they are never posted.
+
+Financial writes are only enabled in the disposable local test profile (see S06D). To try it end to end:
+
+```sh
+npm run db:up && npm run db:migrate:test
+npm run build
+npm run preview:wealth -- --prod --seed   # opens Chromium signed in with synthetic demo holdings
+```
+
+Omit `--seed` for an empty workspace, add `--mobile` for a phone viewport, or `--capture <dir>` to save desktop/mobile screenshots. The preview database is discarded when the browser closes. Automated coverage: `src/lib/wealth/wealth.test.ts`, `tests/integration/holding-profiles.test.ts` and `tests/e2e/wealth.spec.ts`.
+
 ## P1-S02 shell and browser checks
 
 Workspace routes are `/home`, `/settings/appearance`, and `/design-system`, protected by an owner session. Public routes are `/` (dashboard preview) and `/login`. Theme selection supports Light, Dark and System and persists in this browser. The component library demonstrates validation and feedback without storing records. Future finance modules are identified as unavailable and have no dead action links.

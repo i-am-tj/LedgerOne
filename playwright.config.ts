@@ -4,6 +4,9 @@ import { defineConfig, devices } from "@playwright/test";
 const secret =
   process.env.LEDGERONE_E2E_SECRET ?? randomBytes(48).toString("base64");
 process.env.LEDGERONE_E2E_SECRET = secret;
+const vaultKey =
+  process.env.LEDGERONE_E2E_VAULT_KEY ?? randomBytes(32).toString("base64");
+process.env.LEDGERONE_E2E_VAULT_KEY = vaultKey;
 export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: true,
@@ -45,7 +48,8 @@ export default defineConfig({
       GITHUB_CLIENT_ID: "e2e-github-placeholder",
       GITHUB_CLIENT_SECRET: "e2e-github-placeholder",
       AUTH_ALLOWED_EMAILS:
-        "e2e-owner@ledgerone.test,e2e-other@ledgerone.test,e2e-report-desktop@ledgerone.test,e2e-report-mobile@ledgerone.test",
+        "e2e-owner@ledgerone.test,e2e-other@ledgerone.test,e2e-report-desktop@ledgerone.test,e2e-report-mobile@ledgerone.test,e2e-wealth-desktop@ledgerone.test,e2e-wealth-mobile@ledgerone.test",
+      LEDGERONE_VAULT_KEY: vaultKey,
       NEXT_TELEMETRY_DISABLED: "1",
     },
   },
