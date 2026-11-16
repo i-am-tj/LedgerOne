@@ -14,7 +14,12 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { categoryHref, findSection, type FieldDef } from "@/lib/wealth/catalog";
+import {
+  categoryHref,
+  findSection,
+  showsInstitutionLogo,
+  type FieldDef,
+} from "@/lib/wealth/catalog";
 import {
   depositMaturityEstimate,
   daysBetween,
@@ -198,7 +203,11 @@ export function HoldingDetail({ holdingId }: { holdingId: string }) {
       <div className="page-heading !mb-0">
         <div className="flex min-w-0 items-start gap-4">
           <InstitutionLogo
-            name={holding.institution ?? holding.name}
+            name={
+              showsInstitutionLogo(c)
+                ? (holding.institution ?? holding.name)
+                : null
+            }
             institutionKey={holding.institutionKey}
             icon={c.icon}
             kinds={c.institutionKinds}
@@ -333,13 +342,15 @@ export function HoldingDetail({ holdingId }: { holdingId: string }) {
                 <dd className="flex items-center gap-2">
                   {holding.institution ? (
                     <>
-                      <InstitutionLogo
-                        name={holding.institution}
-                        institutionKey={holding.institutionKey}
-                        icon={c.icon}
-                        kinds={c.institutionKinds}
-                        size={22}
-                      />
+                      {showsInstitutionLogo(c) && (
+                        <InstitutionLogo
+                          name={holding.institution}
+                          institutionKey={holding.institutionKey}
+                          icon={c.icon}
+                          kinds={c.institutionKinds}
+                          size={22}
+                        />
+                      )}
                       {holding.institution}
                     </>
                   ) : (

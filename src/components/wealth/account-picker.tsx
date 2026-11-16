@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { Check, ChevronDown } from "lucide-react";
+import { showsInstitutionLogo } from "@/lib/wealth/catalog";
 import type { Holding } from "@/lib/wealth/types";
 import { cn } from "@/lib/utils";
 import { rupees } from "./client";
@@ -99,7 +100,11 @@ export function AccountPicker({
     h ? (
       <>
         <InstitutionLogo
-          name={h.institution ?? h.name}
+          name={
+            showsInstitutionLogo(categoryOf(h))
+              ? (h.institution ?? h.name)
+              : null
+          }
           institutionKey={h.institutionKey}
           icon={categoryOf(h).icon}
           kinds={categoryOf(h).institutionKinds}

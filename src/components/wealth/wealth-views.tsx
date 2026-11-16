@@ -9,6 +9,7 @@ import {
   categoryHref,
   findCategory,
   findSection,
+  showsInstitutionLogo,
   sectionCategories,
   type CategoryDef,
   type SectionId,
@@ -141,7 +142,11 @@ export function HoldingCard({ holding }: { holding: Holding }) {
     <Link href={holdingHref(holding)} className="holding-card">
       <div className="flex items-start gap-3">
         <InstitutionLogo
-          name={holding.institution ?? holding.name}
+          name={
+            showsInstitutionLogo(c)
+              ? (holding.institution ?? holding.name)
+              : null
+          }
           institutionKey={holding.institutionKey}
           icon={c.icon}
           kinds={c.institutionKinds}
@@ -182,7 +187,11 @@ export function HoldingRow({ holding }: { holding: Holding }) {
     <li>
       <Link href={holdingHref(holding)} className="holding-row">
         <InstitutionLogo
-          name={holding.institution ?? holding.name}
+          name={
+            showsInstitutionLogo(c)
+              ? (holding.institution ?? holding.name)
+              : null
+          }
           institutionKey={holding.institutionKey}
           icon={c.icon}
           kinds={c.institutionKinds}

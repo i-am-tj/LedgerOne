@@ -221,6 +221,31 @@ test("Wealth: bank account with identifiers, FD funded via platform, edit, archi
   ).toBeVisible();
 });
 
+test("Wealth forms align fields and word sections per type", async ({
+  page,
+  isMobile,
+}) => {
+  const forms: [string, string, boolean][] = [
+    ["liquid/savings", "Where it’s held", true],
+    ["liquid/cash", "Where it’s kept", false],
+    ["assets/vehicles", "About the vehicle", false],
+    ["assets/property", "About the property", false],
+    ["liabilities/credit-cards", "Card issuer", true],
+    ["liabilities/loans", "Lender", true],
+  ];
+  for (const [path, heading, badge] of forms) {
+    await page.goto(`/wealth/${path}/new`);
+    await expect(page.locator("form h2").first()).toHaveText(heading);
+    const card = page.locator("form > div").first();
+    await expect(card.locator(".institution-logo")).toHaveCount(badge ? 1 : 0);
+    if (!isMobile) {
+      const a = await page.locator("#input-institution").boundingBox();
+      const b = await page.locator("#input-name").boundingBox();
+      expect(Math.abs(a!.y - b!.y), path).toBeLessThan(1);
+    }
+  }
+});
+
 test("Wealth API rejects cross-site writes and mismatched categories", async ({
   page,
 }) => {

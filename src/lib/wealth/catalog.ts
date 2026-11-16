@@ -43,6 +43,10 @@ export type CategoryDef = Readonly<{
   icon: string;
   institutionLabel: string;
   institutionHint: string;
+  /** Heading for the institution card on the form. */
+  whereTitle?: string;
+  /** False when the institution field is free text with no brand (cash, a car…). */
+  institutionLogo?: boolean;
   /** Registry kinds suggested for (and accepted as) the institution. */
   institutionKinds: readonly InstitutionKind[];
   /** Registry kinds suggested for the app / platform field. */
@@ -354,6 +358,8 @@ export const categories: readonly CategoryDef[] = [
   },
   {
     id: "cash",
+    whereTitle: "Where it’s kept",
+    institutionLogo: false,
     section: "liquid",
     label: "Cash",
     singular: "Cash wallet",
@@ -874,6 +880,8 @@ export const categories: readonly CategoryDef[] = [
   },
   {
     id: "property",
+    whereTitle: "About the property",
+    institutionLogo: false,
     section: "assets",
     label: "Property",
     singular: "Property",
@@ -917,6 +925,8 @@ export const categories: readonly CategoryDef[] = [
   },
   {
     id: "vehicles",
+    whereTitle: "About the vehicle",
+    institutionLogo: false,
     section: "assets",
     label: "Vehicles",
     singular: "Vehicle",
@@ -959,6 +969,8 @@ export const categories: readonly CategoryDef[] = [
   },
   {
     id: "receivables",
+    whereTitle: "Who owes you",
+    institutionLogo: false,
     section: "assets",
     label: "Money owed to you",
     singular: "Receivable",
@@ -976,6 +988,8 @@ export const categories: readonly CategoryDef[] = [
   },
   {
     id: "other-assets",
+    whereTitle: "About the asset",
+    institutionLogo: false,
     section: "assets",
     label: "Other assets",
     singular: "Asset",
@@ -998,6 +1012,7 @@ export const categories: readonly CategoryDef[] = [
   },
   {
     id: "credit-cards",
+    whereTitle: "Card issuer",
     section: "liabilities",
     label: "Credit cards",
     singular: "Credit card",
@@ -1062,6 +1077,7 @@ export const categories: readonly CategoryDef[] = [
   },
   {
     id: "loans",
+    whereTitle: "Lender",
     section: "liabilities",
     label: "Loans",
     singular: "Loan",
@@ -1122,6 +1138,8 @@ export const categories: readonly CategoryDef[] = [
   },
   {
     id: "other-liabilities",
+    whereTitle: "Who you owe",
+    institutionLogo: false,
     section: "liabilities",
     label: "Other liabilities",
     singular: "Liability",
@@ -1185,6 +1203,10 @@ export function defaultCategory(kind: string): CategoryDef {
       OTHER_LIABILITY: "other-liabilities",
     }[kind] ?? "other-assets";
   return findCategory(id)!;
+}
+/** Whether the institution name can carry a brand/generated logo. */
+export function showsInstitutionLogo(category: CategoryDef) {
+  return category.institutionLogo !== false;
 }
 export function categoryHref(category: CategoryDef) {
   return `/wealth/${category.section}/${category.id}`;

@@ -10,6 +10,7 @@ import { parseAmount } from "@/lib/ledger/money";
 import {
   categoryHref,
   findCategory,
+  showsInstitutionLogo,
   type CategoryDef,
   type FieldDef,
 } from "@/lib/wealth/catalog";
@@ -35,7 +36,9 @@ import { AccountPicker } from "./account-picker";
 import { InstitutionInput } from "./institution-input";
 import { InstitutionLogo, resolveInstitution } from "./institution-logo";
 
-const field = "grid gap-2 text-sm font-medium";
+// content-start: a field stretched to its row neighbour’s height must not
+// spread that space between its label and control.
+const field = "grid content-start gap-2 text-sm font-medium";
 const select = "form-select";
 const groups: { id: FieldDef["group"]; title: string; hint?: string }[] = [
   { id: "identity", title: "Identification" },
@@ -509,7 +512,7 @@ export function HoldingForm({
       </Link>
       <div className="flex items-start gap-4">
         <InstitutionLogo
-          name={institution || name}
+          name={showsInstitutionLogo(category) ? institution || name : null}
           institutionKey={institutionMatch?.key}
           icon={category.icon}
           kinds={category.institutionKinds}
@@ -557,20 +560,24 @@ export function HoldingForm({
         aria-label={editing ? "Edit holding" : "Add holding"}
       >
         <Card className="grid gap-5">
-          <h2 className="text-lg font-semibold">Where it’s held</h2>
+          <h2 className="text-lg font-semibold">
+            {category.whereTitle ?? "Where it’s held"}
+          </h2>
           <div className="grid gap-5 sm:grid-cols-2">
             <div className={field}>
               <label htmlFor="input-institution">
                 {category.institutionLabel}
               </label>
               <div className="flex items-center gap-3">
-                <InstitutionLogo
-                  name={institution}
-                  institutionKey={institutionMatch?.key}
-                  icon={category.icon}
-                  kinds={category.institutionKinds}
-                  size={40}
-                />
+                {showsInstitutionLogo(category) && (
+                  <InstitutionLogo
+                    name={institution}
+                    institutionKey={institutionMatch?.key}
+                    icon={category.icon}
+                    kinds={category.institutionKinds}
+                    size={40}
+                  />
+                )}
                 <InstitutionInput
                   id="input-institution"
                   kinds={category.institutionKinds}
