@@ -98,3 +98,7 @@ Owner approved rejecting FD returns/loan principal payments above available prin
 ## S08-D reporting defaults and review
 
 Documented read defaults: newest recording timestamp first with operation-ID tie break; latest100 with an honest hasMore indication; all posted ledger activity determines totals at one inclusive effective cutoff; optional asOf/workspace API scope, explicit effective versus recorded labels. These preserve financial rules and need no new accounting command approval. Owner independent final review/manual merge remains required; no generalized agent review or production/hosted activation authorized.
+
+## S09 verdict boundaries
+
+No new accounting contract is proposed. Existing approved INR, typed commands, reconciliation comparison and local-only capability remain intact. Owner independent review/manual merge of S09 remains required. Open S07 original correction/provenance/archived-correction acceptance and #16/#17 require their own evidence/disposition; hosted #11, production grants/activation, backup/restore and Phase1 advancement are not authorized by local green tests. See gates/PHASE_1.md; no blanket waiver requested.
