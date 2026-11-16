@@ -196,6 +196,8 @@ model Currency {
 }
 
 model Account {
+  holdingProfile      HoldingProfile?       @relation("HoldingAccount")
+  fundedHoldings      HoldingProfile[]      @relation("HoldingFunding")
   corrections         AccountCorrection[]
   capitalSources      TransactionCapital[]  @relation("CapitalSource")
   capitalDestinations TransactionCapital[]  @relation("CapitalDestination")
@@ -460,4 +462,30 @@ model AccountCorrection {
   @@unique([originalJournalId, workspaceId, ownerId])
   @@index([accountId, workspaceId, ownerId])
   @@map("account_correction")
+}
+
+// Wealth: descriptive holding metadata; balances stay derived from postings.
+model HoldingProfile {
+  accountId        String   @id @db.Uuid
+  workspaceId      String   @db.Uuid
+  ownerId          String
+  category         String   @db.VarChar(32)
+  institution      String?  @db.VarChar(120)
+  institutionKey   String?  @db.VarChar(40)
+  platform         String?  @db.VarChar(120)
+  platformKey      String?  @db.VarChar(40)
+  fundingAccountId String?  @db.Uuid
+  details          Json     @default("{}")
+  secretCipher     String?
+  notes            String?  @db.VarChar(2000)
+  revision         Int      @default(1)
+  createdAt        DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime @updatedAt @db.Timestamptz(3)
+  account          Account  @relation("HoldingAccount", fields: [accountId, workspaceId, ownerId], references: [id, workspaceId, ownerId], onDelete: Restrict, onUpdate: Restrict)
+  funding          Account? @relation("HoldingFunding", fields: [fundingAccountId, workspaceId, ownerId], references: [id, workspaceId, ownerId], onDelete: Restrict, onUpdate: Restrict, map: "holding_profile_funding_scope_fkey")
+
+  @@unique([accountId, workspaceId, ownerId])
+  @@index([ownerId, workspaceId, category])
+  @@index([fundingAccountId])
+  @@map("holding_profile")
 }

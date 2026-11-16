@@ -31,7 +31,9 @@
     "start:local": "tsx scripts/start-local.ts",
     "test:schema": "tsx scripts/rehearse-production-schema.ts",
     "ledger:attest": "tsx scripts/verify-ledger-invariants.ts",
-    "verify:phase1": "tsx scripts/run-phase1-gate.ts"
+    "verify:phase1": "tsx scripts/run-phase1-gate.ts",
+    "preview:wealth": "tsx scripts/wealth-preview.ts",
+    "logos:fetch": "tsx scripts/fetch-institution-logos.ts"
   },
   "dependencies": {
     "@better-auth/prisma-adapter": "1.7.20",

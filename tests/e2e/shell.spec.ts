@@ -30,6 +30,16 @@ test("P1-S02 routes, active navigation and mobile menu focus", async ({
       page.getByRole("button", { name: "Open navigation" }),
     ).toBeFocused();
     await page.getByRole("button", { name: "Open navigation" }).click();
+  } else {
+    // Desktop: primary header nav selects the section; the sidebar is contextual.
+    const primary = page
+      .getByRole("navigation", { name: "Primary navigation" })
+      .filter({ visible: true });
+    await expect(
+      primary.getByRole("link", { name: "Feed", exact: true }),
+    ).toHaveAttribute("aria-current", "true");
+    await primary.getByRole("link", { name: "Hub", exact: true }).click();
+    await expect(page).toHaveURL(/\/accounts$/);
   }
   await nav.getByRole("link", { name: "Appearance", exact: true }).click();
   await expect(page).toHaveURL(/\/settings\/appearance$/);
