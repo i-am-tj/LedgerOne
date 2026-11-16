@@ -233,3 +233,23 @@ Reconciliation is an owner-approved audited comparison only. Expected ledger-min
 | ₹850 Groceries, persisted ₹49,150, income, mobile/desktop accessibility and lost-response recovery | `tests/e2e/transactions.spec.ts`, [screenshots](evidence/s08-a/)                                         |
 
 The original S08 transfer, settlement, FD, loan and full combined-history cases remain required subsequent slices; S09 phase-gate evidence is not replaced by this increment.
+
+## S08-B traceability
+
+| Requirement                                                                                        | Evidence                                                                           |
+| -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Strict economic type/direction/positive exact amount and canonical replay                          | movement-contract.test.ts                                                          |
+| Asset/net-worth invariance, card purchase versus settlement, partial/overpayment/date boundaries   | transaction-movements.test.ts public/private actual handlers                       |
+| Wrong owner/workspace, self, archive, currency, kinds, raw fields and disabled capability          | Same suite and actual browser Request tests                                        |
+| Atomic receipt/journal/postings/audit/context, exact maximum quantities, loss recovery             | Staged failure and committed-ack loss tests; S06 shared regressions retained       |
+| Same-key concurrency, conflict and distinct-key liability contention                               | Same integration suite with real PostgreSQL SERIALIZABLE retries                   |
+| Snapshot replay after rename/archive and subsequent settlements; immutable context                 | Same integration suite                                                             |
+| Deferred invalid-SQL/overpayment rejection                                                         | Same suite, full rollback of forged context and raw associated financial operation |
+| Actual010→011 compatibility / old snapshots and checksums unchanged                                | movement-upgrade.test.ts public/private                                            |
+| Responsive transfer/payment UI, refresh, original expense history and both movement recovery flows | transaction-movements.spec.ts desktop/mobile, axe and screenshots                  |
+
+No repeated capacity campaign; this slice retains the existing financial limits, retry/deadline policies and accepted local capability boundary. Full required pipeline and exact-head CI remain mandatory.
+
+## S08-B B-R01 correction
+
+`transaction-movements.test.ts` adds public/private real-handler regressions for Jan1 purchase1200, Jan10 payment1000, rejected Jan5 payment500 (no receipt/journal/posting/audit/context changes), accepted Jan5 payment200 (Jan10 zero), later purchase hiding an intermediate dip, competing different-date/different-key settlements with overlapping first attempts, equal-instant grouping, unchanged replay after subsequent payments/metadata and admission scoped outside unrelated earlier negative history. Raw POST plus forged typed evidence must fail at deferred COMMIT and roll back the entire operation. `transaction-movements.spec.ts` adds desktop/mobile failure-message/persisted-balance tests while retaining the original success walkthroughs and screenshots. Existing010→011 upgrade, drift, attestation, roles and full regression suite remain required.

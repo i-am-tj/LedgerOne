@@ -1,6 +1,6 @@
 # Progress and evidence
 
-> Current status (2026-11-14): S07 PR #35 reviewed/merged `1fd3b936a3ccdce2194bc5b6be2fa769acaa0318`; #36 closed with merged recovery evidence. Original remaining S07 requirements and #16/#17 remain tracked. S08-A expense/income UI and typed local commands are implemented on `codex/p1-s08-transactions`, under #38 / epic #37, local pipeline PASS (245 unit / 305 integration / 56 browser), pending owner review and merge. S08-B/C/D and S09 remain required. P1-E3 and Phase 1 are incomplete. Hosted verification NOT RUN; normal-runtime financial writers disabled. Earlier dated checkpoints retain their historical decisions and evidence.
+> Current status (2026-11-16): S08-A PR #39 reviewed/merged `1c74eeaf`. S08-B PR #40 owner review of `239fd16`: CHANGES REQUIRED, medium merge-blocking B-R01 (backdated payment can overpay at a later boundary). Narrow correction and focused regressions implemented; final local pipeline PASS (260 unit /349 integration /64 browser); current-head CI and owner final review pending. PR remains draft/unmerged. Original local260/335/62 and CI PASS are historical test results, not approval. #38/#37 and original residual S07/#16/#17 remain open; C/D/S09 required. P1-E3/Phase1 incomplete; hosted NOT RUN; production/default/raw financial writes disabled.
 
 ## 2026-11-11 — P1-S01 Docker Compose and outage verification
 
@@ -588,3 +588,13 @@ Verified GitHub PR #35 MERGED at `1fd3b936a3ccdce2194bc5b6be2fa769acaa0318`, fet
 Implemented S08-A: typed EXPENSE/INCOME handlers and real `/transactions` form/history, exact ledger balances/consumption, immutable capture context via additive migration 010, scoped canonical replay and existing shared audited executor. Real desktop/mobile browser evidence demonstrates ₹50,000 → ₹49,150 after ₹850 Groceries, refresh persistence, subsequent ₹1,500 income → ₹50,650, and safe same-key recovery after a lost response. Report: [S08-A](reports/P1-S08-A.md).
 
 No hosted operations, published runtime grant changes or generic consumer command activation. No S07/S06 rebuild or generalized independent agent review. Owner independent review and explicitly authorized merge remain required. S08 is not complete; B transfers/card settlement, C FD/loan, D combined history/reporting remain next in order.
+
+## 2026-11-16 — S08-A verified merge; S08-B visible movements
+
+Verified PR #39 MERGED at `1c74eeaf61e228aa61d6ceb9a0c332d1ed742909`, fetched main and created `codex/p1-s08-b-movements`. Preserved S08-A without a new general review. Added typed owned-bank/cash transfers and bank/cash-to-card payments, immutable movement context in additive011, selectors/history/both balances in the existing transaction UI, and real handler/browser regressions. Owner explicitly approved partial card payments and rejection above liability at the selected effective date. No refund/overpayment/fee/interest semantics were invented.
+
+[Implementation and verification report](reports/P1-S08-B.md). No merge, hosted operation, production grant or write activation authorized. #38/#37 remain open; C/D/S09 are unchanged future steps.
+
+## 2026-11-16 — S08-B owner finding B-R01
+
+Owner reviewed239fd16 and required changes. Reproduced six failures in42 tests against that implementation (typed and database acceptance of invalid backdating across public/private fixtures). Correction validates the new settlement against each existing later posted boundary, keeps equal-effective-time entries grouped and preserves immutable replay/the shared executor. Focused corrected tests including010→011 upgrades:44 PASS; complete corrected local pipeline260 unit /349 integration /64 browser PASS. Existing successful UI/screenshots retained; only rejection wording clarified and a browser rejection regression added. Full correction evidence: [B-R01](reports/P1-S08-B_B-R01.md).011 has been applied only to generated disposable local/CI fixtures in recorded project execution; corrected the unmerged011 candidate and rebuild fresh, without touching001–010 or resetting any persistent checksum. No hosted/persistent migration operation performed. Final review/merge remains the owner's decision.

@@ -1,0 +1,11 @@
+{
+  "correctedImplementationCommit": "a3eefc35026f11c46edb7798c3cd086fb9077229",
+  "reviewedHead": "239fd166380ab38714135838557965fda5dc4e9b",
+  "sha256": {
+    "prisma/migrations/202611160011_transaction_movements/migration.sql": "ebc35a7aa26060964ff0e007652ae631f9df91c62d5cf394b3d215f102fac32a",
+    "src/components/transactions/transactions.tsx": "878c58cdef45fc080826ed86db91b757168fd59ebb136f867f51b1bf4765f085",
+    "src/lib/transactions/movement.ts": "c58812045ad5a6d87d290605f780afb16b77db9a212e6adc2d4013d69d0c0206",
+    "tests/e2e/transaction-movements.spec.ts": "cb27b4af9d5a389df57286ee75bd5db4a0951a34fe8c2e2575a9a313baa54ea9",
+    "tests/integration/transaction-movements.test.ts": "062b45a93613f5b75dfb06fb76a3163dab99f6914f866f18a1305fceb43e960d"
+  }
+}

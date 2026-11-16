@@ -7,5 +7,12 @@ export default defineConfig([
   js.configs.recommended,
   tseslint.configs.recommended,
   { languageOptions: { globals: { ...globals.node, ...globals.browser } } },
-  globalIgnores([".next/**", "src/generated/**", "next-env.d.ts"]),
+  globalIgnores([
+    ".next/**",
+    "src/generated/**",
+    "next-env.d.ts",
+    "playwright-report/**",
+    "test-results/**",
+    "coverage/**",
+  ]),
 ]);

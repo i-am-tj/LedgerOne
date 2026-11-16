@@ -1,0 +1,23 @@
+{
+  "implementationCommit": "1562432388b8314590222c193a500e7eb1a48fbe",
+  "baseCommit": "1c74eeaf61e228aa61d6ceb9a0c332d1ed742909",
+  "sha256": {
+    "eslint.config.mjs": "0445bb8dc52d1019dfafbc51f447d3146c537410955faa58c326d70cbdb45c5e",
+    "prisma/migrations/202611160011_transaction_movements/migration.sql": "ebc6f5c91ba157d200c24be30e72479a1d3984baeec712b06cfe47311133cd3f",
+    "prisma/schema.prisma": "8c9d7675a8f0ad97d8bd598e076d235b5109da99716fda66a868fc1cdfb6fd37",
+    "scripts/account-app-server.ts": "2427abfaa92fd0094dbdf689fbdbbdd6d9f37cd7dc04aaeef64cf5bde775764f",
+    "scripts/lib/fresh-ledger-database.ts": "0b1ca235196eabce1c8d6d94aca689a0cd74e5f542d38c9e7c07848eb4c5d2f7",
+    "src/components/transactions/transactions.tsx": "25fd11cfc04b540c15cf5d402488accee343bcb174c6deb52d2bbe5f1b71c2e4",
+    "src/lib/ledger/commands/executor.ts": "2a3dcd3647407e6916921b318b1c09f10fe4d0c4e94fc7235d82ffc8cf348b08",
+    "src/lib/schema-version.ts": "d54b70b26b3b45dc8f378b517f806ca35a9e6b766e42c815278a6a1df88c134f",
+    "src/lib/transactions/contract.ts": "5c7863c42729ec6c52daf51a75d53e31289b807a2d52deb1cc96386a8bc44859",
+    "src/lib/transactions/http.ts": "594f90f1876c737dedb577ba8c59a45a54d51114d9f12c8c8d1e79f23455bf7c",
+    "src/lib/transactions/movement-contract.test.ts": "b786e2173a57661f99847e77da5f3df8bdcf961899127d3a4f8dbc6ab7897f11",
+    "src/lib/transactions/movement-contract.ts": "9ff4868c9cae27f7ea2c92cc82beab97e0777fdc45968cdf9e94e8e53d1420bb",
+    "src/lib/transactions/movement.ts": "a1cfa675ba755b8a4fee5bedd81e329e31adc1a293738b785730f16642ec4727",
+    "tests/e2e/transaction-movements.spec.ts": "57255d11bdda2bb8bebef83df75ea26af3a5148d4a637320f152baa9e620ee45",
+    "tests/integration/movement-upgrade.test.ts": "f669313c7f2fdd8bb1b227d17e0740d6e3da08d585e5058ae4e986fd35fe4c4a",
+    "tests/integration/transaction-movements.test.ts": "44b9542e959ef5a51bfbcac945257feca4a9cab3a4f4fa7cbbd76a11add3d305",
+    "tests/support/post-harness.ts": "0fe1fb7ed36da8e1e6bd6993e314c075989a6280773d2201d51a0795cf39b849"
+  }
+}

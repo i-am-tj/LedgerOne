@@ -1,0 +1,85 @@
+
+> ledgerone@0.1.0 test:integration
+> vitest run --project integration tests/integration/transaction-movements.test.ts
+
+
+ RUN  v5.1.0 /Users/iamtj/Document/Projects/Self/LedgerOne
+
+ ❯ |integration| tests/integration/transaction-movements.test.ts (42 tests | 6 failed) 5166ms
+   ❯ S08-B public real authenticated movements (21)
+     × B-R01 typed rejects January5 ₹500 after January10 ₹1000, atomically 54ms
+     × B-R01 direct SQL rejects January5 ₹500 after January10 ₹1000, atomically 51ms
+     × B-R01 rejects an intermediate negative boundary even when a later purchase restores the final balance 63ms
+   ❯ S08-B ledgerone real authenticated movements (21)
+     × B-R01 typed rejects January5 ₹500 after January10 ₹1000, atomically 58ms
+     × B-R01 direct SQL rejects January5 ₹500 after January10 ₹1000, atomically 54ms
+     × B-R01 rejects an intermediate negative boundary even when a later purchase restores the final balance 74ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |integration| tests/integration/transaction-movements.test.ts > S08-B public real authenticated movements > B-R01 typed rejects January5 ₹500 after January10 ₹1000, atomically
+ FAIL  |integration| tests/integration/transaction-movements.test.ts > S08-B ledgerone real authenticated movements > B-R01 typed rejects January5 ₹500 after January10 ₹1000, atomically
+AssertionError: expected 201 to be 409 // Object.is equality
+
+- Expected
++ Received
+
+- 409
++ 201
+
+ ❯ tests/integration/transaction-movements.test.ts:294:33
+    292|           }
+    293|         }
+    294|         expect(response.status).toBe(mode === "typed" ? 409 : 503);
+       |                                 ^
+    295|         if (mode === "typed")
+    296|           expect(await response.json()).toEqual({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  |integration| tests/integration/transaction-movements.test.ts > S08-B public real authenticated movements > B-R01 direct SQL rejects January5 ₹500 after January10 ₹1000, atomically
+ FAIL  |integration| tests/integration/transaction-movements.test.ts > S08-B ledgerone real authenticated movements > B-R01 direct SQL rejects January5 ₹500 after January10 ₹1000, atomically
+AssertionError: expected 201 to be 503 // Object.is equality
+
+- Expected
++ Received
+
+- 503
++ 201
+
+ ❯ tests/integration/transaction-movements.test.ts:294:33
+    292|           }
+    293|         }
+    294|         expect(response.status).toBe(mode === "typed" ? 409 : 503);
+       |                                 ^
+    295|         if (mode === "typed")
+    296|           expect(await response.json()).toEqual({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  |integration| tests/integration/transaction-movements.test.ts > S08-B public real authenticated movements > B-R01 rejects an intermediate negative boundary even when a later purchase restores the final balance
+ FAIL  |integration| tests/integration/transaction-movements.test.ts > S08-B ledgerone real authenticated movements > B-R01 rejects an intermediate negative boundary even when a later purchase restores the final balance
+AssertionError: expected 201 to be 409 // Object.is equality
+
+- Expected
++ Received
+
+- 409
++ 201
+
+ ❯ tests/integration/transaction-movements.test.ts:344:9
+    342|         (await api({ ...command, amount: "500", effectiveAt: january("…
+    343|           .status,
+    344|       ).toBe(409);
+       |         ^
+    345|       expect(await financialCounts()).toEqual(before);
+    346|       expect(await liabilityAt(card, january("10"))).toBe("20000");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  6 failed | 36 passed (42)
+   Start at  13:51:24
+   Duration  5.68s (tests 93%, import 4%, transform 2%, setup 1%)
+

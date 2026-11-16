@@ -17,6 +17,7 @@ type Account = {
   workspaceId: string;
   name: string;
   kind: string;
+  type: "ASSET" | "LIABILITY";
   currencyCode: string;
   archivedAt: string | null;
   balanceMinor: string;
@@ -25,7 +26,8 @@ type Row = {
   operationId: string;
   kind: string;
   accountName: string;
-  categoryName: string;
+  categoryName: string | null;
+  destinationAccountName?: string;
   amountMinor: string;
   journal: {
     effectiveAt: string;
@@ -54,8 +56,11 @@ const select =
   "min-h-11 rounded-lg border border-border bg-background px-3 text-base";
 export function Transactions() {
   const [data, setData] = useState<Data | null>(null),
-    [kind, setKind] = useState<"EXPENSE" | "INCOME">("EXPENSE"),
+    [kind, setKind] = useState<
+      "EXPENSE" | "INCOME" | "TRANSFER" | "CARD_SETTLEMENT"
+    >("EXPENSE"),
     [accountId, setAccount] = useState(""),
+    [destinationId, setDestination] = useState(""),
     [amount, setAmount] = useState(""),
     [category, setCategory] = useState("Groceries"),
     [date, setDate] = useState(today),
@@ -87,6 +92,21 @@ export function Transactions() {
   const account = accountId
     ? accounts.find((a) => a.id === accountId)
     : accounts[0];
+  const movement = kind === "TRANSFER" || kind === "CARD_SETTLEMENT";
+  const destinations =
+    data?.accounts.filter(
+      (a) =>
+        !a.archivedAt &&
+        a.currencyCode === "INR" &&
+        a.workspaceId === account?.workspaceId &&
+        a.id !== account?.id &&
+        (kind === "TRANSFER"
+          ? a.type === "ASSET" && ["BANK", "CASH"].includes(a.kind)
+          : a.type === "LIABILITY" && a.kind === "CREDIT_CARD"),
+    ) ?? [];
+  const destination = destinationId
+    ? destinations.find((a) => a.id === destinationId)
+    : destinations[0];
   async function save(body: string, workspace: string) {
     if (
       pending.current &&
@@ -105,13 +125,15 @@ export function Transactions() {
       },
       body,
     });
-    await response.json();
+    const result = await response.json();
     if (!response.ok) {
       if (response.status < 500 && !recovering) pending.current = null;
       throw Error(
         response.status === 503
           ? "The outcome is unconfirmed. Recover the pending transaction safely."
-          : "Could not save. Check the account, category and amount.",
+          : result.error === "card_payment_exceeds_liability"
+            ? "Payment exceeds the card liability at the selected date or a later posted date. Overpayments are not supported."
+            : "Could not save. Check the account, category and amount.",
       );
     }
     pending.current = null;
@@ -131,18 +153,27 @@ export function Transactions() {
     try {
       if (recover && pending.current)
         await save(pending.current.body, pending.current.workspace);
-      else if (account)
+      else if (account) {
+        if (movement && !destination)
+          throw Error(
+            "Choose a different eligible destination in the same workspace.",
+          );
         await save(
           JSON.stringify({
             kind,
-            accountId: account.id,
+            ...(movement
+              ? {
+                  sourceAccountId: account.id,
+                  destinationAccountId: destination!.id,
+                }
+              : { accountId: account.id, category }),
             amount,
-            category,
             effectiveAt: date + "T00:00:00+05:30",
             description,
           }),
           account.workspaceId,
         );
+      }
     } catch (e) {
       setError(
         e instanceof Error ? e.message : "Could not save the transaction.",
@@ -158,7 +189,8 @@ export function Transactions() {
           <p className="eyebrow">EVERYDAY FINANCES</p>
           <h1>Transactions</h1>
           <p className="page-description">
-            Record a purchase or income and follow its effect on your accounts.
+            Record purchases, income, transfers and card payments in your
+            accounts.
           </p>
         </div>
       </div>
@@ -243,21 +275,31 @@ export function Transactions() {
                     setKind(k);
                     setCategory(k === "EXPENSE" ? "Groceries" : "Salary");
                     setAccount("");
+                    setDestination("");
                   }}
                 >
                   <option value="EXPENSE">Expense</option>
                   <option value="INCOME">Income</option>
+                  <option value="TRANSFER">Transfer</option>
+                  <option value="CARD_SETTLEMENT">Credit-card payment</option>
                 </select>
               </label>
               <label className="grid gap-2 text-sm font-medium">
                 {kind === "EXPENSE"
                   ? "Paid from account"
-                  : "Receive into account"}
+                  : kind === "INCOME"
+                    ? "Receive into account"
+                    : kind === "TRANSFER"
+                      ? "Source account"
+                      : "Paying account"}
                 <select
                   required
                   className={select}
                   value={account?.id ?? ""}
-                  onChange={(e) => setAccount(e.target.value)}
+                  onChange={(e) => {
+                    setAccount(e.target.value);
+                    setDestination("");
+                  }}
                 >
                   {accounts.map((a) => (
                     <option key={a.id} value={a.id}>
@@ -271,6 +313,40 @@ export function Transactions() {
                   ))}
                 </select>
               </label>
+              {movement && (
+                <label className="grid gap-2 text-sm font-medium">
+                  {kind === "TRANSFER"
+                    ? "Destination account"
+                    : "Credit-card account"}
+                  <select
+                    className={select}
+                    required
+                    value={destination?.id ?? ""}
+                    onChange={(e) => setDestination(e.target.value)}
+                  >
+                    <option value="" disabled>
+                      Choose an eligible account
+                    </option>
+                    {destinations.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.name}
+                      </option>
+                    ))}
+                  </select>
+                  {!destinations.length && (
+                    <span>
+                      No eligible{" "}
+                      {kind === "TRANSFER"
+                        ? "bank/cash destination"
+                        : "credit card"}{" "}
+                      in this workspace.{" "}
+                      <Link href="/accounts" className="underline">
+                        Manage accounts
+                      </Link>
+                    </span>
+                  )}
+                </label>
+              )}
               <label className="grid gap-2 text-sm font-medium">
                 Amount (INR)
                 <Input
@@ -289,22 +365,24 @@ export function Transactions() {
                   onChange={(e) => setDate(e.target.value)}
                 />
               </label>
-              <label className="grid gap-2 text-sm font-medium">
-                Category
-                <select
-                  required
-                  className={select}
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                >
-                  {(kind === "EXPENSE"
-                    ? expenseCategories
-                    : incomeCategories
-                  ).map((c) => (
-                    <option key={c}>{c}</option>
-                  ))}
-                </select>
-              </label>
+              {!movement && (
+                <label className="grid gap-2 text-sm font-medium">
+                  Category
+                  <select
+                    required
+                    className={select}
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                  >
+                    {(kind === "EXPENSE"
+                      ? expenseCategories
+                      : incomeCategories
+                    ).map((c) => (
+                      <option key={c}>{c}</option>
+                    ))}
+                  </select>
+                </label>
+              )}
               <label className="grid gap-2 text-sm font-medium">
                 Description (optional)
                 <Input
@@ -325,29 +403,65 @@ export function Transactions() {
                   </Link>
                 </p>
               )}
+              {movement && destination && (
+                <div className="text-sm text-muted-foreground sm:col-span-2">
+                  <p>
+                    {destination.name}{" "}
+                    {kind === "CARD_SETTLEMENT" ? "liability" : "balance"}{" "}
+                    <strong data-testid="destination-account-balance">
+                      {money(destination.balanceMinor)}
+                    </strong>
+                  </p>
+                  <p>
+                    {kind === "TRANSFER"
+                      ? "Selected accounts combined assets"
+                      : "Selected accounts net worth"}{" "}
+                    <strong data-testid="movement-net-worth">
+                      {money(
+                        (
+                          BigInt(account?.balanceMinor ?? "0") +
+                          (kind === "TRANSFER" ? 1n : -1n) *
+                            BigInt(destination.balanceMinor)
+                        ).toString(),
+                      )}
+                    </strong>
+                  </p>
+                  {kind === "CARD_SETTLEMENT" && (
+                    <p>
+                      Payments reduce card debt, not consumption. Partial
+                      payments are allowed; overpayments, interest and fees are
+                      not supported here. The amount is checked against
+                      liability at the selected effective date.
+                    </p>
+                  )}
+                </div>
+              )}
               <Button
                 type="submit"
-                disabled={busy || !account}
+                disabled={busy || !account || (movement && !destination)}
                 className="sm:col-span-2 sm:justify-self-start"
               >
                 {busy
                   ? "Saving…"
                   : kind === "EXPENSE"
                     ? "Save expense"
-                    : "Save income"}
+                    : kind === "INCOME"
+                      ? "Save income"
+                      : kind === "TRANSFER"
+                        ? "Save transfer"
+                        : "Pay credit-card bill"}
               </Button>
             </form>
           </Card>
           <Card>
             <h2 className="text-xl font-semibold">Transaction history</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Up to 100 recent committed captures. Summary totals use posted
+              Up to 100 recent committed transactions. Summary totals use posted
               income and expense classifications through today.
             </p>
             {!data.transactions.length ? (
               <p className="mt-5 text-muted-foreground">
-                No transactions yet. Your saved expenses and income will appear
-                here.
+                No transactions yet. Your saved transactions will appear here.
               </p>
             ) : (
               <ul className="mt-4 divide-y divide-border">
@@ -360,12 +474,24 @@ export function Transactions() {
                   >
                     <div>
                       <p className="font-semibold">
-                        {t.categoryName} ·{" "}
-                        {t.kind === "EXPENSE" ? "Expense" : "Income"}
+                        {t.kind === "TRANSFER" ? (
+                          "Transfer"
+                        ) : t.kind === "CARD_SETTLEMENT" ? (
+                          "Credit-card payment"
+                        ) : (
+                          <>
+                            {t.categoryName} ·{" "}
+                            {t.kind === "EXPENSE" ? "Expense" : "Income"}
+                          </>
+                        )}
                         {t.journal?.reversal ? " · Reversed" : ""}
                       </p>
                       <p className="mt-1 text-sm text-muted-foreground">
-                        {t.accountName} ·{" "}
+                        {t.accountName}
+                        {t.destinationAccountName
+                          ? " → " + t.destinationAccountName
+                          : ""}{" "}
+                        ·{" "}
                         {t.journal
                           ? new Date(t.journal.effectiveAt).toLocaleDateString(
                               "en-IN",
