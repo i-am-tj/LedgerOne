@@ -1,3 +1,4 @@
+import { isCapitalCommand } from "./capital-contract";
 import "server-only";
 import { randomUUID } from "node:crypto";
 import type { PrismaClient } from "../../generated/prisma/client";
@@ -82,6 +83,26 @@ export async function handleTransactions(
           },
         },
       });
+      const capitals = await database.transactionCapital.findMany({
+        where: { ownerId: actor.ownerId },
+        orderBy: [{ createdAt: "desc" }, { operationId: "desc" }],
+        take: 100,
+        include: {
+          operation: {
+            include: {
+              journals: {
+                where: { status: "POSTED", kind: "GENERAL" },
+                select: {
+                  id: true,
+                  effectiveAt: true,
+                  description: true,
+                  reversal: { select: { id: true } },
+                },
+              },
+            },
+          },
+        },
+      });
       const accounts = await database.account.findMany({
         where: { ownerId: actor.ownerId, type: { in: ["ASSET", "LIABILITY"] } },
         select: {
@@ -146,6 +167,18 @@ export async function handleTransactions(
             journal: r.operation.journals[0] ?? null,
             createdAt: r.createdAt.toISOString(),
           })),
+          ...capitals.map((r) => ({
+            operationId: r.operationId,
+            kind: r.kind,
+            accountName: r.sourceAccountName,
+            destinationAccountName: r.destinationAccountName,
+            categoryName: r.interestAccountName,
+            principalMinor: r.principalMinor.toString(),
+            interestMinor: r.interestMinor.toString(),
+            amountMinor: r.amountMinor.toString(),
+            journal: r.operation.journals[0] ?? null,
+            createdAt: r.createdAt.toISOString(),
+          })),
         ]
           .sort(
             (a, b) =>
@@ -170,7 +203,7 @@ export async function handleTransactions(
       throw new CommandError(503, "transaction_writes_unavailable");
     const command = parseTransaction(await readCommandBody(request));
     const key = idempotencyKey(request.headers.get("idempotency-key"));
-    const result = isMovementCommand(command)
+    const result = isCapitalCommand(command)
       ? await executor.execute(
           authorize,
           workspace.data,
@@ -178,13 +211,21 @@ export async function handleTransactions(
           command,
           request.signal,
         )
-      : await executor.execute(
-          authorize,
-          workspace.data,
-          key,
-          command,
-          request.signal,
-        );
+      : isMovementCommand(command)
+        ? await executor.execute(
+            authorize,
+            workspace.data,
+            key,
+            command,
+            request.signal,
+          )
+        : await executor.execute(
+            authorize,
+            workspace.data,
+            key,
+            command,
+            request.signal,
+          );
     return respond(result.result, result.replayed ? 200 : 201);
   } catch (error) {
     return error instanceof CommandError

@@ -60,12 +60,19 @@ export async function createLegacyCaptureDatabase(
 ) {
   return createLocalLedgerDatabase(source, schema, true, true, 10);
 }
+// S08-C: preserve a real merged011 movement before additive012.
+export async function createLegacyMovementDatabase(
+  source: string,
+  schema: "public" | "ledgerone",
+) {
+  return createLocalLedgerDatabase(source, schema, true, true, 11);
+}
 async function createLocalLedgerDatabase(
   source: string,
   schema: "public" | "ledgerone",
   upgrade = false,
   legacyOnly = false,
-  legacyVersion: 7 | 10 = 7,
+  legacyVersion: 7 | 10 | 11 = 7,
 ) {
   databaseSettings({ LEDGERONE_ENV: "test", DATABASE_URL: source });
   const input = new URL(source);
@@ -131,8 +138,10 @@ async function createLocalLedgerDatabase(
         );
         const names = readdirSync("prisma/migrations")
           .filter((n) =>
-            legacyOnly && legacyVersion === 10
-              ? /^\d{12}_/.test(n) && n.slice(0, 12) <= "202611140010"
+            legacyOnly && legacyVersion >= 10
+              ? /^\d{12}_/.test(n) &&
+                n.slice(0, 12) <=
+                  (legacyVersion === 11 ? "202611160011" : "202611140010")
               : (legacyOnly ? /^20261111000[1-7]_/ : /^20261111000[1-6]_/).test(
                   n,
                 ),

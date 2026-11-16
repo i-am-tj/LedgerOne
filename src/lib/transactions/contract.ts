@@ -1,3 +1,4 @@
+import { isCapitalCommand, parseCapital } from "./capital-contract";
 import { parseMovement } from "./movement-contract";
 import { createHash } from "node:crypto";
 import { z } from "zod";
@@ -59,6 +60,14 @@ export function captureHash(
 
 // Route-level union; each economic command retains its strict own contract.
 export function parseTransaction(value: unknown) {
+  if (
+    value &&
+    typeof value === "object" &&
+    "kind" in value &&
+    typeof value.kind === "string" &&
+    isCapitalCommand({ kind: value.kind })
+  )
+    return parseCapital(value);
   if (
     value &&
     typeof value === "object" &&
