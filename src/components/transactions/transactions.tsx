@@ -10,7 +10,7 @@ import Link from "next/link";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
 import { Input } from "../ui/input";
-import { formatAmount } from "@/lib/ledger/money";
+import { formatAmount, parseAmount, MAX_MINOR } from "@/lib/ledger/money";
 import { expenseCategories, incomeCategories } from "@/lib/transactions/shared";
 type Account = {
   id: string;
@@ -28,6 +28,8 @@ type Row = {
   accountName: string;
   categoryName: string | null;
   destinationAccountName?: string;
+  principalMinor?: string;
+  interestMinor?: string;
   amountMinor: string;
   journal: {
     effectiveAt: string;
@@ -57,11 +59,19 @@ const select =
 export function Transactions() {
   const [data, setData] = useState<Data | null>(null),
     [kind, setKind] = useState<
-      "EXPENSE" | "INCOME" | "TRANSFER" | "CARD_SETTLEMENT"
+      | "EXPENSE"
+      | "INCOME"
+      | "TRANSFER"
+      | "CARD_SETTLEMENT"
+      | "FD_FUNDING"
+      | "FD_RETURN"
+      | "LOAN_REPAYMENT"
     >("EXPENSE"),
     [accountId, setAccount] = useState(""),
     [destinationId, setDestination] = useState(""),
     [amount, setAmount] = useState(""),
+    [principal, setPrincipal] = useState(""),
+    [interest, setInterest] = useState("0"),
     [category, setCategory] = useState("Groceries"),
     [date, setDate] = useState(today),
     [description, setDescription] = useState(""),
@@ -86,13 +96,32 @@ export function Transactions() {
       (a) =>
         !a.archivedAt &&
         a.currencyCode === "INR" &&
-        (["BANK", "CASH"].includes(a.kind) ||
-          (kind === "EXPENSE" && a.kind === "CREDIT_CARD")),
+        (kind === "FD_RETURN"
+          ? a.type === "ASSET" && a.kind === "FIXED_DEPOSIT"
+          : ["BANK", "CASH"].includes(a.kind) ||
+            (kind === "EXPENSE" && a.kind === "CREDIT_CARD")),
     ) ?? [];
   const account = accountId
     ? accounts.find((a) => a.id === accountId)
     : accounts[0];
-  const movement = kind === "TRANSFER" || kind === "CARD_SETTLEMENT";
+  const loan = kind === "LOAN_REPAYMENT";
+  const movement = [
+    "TRANSFER",
+    "CARD_SETTLEMENT",
+    "FD_FUNDING",
+    "FD_RETURN",
+    "LOAN_REPAYMENT",
+  ].includes(kind);
+  const assetMovement = ["TRANSFER", "FD_FUNDING", "FD_RETURN"].includes(kind);
+  let totalMinor: string | null = null;
+  try {
+    const total =
+      parseAmount(principal || "0", "INR") +
+      parseAmount(interest || "0", "INR");
+    if (total <= MAX_MINOR) totalMinor = total.toString();
+  } catch {
+    /* Server validation remains authoritative. */
+  }
   const destinations =
     data?.accounts.filter(
       (a) =>
@@ -100,9 +129,12 @@ export function Transactions() {
         a.currencyCode === "INR" &&
         a.workspaceId === account?.workspaceId &&
         a.id !== account?.id &&
-        (kind === "TRANSFER"
-          ? a.type === "ASSET" && ["BANK", "CASH"].includes(a.kind)
-          : a.type === "LIABILITY" && a.kind === "CREDIT_CARD"),
+        (kind === "FD_FUNDING"
+          ? a.type === "ASSET" && a.kind === "FIXED_DEPOSIT"
+          : kind === "TRANSFER" || kind === "FD_RETURN"
+            ? a.type === "ASSET" && ["BANK", "CASH"].includes(a.kind)
+            : a.type === "LIABILITY" &&
+              a.kind === (loan ? "LOAN" : "CREDIT_CARD")),
     ) ?? [];
   const destination = destinationId
     ? destinations.find((a) => a.id === destinationId)
@@ -133,11 +165,15 @@ export function Transactions() {
           ? "The outcome is unconfirmed. Recover the pending transaction safely."
           : result.error === "card_payment_exceeds_liability"
             ? "Payment exceeds the card liability at the selected date or a later posted date. Overpayments are not supported."
-            : "Could not save. Check the account, category and amount.",
+            : result.error === "principal_exceeds_balance"
+              ? "Principal exceeds the available FD or loan balance at the selected date or a later posted date."
+              : "Could not save. Check the account, category and amount.",
       );
     }
     pending.current = null;
     setAmount("");
+    setPrincipal("");
+    setInterest("0");
     setSuccess("Transaction saved.");
     try {
       await reload();
@@ -167,7 +203,7 @@ export function Transactions() {
                   destinationAccountId: destination!.id,
                 }
               : { accountId: account.id, category }),
-            amount,
+            ...(loan ? { principal, interest } : { amount }),
             effectiveAt: date + "T00:00:00+05:30",
             description,
           }),
@@ -255,7 +291,7 @@ export function Transactions() {
             <h2 className="text-xl font-semibold">Record a transaction</h2>
             {!accounts.length ? (
               <p className="mt-4">
-                Add an active INR bank, cash or credit-card account to begin.{" "}
+                Add an eligible active INR account to begin.{" "}
                 <Link href="/accounts" className="underline">
                   Open Accounts
                 </Link>
@@ -282,6 +318,9 @@ export function Transactions() {
                   <option value="INCOME">Income</option>
                   <option value="TRANSFER">Transfer</option>
                   <option value="CARD_SETTLEMENT">Credit-card payment</option>
+                  <option value="FD_FUNDING">Fund fixed deposit</option>
+                  <option value="FD_RETURN">Return FD principal</option>
+                  <option value="LOAN_REPAYMENT">Loan repayment</option>
                 </select>
               </label>
               <label className="grid gap-2 text-sm font-medium">
@@ -291,7 +330,9 @@ export function Transactions() {
                     ? "Receive into account"
                     : kind === "TRANSFER"
                       ? "Source account"
-                      : "Paying account"}
+                      : kind === "FD_RETURN"
+                        ? "Fixed-deposit source"
+                        : "Paying account"}
                 <select
                   required
                   className={select}
@@ -308,7 +349,9 @@ export function Transactions() {
                         ? "Credit card"
                         : a.kind === "CASH"
                           ? "Cash"
-                          : "Bank"}
+                          : a.kind === "FIXED_DEPOSIT"
+                            ? "Fixed deposit"
+                            : "Bank"}
                     </option>
                   ))}
                 </select>
@@ -317,7 +360,13 @@ export function Transactions() {
                 <label className="grid gap-2 text-sm font-medium">
                   {kind === "TRANSFER"
                     ? "Destination account"
-                    : "Credit-card account"}
+                    : kind === "FD_FUNDING"
+                      ? "Fixed-deposit account"
+                      : kind === "FD_RETURN"
+                        ? "Receiving account"
+                        : loan
+                          ? "Loan account"
+                          : "Credit-card account"}
                   <select
                     className={select}
                     required
@@ -336,9 +385,13 @@ export function Transactions() {
                   {!destinations.length && (
                     <span>
                       No eligible{" "}
-                      {kind === "TRANSFER"
-                        ? "bank/cash destination"
-                        : "credit card"}{" "}
+                      {kind === "FD_FUNDING"
+                        ? "fixed deposit"
+                        : loan
+                          ? "loan"
+                          : assetMovement
+                            ? "bank/cash destination"
+                            : "credit card"}{" "}
                       in this workspace.{" "}
                       <Link href="/accounts" className="underline">
                         Manage accounts
@@ -347,15 +400,48 @@ export function Transactions() {
                   )}
                 </label>
               )}
-              <label className="grid gap-2 text-sm font-medium">
-                Amount (INR)
-                <Input
-                  required
-                  inputMode="decimal"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                />
-              </label>
+              {loan ? (
+                <>
+                  <label className="grid gap-2 text-sm font-medium">
+                    Principal (INR)
+                    <Input
+                      required
+                      inputMode="decimal"
+                      value={principal}
+                      onChange={(e) => setPrincipal(e.target.value)}
+                    />
+                  </label>
+                  <label className="grid gap-2 text-sm font-medium">
+                    Interest (INR)
+                    <Input
+                      required
+                      inputMode="decimal"
+                      value={interest}
+                      onChange={(e) => setInterest(e.target.value)}
+                    />
+                  </label>
+                  <p className="text-sm sm:col-span-2">
+                    Total bank payment{" "}
+                    <strong data-testid="loan-total-payment">
+                      {totalMinor !== null
+                        ? money(totalMinor)
+                        : "Enter valid amounts"}
+                    </strong>
+                    . Principal reduces debt; interest is an expense. No
+                    interest schedule or fees are calculated.
+                  </p>
+                </>
+              ) : (
+                <label className="grid gap-2 text-sm font-medium">
+                  Amount (INR)
+                  <Input
+                    required
+                    inputMode="decimal"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                  />
+                </label>
+              )}
               <label className="grid gap-2 text-sm font-medium">
                 Transaction date (India)
                 <Input
@@ -407,20 +493,22 @@ export function Transactions() {
                 <div className="text-sm text-muted-foreground sm:col-span-2">
                   <p>
                     {destination.name}{" "}
-                    {kind === "CARD_SETTLEMENT" ? "liability" : "balance"}{" "}
+                    {kind === "CARD_SETTLEMENT" || loan
+                      ? "liability"
+                      : "balance"}{" "}
                     <strong data-testid="destination-account-balance">
                       {money(destination.balanceMinor)}
                     </strong>
                   </p>
                   <p>
-                    {kind === "TRANSFER"
+                    {assetMovement
                       ? "Selected accounts combined assets"
                       : "Selected accounts net worth"}{" "}
                     <strong data-testid="movement-net-worth">
                       {money(
                         (
                           BigInt(account?.balanceMinor ?? "0") +
-                          (kind === "TRANSFER" ? 1n : -1n) *
+                          (assetMovement ? 1n : -1n) *
                             BigInt(destination.balanceMinor)
                         ).toString(),
                       )}
@@ -449,7 +537,13 @@ export function Transactions() {
                       ? "Save income"
                       : kind === "TRANSFER"
                         ? "Save transfer"
-                        : "Pay credit-card bill"}
+                        : kind === "FD_FUNDING"
+                          ? "Fund fixed deposit"
+                          : kind === "FD_RETURN"
+                            ? "Return FD principal"
+                            : loan
+                              ? "Save loan repayment"
+                              : "Pay credit-card bill"}
               </Button>
             </form>
           </Card>
@@ -478,6 +572,12 @@ export function Transactions() {
                           "Transfer"
                         ) : t.kind === "CARD_SETTLEMENT" ? (
                           "Credit-card payment"
+                        ) : t.kind === "FD_FUNDING" ? (
+                          "FD funding"
+                        ) : t.kind === "FD_RETURN" ? (
+                          "FD principal return"
+                        ) : t.kind === "LOAN_REPAYMENT" ? (
+                          "Loan repayment"
                         ) : (
                           <>
                             {t.categoryName} ·{" "}
@@ -499,6 +599,15 @@ export function Transactions() {
                             )
                           : "Unavailable journal"}
                       </p>
+                      {t.kind === "LOAN_REPAYMENT" &&
+                        t.principalMinor !== undefined &&
+                        t.interestMinor !== undefined && (
+                          <p className="mt-2 text-sm">
+                            Principal {money(t.principalMinor)} · Interest{" "}
+                            {money(t.interestMinor)} · Total{" "}
+                            {money(t.amountMinor)}
+                          </p>
+                        )}
                       {t.journal?.description && (
                         <p className="mt-2">{t.journal.description}</p>
                       )}
