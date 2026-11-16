@@ -9,6 +9,7 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import { createHmac, randomBytes, randomUUID } from "node:crypto";
 import { mkdirSync } from "node:fs";
+import { createServer } from "node:net";
 import { join } from "node:path";
 import pg from "pg";
 import { chromium, devices, type BrowserContext } from "@playwright/test";
@@ -22,8 +23,9 @@ const option = (name: string) => {
   const i = args.indexOf(name);
   return i >= 0 ? args[i + 1] : undefined;
 };
-const port = Number(option("--port") ?? 3200);
-const base = `http://127.0.0.1:${port}`;
+const explicitPort = option("--port");
+let port = Number(explicitPort ?? 3200);
+let base = `http://127.0.0.1:${port}`;
 const secret = randomBytes(48).toString("base64");
 const email = "preview-owner@ledgerone.test";
 
@@ -425,14 +427,30 @@ async function capture(
 }
 
 async function main() {
-  try {
-    await fetch(base + "/api/health/live");
-    throw Error(
-      `Port ${port} is already in use; stop that server or pass --port`,
-    );
-  } catch (error) {
-    if (error instanceof Error && error.message.startsWith("Port")) throw error;
+  // An explicit --port must be free; otherwise use the first free port from
+  // 3200 so an earlier preview still running never blocks a new one.
+  const free = (p: number) =>
+    new Promise<boolean>((resolve) => {
+      const probe = createServer()
+        .once("error", () => resolve(false))
+        .once("listening", () => probe.close(() => resolve(true)))
+        .listen(p, "127.0.0.1");
+    });
+  if (explicitPort) {
+    if (!(await free(port)))
+      throw Error(
+        `Port ${port} is already in use; stop that server or choose another --port`,
+      );
+  } else {
+    while (!(await free(port))) {
+      if (++port > 3220) throw Error("Ports 3200–3220 are all in use");
+    }
+    if (port !== 3200)
+      console.log(
+        `Port 3200 is busy (another preview?); using ${port} instead.`,
+      );
   }
+  base = `http://127.0.0.1:${port}`;
   await withFreshLedgerDatabase(process.env.TEST_DATABASE_URL!, async (url) => {
     const child = spawn(
       process.execPath,

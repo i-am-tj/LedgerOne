@@ -85,7 +85,7 @@ npm run build
 npm run preview:wealth -- --prod --seed   # opens Chromium signed in with synthetic demo holdings
 ```
 
-Omit `--seed` for an empty workspace, add `--mobile` for a phone viewport, or `--capture <dir>` to save desktop/mobile screenshots. The preview database is discarded when the browser closes. Automated coverage: `src/lib/wealth/wealth.test.ts`, `tests/integration/holding-profiles.test.ts` and `tests/e2e/wealth.spec.ts`.
+Omit `--seed` for an empty workspace, add `--mobile` for a phone viewport, or `--capture <dir>` to save desktop/mobile screenshots. The preview database is discarded when the browser closes. Automated coverage: `src/lib/wealth/wealth.test.ts`, `tests/integration/holding-profiles.test.ts` and `tests/e2e/wealth.spec.ts`. If port 3200 is taken (for example by a preview still open), the next free port is used and printed; pass `--port` to choose one explicitly.
 
 ## P1-S02 shell and browser checks
 
