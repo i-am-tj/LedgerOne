@@ -1,0 +1,13 @@
+
+> ledgerone@0.1.0 test:integration
+> vitest run --project integration
+
+
+ RUN  v5.1.0 <repository>
+
+
+ Test Files  30 passed (30)
+      Tests  422 passed (422)
+   Start at  18:18:29
+   Duration  147.46s (tests 96%, import 3%, setup 1%)
+

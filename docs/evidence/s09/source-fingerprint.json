@@ -1,0 +1,36 @@
+{
+  "executionCommit": "1b7dbcb01e954fea8ccf32394d82b807b4ff8741",
+  "baseCommit": "98908d4749a894ab89603eeb2520c1f77dcd6162",
+  "financialImplementationUnchanged": true,
+  "sha256": {
+    "package.json": "95d2837d73ebacf3ec007b9944df09aa802a52c9763ddbb4193688b7ba10a2c2",
+    "scripts/lib/gate-log-name.ts": "5840a5874f5a5bfa7e37386f72ec1a036062ac09aaf77efac2e5d1ba8d690432",
+    "scripts/run-phase1-gate.ts": "d6ccc462eab8fa30d1b42096bff858973c0010bc31a482f008f54f415691ee8c",
+    "tests/integration/commit-wait.test.ts": "af8b77adc215d58bf7b975891d14df5ee86618e2c0cffacdd238f70685c06991",
+    "tests/integration/s09-accounting.test.ts": "1fbe9b0091fd6d92e01066bf3a857f46e09ae8f77fc59a617505787a804cd2e4",
+    "tests/integration/s09-connection-observation.test.ts": "9f7a720a8a4edfdba43e0d9ca932aea3ec97fa8cf8ce1d82db7972bf257b3d31",
+    "tests/support/s09-fixtures.ts": "1d053924e4850faadadb62e6afa0c79125185d4d13279884a77222f72406b47c",
+    "tests/unit/phase1-runner.test.ts": "9e9d04d65538ad41b7bb5caced61d0929610456e1357340a6234d322ba8f4f2b",
+    "tests/unit/s09-fixtures.test.ts": "565befc441186ecc02dbec1a7b7bfdb07c2396d3cf5420b2fef0ea1194975930",
+    "vitest.config.ts": "614e5a9719b8760aaf63108a28f1a234b770d1ba4c685029a55f642d52b8183a",
+    "prisma/schema.prisma": "7243b3669dc2a8abc6a16dc12c7242d4a1cd539b1df016673e4a1635abecfc7a",
+    "src/lib/ledger/commands/executor.ts": "698df3a27e176c4cfd59b9397793f8d1075b9ce62aeecdc4c233d63d307bff76",
+    "src/lib/transactions/http.ts": "bc35aa940e2d0ccf241d4985e7a69825c2c2e2e9489a8fa225ea6e1838db30eb",
+    "src/lib/accounts/capability.ts": "b4a8ba17cd91f0c37e8336edb0cde9b6e0cb76362f18eb00049bc03fc043c82b",
+    "scripts/account-app-server.ts": "3b0a74d723e4578258217276a7fb6bcfed4f65d04ca0b7ef63ce48638c37e770"
+  },
+  "unchangedMigrations": {
+    "202611110001_platform": "3ba93d8c9fa376688a46651c0d47bf6c97d3fe2876dfe14153697085ebfa500a",
+    "202611110002_identity": "13af0a843799b7d1e500d9fd3ea693d5b471e7d38d052a48fe2f829b3ad1a610",
+    "202611110003_ownership_audit": "557a600453f4a6a6f0451638361f1488f59cb03be7342204c505838c6666a701",
+    "202611110004_ledger_schema": "77dc640da349e2d81a18693fb8150a212e9779d9b70f855ba478c022b09edc57",
+    "202611110005_ledger_search_path": "d62c4b321199c480501beeeed9f8959d1cbff05cc7306d30bba64603cdb55496",
+    "202611110006_reversal_predecessor": "cd8f614407b5a9632f054cf43a5f3d5e25d1e0cad90ea387f634085aa00aa749",
+    "202611110007_command_audit_controls": "4fc2ce1a31abce1e0bbfe85cc0e83febfa3be7b611eaae06f4e4881dc09de379",
+    "202611140008_opening_audit": "07c824f6c193828cbcce1b40c80c47462ab9da9036ad37f38c14b37e5b4732e5",
+    "202611140009_account_lifecycle": "00ff6e65c12c2c3a3d5acb35693ae56a1018fe94d2f593947f65552b99bf2b48",
+    "202611140010_transaction_capture": "87e0b8f82c695e4bcfb66799d150ac01d2c26d67efc3a77668dbcaf2466a6863",
+    "202611160011_transaction_movements": "ebc35a7aa26060964ff0e007652ae631f9df91c62d5cf394b3d215f102fac32a",
+    "202611160012_capital_transactions": "2693bbeeb074c627c4d5ca04707d4bfbfc1c74c3331d86a0950dd29d61eecd31"
+  }
+}

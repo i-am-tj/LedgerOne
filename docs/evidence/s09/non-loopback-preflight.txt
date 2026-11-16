@@ -1,0 +1,2 @@
+Controlled non-loopback preflight exit 1
+Local and test profiles require a loopback database.

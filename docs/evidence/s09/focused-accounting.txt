@@ -1,0 +1,13 @@
+
+> ledgerone@0.1.0 test:integration
+> vitest run --project integration tests/integration/s09-accounting.test.ts
+
+
+ RUN  v5.1.0 <repository>
+
+
+ Test Files  1 passed (1)
+      Tests  12 passed (12)
+   Start at  17:57:44
+   Duration  7.93s (tests 96%, import 3%, transform 1%, setup 1%)
+

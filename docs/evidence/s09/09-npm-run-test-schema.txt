@@ -1,0 +1,5 @@
+
+> ledgerone@0.1.0 test:schema
+> tsx scripts/rehearse-production-schema.ts
+
+PASS: fresh private-schema migrations and zero Prisma drift; production financial read-only grants; temporary invoker-role ledger balancing/rollback/immutability; protected audit and denied DDL/replication bypass/history access; no public tables.

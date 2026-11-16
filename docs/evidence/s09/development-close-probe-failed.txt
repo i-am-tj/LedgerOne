@@ -1,0 +1,41 @@
+
+> ledgerone@0.1.0 test:integration
+> vitest run --project integration tests/integration/s09-connection-observation.test.ts --reporter=verbose --disableConsoleIntercept
+
+
+ RUN  v5.1.0 <repository>
+
+{"observation":"S09-34","mode":"cancel-after","immediateBackendCount":0,"clientEnded":true,"backendGone":true,"observationMs":40,"reused":false,"counts":{"receipts":1,"journals":1,"postings":2,"audits":1}}
+ ✓ |integration| tests/integration/s09-connection-observation.test.ts > S09 #34 cancel-after discard is not reuse; observe client/server close independently 1328ms
+{"observation":"S09-34","mode":"transport","immediateBackendCount":0,"clientEnded":true,"backendGone":true,"observationMs":27,"reused":false,"counts":{"receipts":1,"journals":1,"postings":2,"audits":1}}
+ ✓ |integration| tests/integration/s09-connection-observation.test.ts > S09 #34 transport discard is not reuse; observe client/server close independently 869ms
+ × |integration| tests/integration/s09-connection-observation.test.ts > S09 #34 deferred-close discard is not reuse; observe client/server close independently 781ms
+   → expected +0 to be 1 // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |integration| tests/integration/s09-connection-observation.test.ts > S09 #34 deferred-close discard is not reuse; observe client/server close independently
+AssertionError: expected +0 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ tests/integration/s09-connection-observation.test.ts:91:56
+     89|         );
+     90|       const immediate = await present();
+     91|       if (mode === "deferred-close") expect(immediate).toBe(1);
+       |                                                        ^
+     92|       // Reuse the fixture cleanup's existing five-second observation …
+     93|       // does not extend the command's ten-second budget or postpone i…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  18:07:47
+   Duration  3.44s (tests 89%, import 7%, transform 2%, setup 1%)
+

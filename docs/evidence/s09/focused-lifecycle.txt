@@ -1,0 +1,28 @@
+
+> ledgerone@0.1.0 test:integration
+> vitest run --project integration tests/integration/commit-wait.test.ts tests/integration/s09-connection-observation.test.ts --reporter=verbose --disableConsoleIntercept
+
+
+ RUN  v5.1.0 <repository>
+
+ ✓ |integration| tests/integration/commit-wait.test.ts > 007 COMMIT acknowledgement delayed: deadline, single outcome, connection lifecycle 3434ms
+ ✓ |integration| tests/integration/commit-wait.test.ts > 007 COMMIT acknowledgement expired: deadline, single outcome, connection lifecycle 10448ms
+ ✓ |integration| tests/integration/commit-wait.test.ts > 007 COMMIT acknowledgement cancel-after: deadline, single outcome, connection lifecycle 95ms
+ ✓ |integration| tests/integration/commit-wait.test.ts > 007 COMMIT acknowledgement transport: deadline, single outcome, connection lifecycle 84ms
+ ✓ |integration| tests/integration/commit-wait.test.ts > 007 COMMIT acknowledgement cancel-before: deadline, single outcome, connection lifecycle 76ms
+ ✓ |integration| tests/integration/commit-wait.test.ts > 007 COMMIT acknowledgement expired-before: deadline, single outcome, connection lifecycle 10325ms
+ ✓ |integration| tests/integration/commit-wait.test.ts > a genuine aborted attempt spends the same deadline as final COMMIT 1288ms
+ ✓ |integration| tests/integration/commit-wait.test.ts > a real deferred COMMIT rejection has confirmed deadline-bounded ROLLBACK cleanup 118ms
+ ✓ |integration| tests/integration/commit-wait.test.ts > a real deferred COMMIT rejection has unconfirmed deadline-bounded ROLLBACK cleanup 10146ms
+{"observation":"S09-34","mode":"cancel-after","immediateBackendCount":0,"clientEnded":true,"backendGone":true,"observationMs":27,"reused":false,"counts":{"receipts":1,"journals":1,"postings":2,"audits":1}}
+ ✓ |integration| tests/integration/s09-connection-observation.test.ts > S09 #34 cancel-after discard is not reuse; observe client/server close independently 1183ms
+{"observation":"S09-34","mode":"transport","immediateBackendCount":0,"clientEnded":true,"backendGone":true,"observationMs":24,"reused":false,"counts":{"receipts":1,"journals":1,"postings":2,"audits":1}}
+ ✓ |integration| tests/integration/s09-connection-observation.test.ts > S09 #34 transport discard is not reuse; observe client/server close independently 887ms
+{"observation":"S09-34","mode":"deferred-close","immediateBackendCount":1,"clientEnded":true,"backendGone":true,"observationMs":29,"reused":false,"counts":{"receipts":1,"journals":1,"postings":2,"audits":1}}
+ ✓ |integration| tests/integration/s09-connection-observation.test.ts > S09 #34 deferred-close discard is not reuse; observe client/server close independently 822ms
+
+ Test Files  2 passed (2)
+      Tests  12 passed (12)
+   Start at  18:10:02
+   Duration  40.99s (tests 98%, import 1%)
+
