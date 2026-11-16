@@ -78,3 +78,5 @@ S07 PR #35 is merged (`1fd3b936`); original residual requirements and #16/#17 re
 ## 2026-11-16 delivery checkpoint
 
 S08-A PR39 reviewed/merged at1c74eeaf. S08-B working transfer/card-payment implementation is local pipeline PASS and pending owner review under #38/#37. S08-C FD/loan and D consolidated-history/consumption remain required, followed by S09. No scope reduction or early Phase1/P1-E3 completion.
+
+S08-B review follow-up: owner CHANGES REQUIRED at239fd16 for B-R01. Correct only new-settlement admission across later posted boundaries; retain accepted UI and existing future scope. PR40 remains draft until corrected evidence and owner final review. No next-slice implementation or merge authorized here.

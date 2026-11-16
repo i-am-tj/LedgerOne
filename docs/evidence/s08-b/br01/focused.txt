@@ -1,0 +1,13 @@
+
+> ledgerone@0.1.0 test:integration
+> vitest run --project integration tests/integration/transaction-movements.test.ts tests/integration/movement-upgrade.test.ts
+
+
+ RUN  v5.1.0 /Users/iamtj/Document/Projects/Self/LedgerOne
+
+
+ Test Files  2 passed (2)
+      Tests  44 passed (44)
+   Start at  13:52:57
+   Duration  7.58s (tests 95%, import 3%, setup 1%, transform 1%)
+

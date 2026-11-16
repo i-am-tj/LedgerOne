@@ -88,3 +88,5 @@ No new general planning decision is requested. Owner authorized original S08 Aâ€
 ## S08-B policy and review
 
 Resolved by owner: partial card payments allowed; payments exceeding liability at the selected effective date rejected. Overpayment/refund/fee/interest behavior is not implicitly supported. S08-B implementation requires owner independent review and explicit manual merge. No general planning approval or agent review is requested. Hosted/production operations and generic consumer financial commands remain separately unauthorized.
+
+B-R01 owner clarification is explicit: new backdated settlements must not cause negative liability at any existing later posted boundary. No further accounting decision is requested. Corrected PR40 requires owner final independent review/manual merge; the239fd16 review remains CHANGES REQUIRED in historical evidence.
