@@ -1,0 +1,13 @@
+
+> ledgerone@0.1.0 test:integration
+> vitest run --project integration
+
+
+ RUN  v5.1.0 /Users/iamtj/Document/Projects/Self/ledger-one
+
+
+ Test Files  32 passed (32)
+      Tests  454 passed (454)
+   Start at  21:48:51
+   Duration  157.08s (tests 96%, import 3%, setup 1%)
+

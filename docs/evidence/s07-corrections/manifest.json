@@ -1,0 +1,105 @@
+{
+  "sourceCommit": "199fb516a7b397cb38288a6b8b5abec61bbc4f07",
+  "dirty": false,
+  "startedAt": "2026-11-16T16:18:25.577Z",
+  "node": "v22.23.5",
+  "npm": "10.9.9",
+  "os": {
+    "platform": "darwin",
+    "arch": "arm64",
+    "release": "25.3.0"
+  },
+  "scope": "LOCAL ONLY; not Phase1 release approval, hosted evidence or write activation",
+  "status": "PASS",
+  "stages": [
+    {
+      "command": "npm ci",
+      "exitCode": 0,
+      "log": "01-npm-ci.txt"
+    },
+    {
+      "command": "npm run db:generate",
+      "exitCode": 0,
+      "log": "02-npm-run-db-generate.txt"
+    },
+    {
+      "command": "npm run db:migrate:test",
+      "exitCode": 0,
+      "log": "03-npm-run-db-migrate-test.txt"
+    },
+    {
+      "command": "npm run format:check",
+      "exitCode": 0,
+      "log": "04-npm-run-format-check.txt"
+    },
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "log": "05-npm-run-lint.txt"
+    },
+    {
+      "command": "npm run typecheck",
+      "exitCode": 0,
+      "log": "06-npm-run-typecheck.txt"
+    },
+    {
+      "command": "npm run test:unit",
+      "exitCode": 0,
+      "log": "07-npm-run-test-unit.txt"
+    },
+    {
+      "command": "npm run test:integration",
+      "exitCode": 0,
+      "log": "08-npm-run-test-integration.txt"
+    },
+    {
+      "command": "npm run test:schema",
+      "exitCode": 0,
+      "log": "09-npm-run-test-schema.txt"
+    },
+    {
+      "command": "npm run ledger:attest",
+      "exitCode": 0,
+      "log": "10-npm-run-ledger-attest.txt"
+    },
+    {
+      "command": "npm run build",
+      "exitCode": 0,
+      "log": "11-npm-run-build.txt"
+    },
+    {
+      "command": "npm run test:e2e",
+      "exitCode": 0,
+      "log": "12-npm-run-test-e2e.txt"
+    },
+    {
+      "command": "python3 scripts/check_foundation.py",
+      "exitCode": 0,
+      "log": "13-python3-scripts-check_foundation.py.txt"
+    }
+  ],
+  "migrations": {
+    "202611110001_platform": "3ba93d8c9fa376688a46651c0d47bf6c97d3fe2876dfe14153697085ebfa500a",
+    "202611110002_identity": "13af0a843799b7d1e500d9fd3ea693d5b471e7d38d052a48fe2f829b3ad1a610",
+    "202611110003_ownership_audit": "557a600453f4a6a6f0451638361f1488f59cb03be7342204c505838c6666a701",
+    "202611110004_ledger_schema": "77dc640da349e2d81a18693fb8150a212e9779d9b70f855ba478c022b09edc57",
+    "202611110005_ledger_search_path": "d62c4b321199c480501beeeed9f8959d1cbff05cc7306d30bba64603cdb55496",
+    "202611110006_reversal_predecessor": "cd8f614407b5a9632f054cf43a5f3d5e25d1e0cad90ea387f634085aa00aa749",
+    "202611110007_command_audit_controls": "4fc2ce1a31abce1e0bbfe85cc0e83febfa3be7b611eaae06f4e4881dc09de379",
+    "202611140008_opening_audit": "07c824f6c193828cbcce1b40c80c47462ab9da9036ad37f38c14b37e5b4732e5",
+    "202611140009_account_lifecycle": "00ff6e65c12c2c3a3d5acb35693ae56a1018fe94d2f593947f65552b99bf2b48",
+    "202611140010_transaction_capture": "87e0b8f82c695e4bcfb66799d150ac01d2c26d67efc3a77668dbcaf2466a6863",
+    "202611160011_transaction_movements": "ebc35a7aa26060964ff0e007652ae631f9df91c62d5cf394b3d215f102fac32a",
+    "202611160012_capital_transactions": "2693bbeeb074c627c4d5ca04707d4bfbfc1c74c3331d86a0950dd29d61eecd31",
+    "202611160013_account_corrections": "b1e51abcde3b2092049c2517b2c3f3da01467617af84699ad54c99c15cd0c0a1"
+  },
+  "database": {
+    "version": "PostgreSQL 17.6 on x86_64-apple-darwin23.6.0, compiled by Apple clang version 16.0.0 (clang-1600.0.26.6), 64-bit",
+    "server_version": "17.6",
+    "timezone": "Asia/Kolkata",
+    "default_isolation": "read committed",
+    "profile": "generated disposable loopback PostgreSQL; public and ledgerone restricted-role fixtures; no hosted target",
+    "financialIsolation": "SERIALIZABLE in existing command executor (server default recorded separately)"
+  },
+  "finishedAt": "2026-11-16T16:22:41.733Z"
+}

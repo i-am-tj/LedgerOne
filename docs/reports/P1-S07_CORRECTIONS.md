@@ -41,7 +41,29 @@ Migrations001–012 must remain byte-identical. Fresh and012-to013 upgrades are 
 - Focused correction/upgrade suite:32 passing (both supported schemas).
 - Focused desktop/mobile account/correction browser suite:8 passing before the final read-context refinements; complete pipeline will verify final source.
 - Retained failed development attempts: copied upgrade assertion expected11 historical migrations instead of12; corrected fixture assertion. Initial browser locator did not address a wrapped select label; changed to its actual accessible combobox name without weakening monetary/count assertions. Initial lint found unused correction metadata and an unused import; metadata is now returned in activity, import removed. No failing product invariant was relabeled as a fixture issue.
-- Final full-pipeline and exact-head CI: PENDING. This document does not claim they ran or passed.
+- Final complete local pipeline: **PASS**,13/13 stages exited0 at `199fb516a7b397cb38288a6b8b5abec61bbc4f07`;298 unit /454 integration /78 desktop/mobile browser tests. Both exact-head GitHub CI runs remain pending publication; no CI pass is inferred from local execution.
+
+## Reproducible final local evidence
+
+Environment: Node22.23.5/npm10.9.9, macOS arm64, native PostgreSQL17.6 on an explicitly approved loopback control profile. All financial tests use generated disposable databases, synthetic users and restricted writer/read-only roles in public/ledgerone. No hosted credentials were read or hosted connections attempted.
+
+Command (control URL is dummy local setup, never a hosted target):
+
+```sh
+LEDGERONE_ENV=test TEST_DATABASE_URL='<approved-disposable-loopback-control-url>' npm run verify:phase1 -- /private/tmp/ledgerone-s07-corrections-gate1
+```
+
+Observed exit0. [Exact-source manifest](../evidence/s07-corrections/manifest.json) records all migration SHA256s, environment and stage commands/exits. Its13 linked stage logs cover npm ci; db:generate; db:migrate:test; format:check; lint; typecheck; test:unit; test:integration; test:schema; ledger:attest; build; test:e2e; foundation. Applied001–012 compared byte-for-byte with merged base20c195a; all unchanged. Schema rehearsal confirms fresh private migration and zero drift, SELECT-only published financial grants and denied DDL/history bypass. Attestation verifies enabled trigger/CHECK/function/grant/history catalogs. Existing full S05–S09 accounting, HTTP, cancellation/COMMIT/retry and browser regressions pass.
+
+Publication adds only evidence/documentation after this tested source; executable code, migrations, dependency lock and test files remain identical. No unrelated capacity rerun or independent AI review is claimed. Final publication head and both CI run URLs/results will be recorded on the PR.
+
+### Actual browser walkthrough
+
+1. Create INR bank with₹50,000 opening; correct to₹40,000, refresh, retain original marker and visible reversal/replacement with reason.
+2. Record₹850 expense, archive, correct expense to₹700 without restoring the account (balance₹39,300); correct archived opening to₹45,000 (balance₹44,300), refresh and retain original history.
+3. Lose a real committed correction acknowledgement; changed-input submission remains blocked, same-key recovery returns one original result. Both viewport projects pass; axe main-content checks and mobile overflow assertions pass.
+
+[Desktop opening](../evidence/s07-corrections/desktop-01-corrected-opening.png), [desktop archived corrections](../evidence/s07-corrections/desktop-02-archived-corrections.png), [mobile opening](../evidence/s07-corrections/mobile-01-corrected-opening.png), [mobile archived corrections](../evidence/s07-corrections/mobile-02-archived-corrections.png). Images are unmodified screenshots of the real persisted local application, not mockups.
 
 ## Review and limitations
 

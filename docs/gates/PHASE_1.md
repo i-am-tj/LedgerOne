@@ -4,7 +4,7 @@
 
 S09 PR45 is merged at20c195a. #16 historical context and #17 financial authorization are CLOSED for currently supported operations after original-criteria verification and owner-confirmed independent gap review. [#16 evidence](https://github.com/i-am-tj/ledger-one/issues/16#issuecomment-6921040886), [#17 evidence](https://github.com/i-am-tj/ledger-one/issues/17#issuecomment-6921043644). No new code was needed for those dispositions.
 
-#12 correction completion is implemented, pending final pipeline, owner review and manual merge. [Scope and evidence](../reports/P1-S07_CORRECTIONS.md). Full Phase1 advancement remains BLOCKED, hosted verification NOT RUN and production/default/generic writes disabled. Historical S09 checkpoint statements and open #34 observations below remain preserved; this feature does not waive any environmental or review prerequisite.
+#12 correction completion is implemented; complete local pipeline at199fb51 PASS (298 unit/454 integration/78 browser,13 stage exits0). Exact publication-head CI, owner review and manual merge pending. [Scope and evidence](../reports/P1-S07_CORRECTIONS.md). Full Phase1 advancement remains BLOCKED, hosted verification NOT RUN and production/default/generic writes disabled. Historical S09 checkpoint statements and open #34 observations below remain preserved; this feature does not waive any environmental or review prerequisite.
 
 ## Historical S09 publication checkpoint
 
