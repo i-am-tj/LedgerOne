@@ -84,3 +84,7 @@ The owner approved the ledger.opened additive contract for isolated local implem
 ## S08-A owner implementation review
 
 No new general planning decision is requested. Owner authorized original S08 A–D scope and local implementation. Expense/income candidate requires owner independent review and explicit merge authorization; no agent/native review approval is implied. Hosted database operations, production grants/activation and generic consumer financial APIs remain separately unauthorized.
+
+## S08-B policy and review
+
+Resolved by owner: partial card payments allowed; payments exceeding liability at the selected effective date rejected. Overpayment/refund/fee/interest behavior is not implicitly supported. S08-B implementation requires owner independent review and explicit manual merge. No general planning approval or agent review is requested. Hosted/production operations and generic consumer financial commands remain separately unauthorized.
