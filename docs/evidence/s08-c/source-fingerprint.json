@@ -1,0 +1,23 @@
+{
+  "implementationCommit": "154ec373a0bb1184c2c08e7a1d3b0a3932b89147",
+  "baseCommit": "e4348ea96bb222ce5be51d200be02b39f2baa489",
+  "sha256": {
+    "prisma/migrations/202611160012_capital_transactions/migration.sql": "2693bbeeb074c627c4d5ca04707d4bfbfc1c74c3331d86a0950dd29d61eecd31",
+    "prisma/schema.prisma": "7243b3669dc2a8abc6a16dc12c7242d4a1cd539b1df016673e4a1635abecfc7a",
+    "scripts/account-app-server.ts": "3b0a74d723e4578258217276a7fb6bcfed4f65d04ca0b7ef63ce48638c37e770",
+    "scripts/lib/fresh-ledger-database.ts": "1aa294bcbdf3cf14994a8916265ef98146171e50aa2cbec74130627349867bb4",
+    "src/components/transactions/transactions.tsx": "af0b5b8c386db719418e31914c99aec1e92365b43098b0f484b382e2c7557c27",
+    "src/lib/ledger/commands/executor.ts": "698df3a27e176c4cfd59b9397793f8d1075b9ce62aeecdc4c233d63d307bff76",
+    "src/lib/schema-version.ts": "1cae344df166c8b2676431c527867d863000c05d6246928a025e8fbcef210af0",
+    "src/lib/transactions/capital-contract.test.ts": "04a6c10b8fa568992cc34812a761b2a239b583bba2e04ee5098da65bf89f9067",
+    "src/lib/transactions/capital-contract.ts": "6d7b47d3e37dc6f9651989a9b5dabbf6e77ca82274eaf358509d613071da4030",
+    "src/lib/transactions/capital.ts": "0e0c2f63ea08a24bf828e2046890e5b281d0ac834d41f41cc0d2ca903045580e",
+    "src/lib/transactions/contract.ts": "9447f68441a2d88a5e3709eb640c03901d77221807686ed054f11e6f062ea6b7",
+    "src/lib/transactions/http.ts": "9f78a7f81a251f59d63d1b2a39722b8e5481bca5a7a4ddb117e3c3a8a66ab2fe",
+    "tests/e2e/transaction-capital.spec.ts": "3b884c20ea168c0651583093f0ba0c731738a3704d8e2589166c16d6f35827c0",
+    "tests/integration/capital-upgrade.test.ts": "632ab5b144e6ab68e5340f1ec900003a512c8a37b53d244e8c9a9ef5072a45cc",
+    "tests/integration/movement-upgrade.test.ts": "15466b56fed5b3f0b904131d7caeb5c71b5adcea6b4ef1fa80ed4eb2ff225429",
+    "tests/integration/transaction-capital.test.ts": "5146cc9561c7a60883752599659c98a2c50a6081ea9342b2615abf7dcfc97b64",
+    "tests/support/post-harness.ts": "a5b7d40cb9ec6a5818fbaca49c2f8ca912b9d2ea2ed253b6f5fa0600487d0c85"
+  }
+}

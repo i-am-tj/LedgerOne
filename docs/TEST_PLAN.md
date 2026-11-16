@@ -253,3 +253,19 @@ No repeated capacity campaign; this slice retains the existing financial limits,
 ## S08-B B-R01 correction
 
 `transaction-movements.test.ts` adds public/private real-handler regressions for Jan1 purchase1200, Jan10 payment1000, rejected Jan5 payment500 (no receipt/journal/posting/audit/context changes), accepted Jan5 payment200 (Jan10 zero), later purchase hiding an intermediate dip, competing different-date/different-key settlements with overlapping first attempts, equal-instant grouping, unchanged replay after subsequent payments/metadata and admission scoped outside unrelated earlier negative history. Raw POST plus forged typed evidence must fail at deferred COMMIT and roll back the entire operation. `transaction-movements.spec.ts` adds desktop/mobile failure-message/persisted-balance tests while retaining the original success walkthroughs and screenshots. Existing010→011 upgrade, drift, attestation, roles and full regression suite remain required.
+
+## S08-C traceability
+
+| Requirement                                                                                      | Evidence                                                                       |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
+| Positive exact principal, nonnegative interest, bounded total and semantic hash                  | capital-contract.test.ts                                                       |
+| FD principal round trip/net worth and loan600 expense/three exact balanced legs                  | transaction-capital.test.ts actual handlers, public/private restricted writers |
+| Zero interest/no zero posting, max total precision and sum overflow                              | Same integration and unit suites                                               |
+| Wrong owner/workspace/currency/kind/archive/raw/forged fields/default disabled                   | Same actual-handler suite                                                      |
+| Atomic classification/journal/receipt/audit/context rollback and direct-SQL malformed components | Same integration suite                                                         |
+| Later-boundary principal limit and distinct-key/different-date contention                        | FD_RETURN and LOAN_REPAYMENT regressions in same suite                         |
+| Replay after archive/rename/drained principal, same-key concurrency and lost acknowledgement     | All3 capital command variants in same suite                                    |
+| Real011→012 upgrade preserves original movement and checksums                                    | capital-upgrade.test.ts public/private; old010→current rehearsal retained      |
+| Responsive FD funding/return, loan live total/history, refresh, accessibility, safe recovery     | transaction-capital.spec.ts desktop/mobile8 cases and screenshots              |
+
+No capacity campaign or generalized agent review. Normal complete pipeline and exact-head CI remain required before owner implementation review; posted historical quantities never derive from mock responses.
