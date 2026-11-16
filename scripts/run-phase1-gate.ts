@@ -22,7 +22,12 @@ async function main() {
       "Usage: npm run verify:phase1 -- /absolute/empty/output-directory",
     );
   const out = process.argv[2]!;
-  if (!out.startsWith("/") || resolve(out) === process.cwd() || existsSync(out))
+  if (
+    !out.startsWith("/") ||
+    resolve(out) === process.cwd() ||
+    resolve(out).startsWith(process.cwd() + "/") ||
+    existsSync(out)
+  )
     throw Error("A new absolute output directory is required");
   if (process.env.LEDGERONE_ENV !== "test")
     throw Error(
@@ -39,7 +44,10 @@ async function main() {
     throw Error(
       "Clean committed source required for exact-source gate evidence",
     );
-  if (!/^v22\./.test(process.version))
+  if (
+    Number(process.versions.node.split(".")[0]) !== 22 ||
+    Number(process.versions.node.split(".")[1]) < 22
+  )
     throw Error("Use the repository Node22 runtime");
   mkdirSync(out, { recursive: true, mode: 0o700 });
   const manifest: {
@@ -70,6 +78,21 @@ async function main() {
         ]),
     ),
   };
+  const verifySource = () => {
+    const head = spawnSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" });
+    const tree = spawnSync("git", ["status", "--porcelain"], {
+      encoding: "utf8",
+    });
+    if (
+      head.status !== 0 ||
+      tree.status !== 0 ||
+      head.stdout.trim() !== manifest.sourceCommit ||
+      tree.stdout.trim()
+    )
+      throw Error(
+        "Source changed during gate execution; exact-source PASS refused",
+      );
+  };
   const save = () =>
     writeFileSync(
       join(out, "manifest.json"),
@@ -82,6 +105,7 @@ async function main() {
     args: string[],
     env: NodeJS.ProcessEnv,
   ) {
+    verifySource();
     const name = `${String(manifest.stages.length + 1).padStart(2, "0")}-${command}-${args.join("-").replaceAll(":", "-")}.txt`;
     const chunks: string[] = [];
     let pending = "";
@@ -118,6 +142,7 @@ async function main() {
       log: name,
     });
     save();
+    verifySource();
     if (exitCode !== 0)
       throw Error(
         `Gate stopped: ${command} ${args.join(" ")} exit${exitCode}; see ${name}`,
@@ -168,6 +193,7 @@ async function main() {
         await stage("npm", ["run", task], scoped);
       await stage("python3", ["scripts/check_foundation.py"], scoped);
     });
+    verifySource();
     manifest.status = "PASS";
   } catch (error) {
     manifest.status = "FAIL";
