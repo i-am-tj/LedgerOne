@@ -1,5 +1,13 @@
 # Phase 1 gate — current S09 assessment
 
+## Current S07 correction checkpoint (supersedes stale issue status only)
+
+S09 PR45 is merged at20c195a. #16 historical context and #17 financial authorization are CLOSED for currently supported operations after original-criteria verification and owner-confirmed independent gap review. [#16 evidence](https://github.com/i-am-tj/ledger-one/issues/16#issuecomment-6921040886), [#17 evidence](https://github.com/i-am-tj/ledger-one/issues/17#issuecomment-6921043644). No new code was needed for those dispositions.
+
+#12 correction completion is implemented; complete local pipeline at199fb51 PASS (298 unit/454 integration/78 browser,13 stage exits0). Exact publication-head CI, owner review and manual merge pending. [Scope and evidence](../reports/P1-S07_CORRECTIONS.md). Full Phase1 advancement remains BLOCKED, hosted verification NOT RUN and production/default/generic writes disabled. Historical S09 checkpoint statements and open #34 observations below remain preserved; this feature does not waive any environmental or review prerequisite.
+
+## Historical S09 publication checkpoint
+
 Assessment date:2026-11-16 Asia/Kolkata. S09 [#44](https://github.com/i-am-tj/LedgerOne/issues/44), draft [PR #45](https://github.com/i-am-tj/LedgerOne/pull/45) on test/p1-s09-accounting-phase1-gate; predecessor S08-D PR43 reviewed/merged as98908d4749a894ab89603eeb2520c1f77dcd6162. No generalized predecessor re-review performed. Earlier checkpoints below remain unaltered historical evidence.
 
 ## Three separate verdicts

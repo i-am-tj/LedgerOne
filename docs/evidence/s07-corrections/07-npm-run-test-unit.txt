@@ -1,0 +1,16 @@
+
+> ledgerone@0.1.0 test:unit
+> vitest run --project unit
+
+
+ RUN  v5.1.0 /Users/iamtj/Document/Projects/Self/ledger-one
+
+
+ Test Files  23 passed (23)
+      Tests  298 passed (298)
+   Start at  21:48:50
+   Duration  894ms (import 42%, transform 35%, tests 20%, worker 3%)
+
+    Isolate  23 workers spawned · ~133ms startup each (spawn + environment, per file)
+             at least ~304ms faster with isolate: false — reuses workers across files instead of one per file
+

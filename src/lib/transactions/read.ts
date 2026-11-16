@@ -106,10 +106,12 @@ export async function readTransactionOverview(
    SELECT c."operationId",c."workspaceId",c.kind,c."accountName",c."destinationAccountName",c."accountKind",c."categoryName",c."principalMinor",c."interestMinor",c."amountMinor",${iso('c."createdAt"')} AS "createdAt",c."journalId",${iso('c."effectiveAt"')} AS "effectiveAt",${iso('c."postedAt"')} AS "postedAt",c.description,
     c."effectiveAt">${cutoff}::timestamptz AS "futureEffective",
     r.id AS "reversalId",r."operationId" AS "reversalOperationId",o.kind::text AS "reversalKind",${iso('r."effectiveAt"')} AS "reversalEffectiveAt",${iso('r."postedAt"')} AS "reversalPostedAt",r."effectiveAt"<=${cutoff}::timestamptz AS "reversalAffectsSummary",
-    followup.id AS "followUpId",${iso('followup."effectiveAt"')} AS "followUpEffectiveAt",replacement.id AS "replacementId",${iso('replacement."effectiveAt"')} AS "replacementEffectiveAt",replacement.description AS "replacementDescription"
+    coalesce(followup.id,resumed.id) AS "followUpId",${iso('coalesce(followup."effectiveAt",resumed."effectiveAt")')} AS "followUpEffectiveAt",replacement.id AS "replacementId",${iso('replacement."effectiveAt"')} AS "replacementEffectiveAt",replacement.description AS "replacementDescription"
    FROM recent c
    LEFT JOIN ${journal} r ON r."reversesJournalId"=c."journalId" AND r."ownerId"=${owner} AND r."workspaceId"=c."workspaceId" AND r.status='POSTED'
    LEFT JOIN ${journal} followup ON followup."reversesJournalId"=r.id AND followup."ownerId"=r."ownerId" AND followup."workspaceId"=r."workspaceId" AND followup.status='POSTED'
+   LEFT JOIN ${table("account_correction")} continuation ON continuation."originalJournalId"=r.id AND continuation."ownerId"=r."ownerId" AND continuation."workspaceId"=r."workspaceId"
+   LEFT JOIN ${journal} resumed ON resumed.id=continuation."replacementJournalId" AND resumed."ownerId"=continuation."ownerId" AND resumed."workspaceId"=continuation."workspaceId" AND resumed.status='POSTED'
    LEFT JOIN ${operation} o ON o.id=r."operationId" AND o."ownerId"=r."ownerId" AND o."workspaceId"=r."workspaceId"
    LEFT JOIN ${journal} replacement ON o.kind='CORRECT' AND replacement."operationId"=o.id AND replacement."ownerId"=o."ownerId" AND replacement."workspaceId"=o."workspaceId" AND replacement.status='POSTED' AND replacement.kind='GENERAL' AND replacement."reversesJournalId" IS NULL
    ORDER BY c."createdAt" DESC,c."operationId" DESC`);

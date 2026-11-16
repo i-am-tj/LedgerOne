@@ -1,0 +1,13 @@
+
+> ledgerone@0.1.0 db:migrate:test
+> tsx scripts/migrate-test-db.ts
+
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "ledgerone_controls_86cc6de887bd1aa8_test", schema "public" at "127.0.0.1:55454"
+
+13 migrations found in prisma/migrations
+
+
+No pending migrations to apply.

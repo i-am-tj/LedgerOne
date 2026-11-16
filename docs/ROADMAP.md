@@ -1,5 +1,7 @@
 # Current delivery roadmap
 
+> Current correction checkpoint: merged main20c195a (S09 PR45) preserved. #16/#17 closed with criterion-level merged evidence and owner-confirmed independent gap review. Remaining #12 opening/archived-account corrections implemented on `feat/p1-s07-account-corrections`; complete local pipeline PASS at199fb51 (298 unit/454 integration/78 browser); exact-head CI and owner review/manual merge pending. [Evidence](reports/P1-S07_CORRECTIONS.md). No hosted operations, production writes or Phase2 authorized; historical checkpoints below remain intact.
+
 > Current status (2026-11-12): S06C completed/reviewed merge `3502754` at corrected head `c22488b`; #10/#27 closed. [Verified closure](reports/S06C_CLOSURE.md). S06D planning PR #28 accepted/amended and merged `d048d8b`; isolated local implementation now proceeds in a separate PR. Hosted operations remain unauthorized. A05-01–05 remain open. Full S06 gate closed, Phase 1 incomplete, normal-runtime financial writes disabled. Earlier dated checkpoints retain their original decisions and evidence.
 
 The user authorized an expanded Phase 1 on 2026-11-11. It replaces the initial seven-phase schedule for implementation order. Local Git and the GitHub story workflow are established in `i-am-tj/LedgerOne`; no public deployment is implied.

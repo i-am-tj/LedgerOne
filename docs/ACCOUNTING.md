@@ -137,3 +137,7 @@ Account native balances use debit-normal assets / credit-normal liabilities; INR
 ## S09 independent verification
 
 Fixed integer-paise canonical expectations in tests/support/s09-fixtures.ts independently specify balances and economic totals after each Phase1 operation; s09-accounting.test.ts compares every relevant journal leg and complete persisted/query balances. Fixed-seed properties exercise typed commands and the existing engine with independent business deltas, exact BigInt expectations, replay/conflict/rollback checks. This is test evidence, not an extension of posting, FX, correction or archive policy.
+
+## S07 correction admission
+
+Opening and original expense/income corrections now use the existing executor with immutable correction intent. Nonzero uses CORRECT, zero uses exact REVERSE, and a registered zero may resume via a scoped POST continuation without another opening marker or purchase capture. Archived accounts remain archived. Accounts/classification stay fixed; independent effective dates control posted reporting. See reports/P1-S07_CORRECTIONS.md. Other principal/movement correction workflows remain unavailable.

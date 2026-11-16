@@ -34,7 +34,9 @@ export function reversalConflict(error: unknown) {
     typeof error === "object" &&
     error !== null &&
     "constraint" in error &&
-    error.constraint === "journal_reversesJournalId_workspaceId_ownerId_key"
+    (error.constraint === "journal_reversesJournalId_workspaceId_ownerId_key" ||
+      error.constraint ===
+        "account_correction_originalJournalId_workspaceId_ownerId_key")
   );
 }
 export function retryDelay(

@@ -288,3 +288,7 @@ Existing A/B/C mutation, idempotency, principal admission, recovery and auth sui
 ## S09 current Phase1 scope and execution
 
 The register above is the original multi-phase planning checkpoint, not a claim that current S01–S08 work is absent. Current Phase1 evidence is evaluated in [PHASE_1](gates/PHASE_1.md). [S09 traceability](gates/S09_TRACEABILITY.md) maps each original requirement to new independent fixed/seeded tests and reused actual handler/role/concurrency/migration/browser evidence. [Reproduction](setup/PHASE_1_GATE.md) uses npm run verify:phase1, with exact source/stage exits/private artifacts and no skip flag. Broad split/investment/FX/refund/tag scenarios in the earlier canonical paragraph are explicitly Phase2+ NOT RUN, not prerequisites to implement during S09. No original Phase1 requirement is removed.
+
+## S07 correction completion coverage
+
+correction-contract.test.ts provides exact signed input/canonicalization cases. account-corrections.test.ts exercises real sessions/handlers, immutable marker/capture evidence, archive preservation, ownership, replay/conflicts, rollback, direct SQL and concurrency in public and ledgerone schemas. account-correction-upgrade.test.ts rehearses012-to013 with unchanged historical evidence/checksums. account-corrections.spec.ts provides actual mobile/desktop correction and lost-response walkthroughs. Full pipeline evidence belongs in reports/P1-S07_CORRECTIONS.md; no acceptance is inferred from test existence.

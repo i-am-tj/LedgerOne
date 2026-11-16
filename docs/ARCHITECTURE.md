@@ -139,3 +139,7 @@ GET /api/transactions accepts optional workspace and asOf (strict explicit insta
 ## S09 verification composition
 
 The test-only canonical/seeded oracle and verify:phase1 runner exercise the existing application, not another financial engine. The runner delegates database creation/cleanup to the existing generated local fixture factory and invokes existing mandatory npm/CI checks. It records exact committed source and per-stage evidence, never exposes write capability or connects to hosted targets.
+
+## S07 typed correction extension
+
+The account handler validates typed correction payloads and reuses the single financial executor. Migration013 binds immutable intent, root and exact children to the existing receipt/audit. Account and transaction queries expose correction context read-only; ordinary and generic financial capabilities remain unchanged. See reports/P1-S07_CORRECTIONS.md.

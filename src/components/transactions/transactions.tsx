@@ -697,7 +697,7 @@ export function Transactions() {
                         )}
                         {t.journal?.reversal
                           ? t.journal.reversal.followUp
-                            ? " · Further reversal history"
+                            ? " · Further correction history"
                             : !t.journal.reversal.affectsSummary
                               ? t.journal.reversal.kind === "CORRECT"
                                 ? " · Correction not effective yet"
@@ -760,12 +760,12 @@ export function Transactions() {
                           </p>
                           {t.journal.reversal.followUp && (
                             <p className="break-all">
-                              Later reversal journal{" "}
-                              {t.journal.reversal.followUp.id} · effective{" "}
+                              Follow-up journal {t.journal.reversal.followUp.id}{" "}
+                              · effective{" "}
                               {indiaTime(
                                 t.journal.reversal.followUp.effectiveAt,
                               )}{" "}
-                              (India). Further reversal history exists; totals
+                              (India). Further correction history exists; totals
                               use all posted entries.
                             </p>
                           )}

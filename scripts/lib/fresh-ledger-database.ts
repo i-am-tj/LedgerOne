@@ -67,12 +67,18 @@ export async function createLegacyMovementDatabase(
 ) {
   return createLocalLedgerDatabase(source, schema, true, true, 11);
 }
+export async function createLegacyCapitalDatabase(
+  source: string,
+  schema: "public" | "ledgerone",
+) {
+  return createLocalLedgerDatabase(source, schema, true, true, 12);
+}
 async function createLocalLedgerDatabase(
   source: string,
   schema: "public" | "ledgerone",
   upgrade = false,
   legacyOnly = false,
-  legacyVersion: 7 | 10 | 11 = 7,
+  legacyVersion: 7 | 10 | 11 | 12 = 7,
 ) {
   databaseSettings({ LEDGERONE_ENV: "test", DATABASE_URL: source });
   const input = new URL(source);
@@ -141,7 +147,11 @@ async function createLocalLedgerDatabase(
             legacyOnly && legacyVersion >= 10
               ? /^\d{12}_/.test(n) &&
                 n.slice(0, 12) <=
-                  (legacyVersion === 11 ? "202611160011" : "202611140010")
+                  (legacyVersion === 12
+                    ? "202611160012"
+                    : legacyVersion === 11
+                      ? "202611160011"
+                      : "202611140010")
               : (legacyOnly ? /^20261111000[1-7]_/ : /^20261111000[1-6]_/).test(
                   n,
                 ),

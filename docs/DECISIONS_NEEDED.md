@@ -102,3 +102,7 @@ Documented read defaults: newest recording timestamp first with operation-ID tie
 ## S09 verdict boundaries
 
 No new accounting contract is proposed. Existing approved INR, typed commands, reconciliation comparison and local-only capability remain intact. Owner independent review/manual merge of S09 remains required. Open S07 original correction/provenance/archived-correction acceptance and #16/#17 require their own evidence/disposition; hosted #11, production grants/activation, backup/restore and Phase1 advancement are not authorized by local green tests. See gates/PHASE_1.md; no blanket waiver requested.
+
+## S07 bounded correction decision recorded
+
+Owner approved archived corrections for opening balances and expense/income only. Original accounts/classification remain fixed. No further general planning approval is required for that scope. Transfers/card/FD/loan corrections need separate business policies; they are not exposed by this increment. Implementation review/manual merge and hosted/production authorization remain separate.
